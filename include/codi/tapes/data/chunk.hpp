@@ -234,6 +234,14 @@ namespace codi {
         usedSize += 1;
       }
 
+      /// \copydoc ChunkBase::pushData
+      template<typename Type>
+      CODI_INLINE void pushData(Type const& value1) {
+        codiAssert(getUnusedSize() != 0);
+        *((Type*)(&data1[usedSize])) = value1;
+        usedSize += sizeof(Type);
+      }
+
       /// \copydoc ChunkBase::readData
       void readData(FileIo& handle) {
         allocateData();
