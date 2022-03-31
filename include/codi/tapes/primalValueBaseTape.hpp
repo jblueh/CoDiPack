@@ -300,12 +300,12 @@ namespace codi {
       };
 
       /// Push all data for each argument.
-      struct PushIdentfierPassive : public ForEachLeafLogic<PushIdentfierPassive> {
+      struct PushIdentfier : public ForEachLeafLogic<PushIdentfier> {
         public:
 
           /// \copydoc codi::ForEachLeafLogic::handleActive
           template<typename Node>
-          CODI_INLINE void handleActive(Node const& node, StaticData& staticData,
+          CODI_INLINE void handleActive(Node const& node,
                                         DynamicData& dynamicData,
                                         size_t& curPassiveArgument) {
             Identifier rhsIndex = node.getIdentifier();
@@ -313,10 +313,24 @@ namespace codi {
               rhsIndex = curPassiveArgument;
 
               curPassiveArgument += 1;
-              dynamicData.pushData(node.getValue());
             }
 
-            staticData.pushData(rhsIndex);
+            dynamicData.pushData(rhsIndex);
+          }
+      };
+
+      /// Push all data for each argument.
+      struct PushPassive : public ForEachLeafLogic<PushPassive> {
+        public:
+
+          /// \copydoc codi::ForEachLeafLogic::handleActive
+          template<typename Node>
+          CODI_INLINE void handleActive(Node const& node,
+                                        DynamicData& dynamicData) {
+            Identifier rhsIndex = node.getIdentifier();
+            if (CODI_ENABLE_CHECK(Config::CheckZeroIndex, IndexManager::InactiveIndex == rhsIndex)) {
+              dynamicData.pushData(node.getValue());
+            }
           }
       };
 
@@ -326,7 +340,7 @@ namespace codi {
 
           /// \copydoc codi::ForEachLeafLogic::handleConstant
           template<typename Node>
-          CODI_INLINE void handleConstant(Node const& node, StaticData& staticData) {
+          CODI_INLINE void handleConstant(Node const& node, DynamicData& staticData) {
             using ConversionOperator = typename Node::template ConversionOperator<PassiveReal>;
 
             staticData.pushData(ConversionOperator::toDataStore(node.getValue()));
@@ -344,7 +358,8 @@ namespace codi {
                              ExpressionInterface<Real, Rhs> const& rhs) {
         if (CODI_ENABLE_CHECK(Config::CheckTapeActivity, cast().isActive())) {
           CountActiveArguments countActiveArguments;
-          PushIdentfierPassive pushActive;
+          PushIdentfier pushIdentifier;
+          PushPassive pushPassive;
           PushConstant pushConstant;
           size_t constexpr MaxActiveArgs = ExpressionTraits::NumberOfActiveTypeArguments<Rhs>::value;
           size_t constexpr MaxConstantArgs = ExpressionTraits::NumberOfConstantTypeArguments<Rhs>::value;
@@ -356,23 +371,27 @@ namespace codi {
           countActiveArguments.eval(rhs.cast(), activeArguments);
 
           if (CODI_ENABLE_CHECK(Config::CheckEmptyStatements, 0 != activeArguments)) {
-            size_t staticSize = sizeof(Config::ArgumentSize) + sizeof(EvalHandle) + sizeof(Identifier) + sizeof(Real)
-                                + (MaxActiveArgs) * sizeof(Identifier) + MaxConstantArgs * sizeof(PassiveReal);
-            size_t dynamicSize = (MaxActiveArgs - activeArguments) * sizeof(Real);
+            size_t staticSize = sizeof(Config::ArgumentSize) + sizeof(EvalHandle);
+            size_t dynamicSize = sizeof(Identifier) + sizeof(Real)
+                                  + (MaxActiveArgs - activeArguments) * sizeof(Real)
+                                  + (MaxActiveArgs) * sizeof(Identifier)
+                                  + MaxConstantArgs * sizeof(PassiveReal);
             staticData.reserveItems(staticSize);
             dynamicData.reserveItems(dynamicSize);
 
             size_t passiveArguments = 0;
-            pushActive.eval(rhs.cast(), staticData, dynamicData, passiveArguments);
-            pushConstant.eval(rhs.cast(), staticData);
+            pushPassive.eval(rhs.cast(), dynamicData);
+            pushIdentifier.eval(rhs.cast(), dynamicData, passiveArguments);
+            pushConstant.eval(rhs.cast(), dynamicData);
 
             bool generatedNewIndex = indexManager.get().assignIndex(lhs.cast().getIdentifier());
             checkPrimalSize(generatedNewIndex);
 
             Real& primalEntry = primals[lhs.cast().getIdentifier()];
-            staticData.pushData(lhs.cast().getIdentifier());
+            dynamicData.pushData(lhs.cast().getIdentifier());
+            dynamicData.pushData(primalEntry);
+
             staticData.pushData((Config::ArgumentSize)passiveArguments);
-            staticData.pushData(primalEntry);
             staticData.pushData(StatementEvaluator::template createHandle<Impl, Impl, Rhs>());
 
             primalEntry = rhs.cast().getValue();
@@ -1036,19 +1055,27 @@ namespace codi {
       template<typename Func>
       CODI_INLINE static void statementEvaluateReverseFull(
           Func const& evalInner, size_t const& maxActiveArgs, size_t const& maxConstantArgs, Real* primalVector,
-          ADJOINT_VECTOR_TYPE* adjointVector, Gradient lhsAdjoint, Config::ArgumentSize numberOfPassiveArguments,
-          size_t& curDynamicPos, char const* const dynamicValues,
-          size_t& curStaticPos, char const* const staticValues
+          ADJOINT_VECTOR_TYPE* adjointVector, Config::ArgumentSize numberOfPassiveArguments,
+          size_t& curDynamicPos, char const* const dynamicValues
       ) {
 
         // Adapt vector positions.
-        curStaticPos -= maxConstantArgs * sizeof(PassiveReal);
-        PassiveReal const* constantValues = (PassiveReal const*)(&staticValues[curStaticPos]);
-        curStaticPos -= maxActiveArgs * sizeof(Identifier);
-        Identifier const* rhsIdentifiers = (Identifier const*)(&staticValues[curStaticPos]);
+        curDynamicPos -= sizeof(Real);
+        Real oldPrimalValue = *((Real const*)(&dynamicValues[curDynamicPos]));
+        curDynamicPos -= sizeof(Identifier);
+        Identifier lhsIdentifier = *((Identifier const*)(&dynamicValues[curDynamicPos]));
 
+        curDynamicPos -= maxConstantArgs * sizeof(PassiveReal);
+        PassiveReal const* constantValues = (PassiveReal const*)(&dynamicValues[curDynamicPos]);
+        curDynamicPos -= maxActiveArgs * sizeof(Identifier);
+        Identifier const* rhsIdentifiers = (Identifier const*)(&dynamicValues[curDynamicPos]);
         curDynamicPos -= numberOfPassiveArguments * sizeof(Real);
         Real const* passiveValues = (Real*)(&dynamicValues[curDynamicPos]);
+
+        Gradient const lhsAdjoint = adjointVector[lhsIdentifier];
+        adjointVector[lhsIdentifier] = Gradient();
+
+        primalVector[lhsIdentifier] = oldPrimalValue;
 
         if (CODI_ENABLE_CHECK(Config::SkipZeroAdjointEvaluation, !RealTraits::isTotalZero(lhsAdjoint))) {
           for (Config::ArgumentSize curPos = 0; curPos < numberOfPassiveArguments; curPos += 1) {
@@ -1081,15 +1108,12 @@ namespace codi {
       /// \copydoc codi::StatementEvaluatorTapeInterface::statementEvaluateReverse()
       template<typename Rhs>
       CODI_INLINE static void statementEvaluateReverse(Real* primalVector, ADJOINT_VECTOR_TYPE* adjointVector,
-                                                       Gradient lhsAdjoint,
                                                        Config::ArgumentSize numberOfPassiveArguments,
-                                                       size_t& curDynamicPos, char const* const dynamicValues,
-                                                       size_t& curStaticPos, char const* const staticValues) {
+                                                       size_t& curDynamicPos, char const* const dynamicValues) {
         size_t constexpr maxActiveArgs = ExpressionTraits::NumberOfActiveTypeArguments<Rhs>::value;
         size_t constexpr maxConstantArgs = ExpressionTraits::NumberOfConstantTypeArguments<Rhs>::value;
         statementEvaluateReverseFull(statementEvaluateReverseInner<Rhs>, maxActiveArgs, maxConstantArgs, primalVector,
-                                     adjointVector, lhsAdjoint, numberOfPassiveArguments, curDynamicPos, dynamicValues,
-                                     curStaticPos, staticValues);
+                                     adjointVector, numberOfPassiveArguments, curDynamicPos, dynamicValues);
       }
 
     private:

@@ -129,21 +129,12 @@ namespace codi {
 
           curStaticPos -= sizeof(EvalHandle);
           EvalHandle handle = *((EvalHandle const*)(&staticValues[curStaticPos]));
-          curStaticPos -= sizeof(Real);
-          Real oldPrimalValue = *((Real const*)(&staticValues[curStaticPos]));
           curStaticPos -= sizeof(Config::ArgumentSize);
           Config::ArgumentSize numberOfPassiveArguments = *((Config::ArgumentSize const*)(&staticValues[curStaticPos]));
-          curStaticPos -= sizeof(Identifier);
-          Identifier lhsIdentifier = *((Identifier const*)(&staticValues[curStaticPos]));
-
-          Gradient const lhsAdjoint = adjointVector[lhsIdentifier];
-          adjointVector[lhsIdentifier] = Gradient();
-
-          primalVector[lhsIdentifier] = oldPrimalValue;
 
           StatementEvaluator::template callReverse<PrimalValueReuseTape>(
-              handle, primalVector, adjointVector, lhsAdjoint,
-              numberOfPassiveArguments, curDynamicPos, dynamicValues, curStaticPos, staticValues);
+              handle, primalVector, adjointVector,
+              numberOfPassiveArguments, curDynamicPos, dynamicValues);
         }
       }
 
