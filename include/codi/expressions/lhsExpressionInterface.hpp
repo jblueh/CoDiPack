@@ -222,6 +222,11 @@ namespace codi {
       CODI_INLINE static void setValue(Type& v, Real const& value) {
         v.setValue(value);
       }
+
+      /// \copydoc DataExtraction::setIdentifier()
+      CODI_INLINE static void setIdentifier(Type& v, Identifier const& identifier) {
+        v.getIdentifier() = identifier;
+      }
   };
 
   /// Specialization of RealTraits::DataRegistration for CoDiPack types.
@@ -245,6 +250,21 @@ namespace codi {
       /// \copydoc DataRegistration::registerExternalFunctionOutput()
       CODI_INLINE static Real registerExternalFunctionOutput(Type& v) {
         return Type::getTape().registerExternalFunctionOutput(v);
+      }
+  };
+
+  template<typename T_Type>
+  struct RealTraits::AggregatedTypeTraits<T_Type, ExpressionTraits::EnableIfLhsExpression<T_Type>> :
+    RealTraits::ArrayAggregatedTypeTraitsBase<T_Type, T_Type, typename T_Type::Real, 1> {};
+
+  template<typename T>
+  struct ComputationTraits::TransposeImpl<T, ExpressionTraits::EnableIfLhsExpression<T>> {
+    public:
+      using Jacobian = T;
+      using Return = T;
+
+      static Return transpose(Jacobian const& jacobian) {
+        return jacobian;
       }
   };
 #endif

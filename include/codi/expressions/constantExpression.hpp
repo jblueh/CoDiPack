@@ -95,7 +95,7 @@ namespace codi {
       /// @{
 
       using StoreAs = ConstantExpression;  ///< \copydoc codi::ExpressionInterface::StoreAs
-      using ActiveResult = void;           ///< \copydoc codi::ExpressionInterface::ActiveResult
+      using ADLogic = void;           ///< \copydoc codi::ExpressionInterface::ADLogic
 
       /// \copydoc codi::ExpressionInterface::getValue
       CODI_INLINE Real const& getValue() const {

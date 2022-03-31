@@ -109,7 +109,7 @@ namespace codi {
       /// @{
 
       using StoreAs = ImmutableActiveType const&;              ///< \copydoc codi::ExpressionInterface::StoreAs
-      using ActiveResult = typename ActiveType::ActiveResult;  ///< \copydoc codi::ExpressionInterface::ActiveResult
+      using ADLogic = Tape;  ///< \copydoc codi::ExpressionInterface::ADLogic
 
       /// @}
       /*******************************************************************************/

@@ -45,7 +45,7 @@ DRIVER_DIR = $(INCLUDE_DIR)/drivers
 CODI_DIR := ..
 CODI_INCLUDE = -I$(CODI_DIR)/include
 
-FLAGS = -Wall -Wextra -pedantic -std=c++11 -DCODI_IgnoreInvalidJacobians=true -DCODI_EnableAssert=true -I$(INCLUDE_DIR)
+FLAGS = -Wall -Wextra -pedantic -std=c++14 -DCODI_IgnoreInvalidJacobians=true -DCODI_EnableAssert=true -I$(INCLUDE_DIR) $(CODI_INCLUDE)
 
 ifeq ($(OPT), yes)
   CXX_FLAGS := -O3 $(FLAGS)
@@ -72,6 +72,7 @@ DEP_FILES  += $(wildcard $(BUILD_DIR)/**/**/**/**.d)
 
 # Test selection by user
 ALL_TESTS = $(patsubst test%.hpp,Test%,$(notdir $(TEST_FILES)))
+ALL_TESTS := $(filter-out TestComplex%, $(ALL_TESTS))
 ifeq ($(TESTS),)
   CONFID = $(BUILD_DIR)/allTests.conf
   SELECTED_TESTS = $(ALL_TESTS)

@@ -41,6 +41,7 @@
 #include "../traits/expressionTraits.hpp"
 #include "../traits/realTraits.hpp"
 #include "logic/nodeInterface.hpp"
+#include "expressionMemberOperations.hpp"
 
 /** \copydoc codi::Namespace */
 namespace codi {
@@ -56,14 +57,15 @@ namespace codi {
    * @tparam T_Impl  Class implementing this interface.
    */
   template<typename T_Real, typename T_Impl>
-  struct ExpressionInterface : public NodeInterface<T_Impl> {
+  struct ExpressionInterface : public NodeInterface<T_Impl>,
+                               public ExpressionMemberOperations<T_Real, T_Impl>{
     public:
 
       using Real = CODI_DD(T_Real, double);               ///< See ExpressionInterface.
       using Impl = CODI_DD(T_Impl, ExpressionInterface);  ///< See ExpressionInterface.
 
-      using ActiveResult = CODI_UNDEFINED;  ///< Type into which the expression can be converted. Usually also the type
-                                            ///< from which is constructed.
+      using ADLogic = CODI_UNDEFINED;  ///< AD logic that governs the expression. Needs to be the same for all inputs of
+                                       ///< the expression. TODO: Construction
 
       /// Cast to the implementation.
       CODI_INLINE Impl const& cast() const {

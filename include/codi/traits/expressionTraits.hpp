@@ -56,6 +56,11 @@ namespace codi {
   template<typename T_Tape>
   struct StaticContextActiveType;
 
+  namespace RealTraits {
+    template<typename T_Real, typename>
+    struct AggregatedTypeTraits;
+  }
+
   /// Traits for everything that can be an expression e.g. codi::RealReverse, a + b, etc..
   namespace ExpressionTraits {
 
@@ -79,12 +84,39 @@ namespace codi {
       public:
 
         /// The resulting active type of an expression.
-        using ActiveResult = typename std::conditional<isBVoid, ResultA, ResultB>::type;
+        using ADLogic = typename std::conditional<isBVoid, ResultA, ResultB>::type;
     };
 
     /// \copydoc ValidateResultImpl
     template<typename ResultA, typename ResultB>
     using ValidateResult = ValidateResultImpl<ResultA, ResultB>;
+
+    template<typename T_Real, typename T_Tape, bool isStatic = false, typename = void>
+    struct ActiveResultImpl {
+
+        using Real = CODI_DD(T_Real, CODI_ANY);
+        using Tape = CODI_DD(T_Tape, CODI_ANY);
+
+        /// The resulting active type of an expression.
+        using ActiveResult = CODI_ANY;
+    };
+
+    template<typename Real, typename Tape, bool isStatic = false>
+    using ActiveResult = typename ActiveResultImpl<Real, Tape, isStatic>::ActiveResult;
+
+    template<typename T_Expr, bool isStatic = false, typename = void>
+    struct ActiveResultFromExprImpl {
+
+        using Expr = CODI_DD(T_Expr, CODI_ANY);
+
+        /// The resulting active type of an expression.
+        using ActiveResult = Expr;
+    };
+
+    template<typename Expr, bool isStatic = false>
+    using ActiveResultFromExpr = typename ActiveResultFromExprImpl<Expr, isStatic>::ActiveResult;
+
+
 
     /// @}
     /*******************************************************************************/
@@ -210,7 +242,7 @@ namespace codi {
         /// \copydoc CompileTimeTraversalLogic::leaf()
         template<typename Node, typename = EnableIfConstantExpression<Node>>
         CODI_INLINE static size_t constexpr leaf() {
-          return 1;
+          return ::codi::RealTraits::AggregatedTypeTraits<typename Node::Real, void>::Elements;
         }
         using CompileTimeTraversalLogic<size_t, NumberOfConstantTypeArguments>::leaf;
 
@@ -223,6 +255,18 @@ namespace codi {
     template<typename Expr>
     bool constexpr numberOfConstantTypeArguments = NumberOfConstantTypeArguments<Expr>::value;
 #endif
+
+    template<typename T_Expr, bool isStatic>
+    struct ActiveResultFromExprImpl<T_Expr, isStatic, EnableIfExpression<T_Expr>> {
+
+        using Expr = CODI_DD(T_Expr, CODI_ANY);
+        using Real = typename Expr::Real;
+        using Tape = typename Expr::ADLogic;
+
+        /// The resulting active type of an expression.
+        using ActiveResult = typename ActiveResultImpl<Real, Tape, isStatic>::ActiveResult;
+    };
+
 
     /// @}
   }

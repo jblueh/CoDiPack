@@ -213,6 +213,15 @@ namespace codi {
     bool constexpr SkipZeroAdjointEvaluation = CODI_SkipZeroAdjointEvaluation;
 #undef CODI_SkipZeroAdjointEvaluation
 
+#ifndef CODI_SpecializeStdComplex
+  /// See codi::Config::SpecializeStdComplex.
+  #define CODI_SpecializeStdComplex 1
+#endif
+    /// If std::complex<> is specialized for CoDiPack types so that they are integrated into the expression trees of
+    /// CoDiPack.
+    bool constexpr SpecializeStdComplex = CODI_SpecializeStdComplex;
+    // Do not undefine.
+
 #ifndef CODI_SortIndicesOnReset
   /// See codi::Config::SortIndicesOnReset.
   #define CODI_SortIndicesOnReset true
@@ -292,15 +301,19 @@ namespace codi {
 #if CODI_ForcedInlines
   #if defined(__INTEL_COMPILER) | defined(_MSC_VER)
     #define CODI_INLINE __forceinline
+    #define CODI_LAMBDA_INLINE __forceinline /* TODO: Test */
   #elif defined(__GNUC__)
     #define CODI_INLINE inline __attribute__((always_inline))
+    #define CODI_LAMBDA_INLINE __attribute__((always_inline))
   #else
     #warning Could not determine compiler for forced inline definitions. Using inline.
     #define CODI_INLINE inline
+    #define CODI_LAMBDA_INLINE /*inline*/
   #endif
 #else
   /// See codi::Config::ForcedInlines.
   #define CODI_INLINE inline
+  #define CODI_LAMBDA_INLINE /*inline*/
 #endif
     /// Force inlining instead of using the heuristics from the compiler.
     bool constexpr ForcedInlines = CODI_ForcedInlines;

@@ -94,7 +94,7 @@ namespace codi {
       /// @{
 
       using StoreAs = ReferenceActiveType const&;        ///< \copydoc codi::ExpressionInterface::StoreAs
-      using ActiveResult = typename Type::ActiveResult;  ///< \copydoc codi::ExpressionInterface::ActiveResult
+      using ADLogic = Tape;  ///< \copydoc codi::ExpressionInterface::ADLogic
 
       /// \copydoc codi::LhsExpressionInterface::getIdentifier()
       CODI_INLINE Identifier& getIdentifier() {

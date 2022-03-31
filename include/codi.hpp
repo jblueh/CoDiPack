@@ -66,6 +66,7 @@
 #include "codi/traits/computationTraits.hpp"
 #include "codi/traits/numericLimits.hpp"
 #include "codi/traits/tapeTraits.hpp"
+#include "codi/expressions/complex/stdComplex.hpp"
 
 #if CODI_EnableMPI
   #include "codi/tools/mpi/codiMpiTypes.hpp"

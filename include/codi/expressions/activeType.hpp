@@ -123,7 +123,7 @@ namespace codi {
       /// @{
 
       using StoreAs = ActiveType const&;  ///< \copydoc codi::ExpressionInterface::StoreAs
-      using ActiveResult = ActiveType;    ///< \copydoc codi::ExpressionInterface::ActiveResult
+      using ADLogic = Tape;    ///< \copydoc codi::ExpressionInterface::ADLogic
 
       /// @}
       /*******************************************************************************/
@@ -160,4 +160,14 @@ namespace codi {
 
   template<typename Tape>
   Tape ActiveType<Tape>::tape{};
+
+  template<typename T_Real, typename T_Tape>
+  struct ExpressionTraits::ActiveResultImpl<T_Real, T_Tape, false> {
+
+      using Real = CODI_DD(T_Real, CODI_ANY);
+      using Tape = CODI_DD(T_Tape, CODI_ANY);
+
+      /// The resulting active type of an expression.
+      using ActiveResult = ActiveType<Tape>;
+  };
 }

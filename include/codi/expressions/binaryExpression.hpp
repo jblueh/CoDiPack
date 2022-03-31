@@ -101,20 +101,22 @@ namespace codi {
 
       /// Constructor
       template<typename RealA, typename RealB>
-      explicit BinaryExpression(ExpressionInterface<RealA, ArgA> const& argA,
+      CODI_INLINE explicit BinaryExpression(ExpressionInterface<RealA, ArgA> const& argA,
                                 ExpressionInterface<RealB, ArgB> const& argB)
           : argA(argA.cast()),
             argB(argB.cast()),
             result(Operation::primal(this->argA.getValue(), this->argB.getValue())) {}
 
+      CODI_INLINE BinaryExpression(BinaryExpression const&) = default;
+      
       /*******************************************************************************/
       /// @name Implementation of ExpressionInterface
       /// @{
 
       using StoreAs = BinaryExpression;  ///< \copydoc codi::ExpressionInterface::StoreAs
-      using ActiveResult =
-          typename ExpressionTraits::ValidateResult<typename ArgA::ActiveResult, typename ArgB::ActiveResult>::
-              ActiveResult;  ///< \copydoc codi::ExpressionInterface::ActiveResult
+      using ADLogic =
+          typename ExpressionTraits::ValidateResult<typename ArgA::ADLogic, typename ArgB::ADLogic>::
+              ADLogic;  ///< \copydoc codi::ExpressionInterface::ADLogic
 
       /// \copydoc codi::ExpressionInterface::getValue()
       CODI_INLINE Real const& getValue() const {

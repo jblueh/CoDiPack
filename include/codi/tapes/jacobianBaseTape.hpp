@@ -41,6 +41,7 @@
 #include "../misc/macros.hpp"
 #include "../misc/memberStore.hpp"
 #include "../config.h"
+#include "../expressions/aggregatedExpressionType.hpp"
 #include "../expressions/lhsExpressionInterface.hpp"
 #include "../expressions/logic/compileTimeTraversalLogic.hpp"
 #include "../expressions/logic/helpers/forEachLeafLogic.hpp"
@@ -269,12 +270,13 @@ namespace codi {
           /// General implementation. Checks for invalid and passive values/Jacobians.
           template<typename Node, typename Jacobian, typename DataVector>
           CODI_INLINE void handleJacobianOnActive(Node const& node, Jacobian jacobianExpr, DataVector& dataVector) {
-            Real jacobian = ComputationTraits::adjointConversion<Real>(jacobianExpr);
+            ExpressionTraits::ActiveResultFromExpr<Jacobian> jacobian = jacobianExpr;
+            Real jacobianReal = ComputationTraits::adjointConversion<Real>(jacobian);
 
             if (CODI_ENABLE_CHECK(Config::CheckZeroIndex, 0 != node.getIdentifier())) {
-              if (CODI_ENABLE_CHECK(Config::IgnoreInvalidJacobians, RealTraits::isTotalFinite(jacobian))) {
-                if (CODI_ENABLE_CHECK(Config::CheckJacobianIsZero, !RealTraits::isTotalZero(jacobian))) {
-                  dataVector.pushData(jacobian, node.getIdentifier());
+              if (CODI_ENABLE_CHECK(Config::IgnoreInvalidJacobians, RealTraits::isTotalFinite(jacobianReal))) {
+                if (CODI_ENABLE_CHECK(Config::CheckJacobianIsZero, !RealTraits::isTotalZero(jacobianReal))) {
+                  dataVector.pushData(jacobianReal, node.getIdentifier());
                 }
               }
             }
@@ -286,11 +288,12 @@ namespace codi {
                                                   DataVector& dataVector) {
             CODI_UNUSED(dataVector);
 
-            Real jacobian = ComputationTraits::adjointConversion<Real>(jacobianExpr);
+            ExpressionTraits::ActiveResultFromExpr<Jacobian> jacobian = jacobianExpr;
+            Real jacobianReal = ComputationTraits::adjointConversion<Real>(jacobian);
 
-            if (CODI_ENABLE_CHECK(Config::IgnoreInvalidJacobians, RealTraits::isTotalFinite(jacobian))) {
+            if (CODI_ENABLE_CHECK(Config::IgnoreInvalidJacobians, RealTraits::isTotalFinite(jacobianReal))) {
               // Do a delayed push for these leaf nodes, accumulate the jacobian in the local member.
-              node.jacobian += jacobian;
+              node.jacobian += jacobianReal;
             }
           }
       };
@@ -338,6 +341,45 @@ namespace codi {
     public:
 
       /// @{
+
+      template<typename Aggregated, typename Type, typename Lhs, typename Rhs>
+      CODI_INLINE void store(AggregatedExpressionType<Aggregated, Type, Lhs>& lhs,
+                             ExpressionInterface<Aggregated, Rhs> const& rhs) {
+
+        using AggregatedTraits = RealTraits::AggregatedTypeTraits<Aggregated>;
+
+        int constexpr Elements = AggregatedTraits::Elements;
+
+        if (CODI_ENABLE_CHECK(Config::CheckTapeActivity, cast().isActive())) {
+
+          Aggregated real{};
+          Identifier identifierVec[Elements];
+          static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
+            AggregatedTraits::template arrayAccess<i.value>(real) = lhs.arrayValue[i.value].getValue();
+            identifierVec[i.value] = lhs.arrayValue[i.value].getIdentifier();
+          });
+
+          // Perform the storing for each index
+          static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
+            ActiveTypeWrapper<typename Lhs::ActiveInnerType> wrapper(
+                  AggregatedTraits::template arrayAccess<i.value>(real),
+                  identifierVec[i.value]);
+            wrapper = ExtractExpression<Aggregated, i.value, Rhs>(rhs);
+          });
+
+          static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
+            lhs.arrayValue[i.value].value() = AggregatedTraits::template arrayAccess<i.value>(real);
+            lhs.arrayValue[i.value].getIdentifier() = identifierVec[i.value];
+          });
+        } else {
+          Aggregated real = rhs.cast().getValue();
+
+          static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
+            lhs.arrayValue[i.value].value() = AggregatedTraits::template arrayAccess<i.value>(real);
+            indexManager.get().freeIndex(lhs.arrayValue[i.value].getIdentifier());
+          });
+        }
+      }
 
       /// \copydoc codi::InternalStatementRecordingTapeInterface::store()
       template<typename Lhs, typename Rhs>

@@ -87,7 +87,9 @@ namespace codi {
 
   using std::abs;
   using std::acos;
+  using std::acosh;
   using std::asin;
+  using std::asinh;
   using std::atan;
   using std::atanh;
   using std::cbrt;
@@ -135,7 +137,7 @@ namespace codi {
         } else if (arg > 0.0) {
           return (Real)1.0;
         } else {
-          return (Real)0.0;
+          return (Real)1.0;
         }
       }
   };
@@ -165,15 +167,77 @@ namespace codi {
       static CODI_INLINE Real gradient(Arg const& arg, Real const& result) {
         CODI_UNUSED(result);
         if (Config::CheckExpressionArguments) {
-          if (RealTraits::getPassiveValue(arg) <= -1.0 || 1.0 <= RealTraits::getPassiveValue(arg)) {
-            CODI_EXCEPTION("acos outside of (-1, 1).(Value: %0.15e)", RealTraits::getPassiveValue(arg));
-          }
+          checkArgument(arg);
         }
         return -1.0 / sqrt(1.0 - arg * arg);
+      }
+
+    private:
+
+      template<typename Arg>
+      static void checkArgument(Arg const& arg) {
+        if (RealTraits::getPassiveValue(arg) <= -1.0 || 1.0 <= RealTraits::getPassiveValue(arg)) {
+          CODI_EXCEPTION("acos outside of (-1, 1).(Value: %0.15e)", RealTraits::getPassiveValue(arg));
+        }
+      }
+
+      template<typename Arg>
+      static void checkArgument(std::complex<Arg> const& arg) {
+        if (0.0 == RealTraits::getPassiveValue(imag(arg)) && (RealTraits::getPassiveValue(real(arg)) == -1.0 || 1.0 == RealTraits::getPassiveValue(real(arg)))) {
+          CODI_EXCEPTION("acos outside of C \\ {(-1, 0), (1, 0)}.(Value: %0.15e + %0.15e i)",
+                         RealTraits::getPassiveValue(real(arg)),
+                         RealTraits::getPassiveValue(imag(arg)));
+        }
       }
   };
 #define OPERATION_LOGIC OperationAcos
 #define FUNCTION acos
+#include "unaryOverloads.tpp"
+
+  /// UnaryOperation implementation for acosh
+  template<typename T_Real>
+  struct OperationAcosh : public UnaryOperation<T_Real> {
+    public:
+
+      using Real = CODI_DD(T_Real, double);  ///< See BinaryOperation.
+
+      /// \copydoc UnaryOperation::primal
+      template<typename Arg>
+      static CODI_INLINE Real primal(Arg const& arg) {
+        return acosh(arg);
+      }
+
+      /// \copydoc UnaryOperation::gradient
+      template<typename Arg>
+      static CODI_INLINE Real gradient(Arg const& arg, Real const& result) {
+        CODI_UNUSED(result);
+        if (Config::CheckExpressionArguments) {
+          checkArgument(arg);
+        }
+        return 1.0 / (sqrt(arg + 1.0) * sqrt(arg - 1.0));
+      }
+
+
+    private:
+
+      template<typename Arg>
+      static void checkArgument(Arg const& arg) {
+        if (RealTraits::getPassiveValue(arg) >= 1.0) {
+          CODI_EXCEPTION("acosh outside of [1, inf).(Value: %0.15e)", RealTraits::getPassiveValue(arg));
+        }
+      }
+
+      template<typename Arg>
+      static void checkArgument(std::complex<Arg> const& arg) {
+        if (0.0 == RealTraits::getPassiveValue(imag(arg)) && RealTraits::getPassiveValue(real(arg)) >= 1.0) {
+          CODI_EXCEPTION("asin outside of C \\ (-inf, 1)x(0).(Value: %0.15e + %0.15e i)",
+                         RealTraits::getPassiveValue(real(arg)),
+                         RealTraits::getPassiveValue(imag(arg)));
+        }
+      }
+  };
+#define OPERATION_LOGIC OperationAcosh
+#define FUNCTION acosh
 #include "unaryOverloads.tpp"
 
   /// UnaryOperation implementation for asin
@@ -194,15 +258,56 @@ namespace codi {
       static CODI_INLINE Real gradient(Arg const& arg, Real const& result) {
         CODI_UNUSED(result);
         if (Config::CheckExpressionArguments) {
-          if (RealTraits::getPassiveValue(arg) <= -1.0 || 1.0 <= RealTraits::getPassiveValue(arg)) {
-            CODI_EXCEPTION("asin outside of (-1, 1).(Value: %0.15e)", RealTraits::getPassiveValue(arg));
-          }
+          checkArgument(arg);
         }
         return 1.0 / sqrt(1.0 - arg * arg);
+      }
+
+    private:
+
+      template<typename Arg>
+      static void checkArgument(Arg const& arg) {
+        if (RealTraits::getPassiveValue(arg) <= -1.0 || 1.0 <= RealTraits::getPassiveValue(arg)) {
+          CODI_EXCEPTION("asin outside of (-1, 1).(Value: %0.15e)", RealTraits::getPassiveValue(arg));
+        }
+      }
+
+      template<typename Arg>
+      static void checkArgument(std::complex<Arg> const& arg) {
+        if (0.0 == RealTraits::getPassiveValue(imag(arg)) && (RealTraits::getPassiveValue(real(arg)) == -1.0 || 1.0 == RealTraits::getPassiveValue(real(arg)))) {
+          CODI_EXCEPTION("asin outside of C \\ {(-1, 0), (1, 0)}.(Value: %0.15e + %0.15e i)",
+                         RealTraits::getPassiveValue(real(arg)),
+                         RealTraits::getPassiveValue(imag(arg)));
+        }
       }
   };
 #define OPERATION_LOGIC OperationAsin
 #define FUNCTION asin
+#include "unaryOverloads.tpp"
+
+  /// UnaryOperation implementation for asin
+  template<typename T_Real>
+  struct OperationAsinh : public UnaryOperation<T_Real> {
+    public:
+
+      using Real = CODI_DD(T_Real, double);  ///< See BinaryOperation.
+
+      /// \copydoc UnaryOperation::primal
+      template<typename Arg>
+      static CODI_INLINE Real primal(Arg const& arg) {
+        return asinh(arg);
+      }
+
+      /// \copydoc UnaryOperation::gradient
+      template<typename Arg>
+      static CODI_INLINE Real gradient(Arg const& arg, Real const& result) {
+        CODI_UNUSED(result);
+
+        return 1.0 / sqrt(arg * arg + 1.0);
+      }
+  };
+#define OPERATION_LOGIC OperationAsinh
+#define FUNCTION asinh
 #include "unaryOverloads.tpp"
 
   /// UnaryOperation implementation for atan
@@ -247,11 +352,27 @@ namespace codi {
       static CODI_INLINE Real gradient(Arg const& arg, Real const& result) {
         CODI_UNUSED(result);
         if (Config::CheckExpressionArguments) {
-          if (RealTraits::getPassiveValue(arg) <= -1.0 || 1.0 <= RealTraits::getPassiveValue(arg)) {
-            CODI_EXCEPTION("atanh outside of (-1, 1).(Value: %0.15e)", RealTraits::getPassiveValue(arg));
-          }
+          checkArgument(arg);
         }
         return 1.0 / (1.0 - arg * arg);
+      }
+
+    private:
+
+      template<typename Arg>
+      static void checkArgument(Arg const& arg) {
+        if (RealTraits::getPassiveValue(arg) <= -1.0 || 1.0 <= RealTraits::getPassiveValue(arg)) {
+          CODI_EXCEPTION("atanh outside of (-1, 1).(Value: %0.15e)", RealTraits::getPassiveValue(arg));
+        }
+      }
+
+      template<typename Arg>
+      static void checkArgument(std::complex<Arg> const& arg) {
+        if (0.0 == RealTraits::getPassiveValue(imag(arg)) && (RealTraits::getPassiveValue(real(arg)) <= -1.0 || 1.0 <= RealTraits::getPassiveValue(real(arg)))) {
+          CODI_EXCEPTION("atanh outside of C \\ (-1, 1) x (0).(Value: %0.15e + %0.15e i)",
+                         RealTraits::getPassiveValue(real(arg)),
+                         RealTraits::getPassiveValue(imag(arg)));
+        }
       }
   };
 #define OPERATION_LOGIC OperationAtanh
@@ -464,11 +585,25 @@ namespace codi {
       static CODI_INLINE Real gradient(Arg const& arg, Real const& result) {
         CODI_UNUSED(result);
         if (Config::CheckExpressionArguments) {
-          if (0.0 > RealTraits::getPassiveValue(arg)) {
-            CODI_EXCEPTION("Logarithm of negative value or zero.(Value: %0.15e)", RealTraits::getPassiveValue(arg));
-          }
+          checkArgument(arg);
         }
         return 1.0 / arg;
+      }
+
+    private:
+
+      template<typename Arg>
+      static void checkArgument(Arg const& arg) {
+        if (0.0 > RealTraits::getPassiveValue(arg)) {
+          CODI_EXCEPTION("Logarithm of negative value or zero.(Value: %0.15e)", RealTraits::getPassiveValue(arg));
+        }
+      }
+
+      template<typename Arg>
+      static void checkArgument(std::complex<Arg> const& arg) {
+        if (0.0 == RealTraits::getPassiveValue(abs(arg))) {
+          CODI_EXCEPTION("Logarithm of zero.(Value: %0.15e)", RealTraits::getPassiveValue(abs(arg)));
+        }
       }
   };
 #define OPERATION_LOGIC OperationLog
@@ -493,11 +628,24 @@ namespace codi {
       static CODI_INLINE Real gradient(Arg const& arg, Real const& result) {
         CODI_UNUSED(result);
         if (Config::CheckExpressionArguments) {
-          if (0.0 > RealTraits::getPassiveValue(arg)) {
-            CODI_EXCEPTION("Logarithm of negative value or zero.(Value: %0.15e)", RealTraits::getPassiveValue(arg));
-          }
+          checkArgument(arg);
         }
         return 0.434294481903252 / arg;
+      }
+
+    private:
+      template<typename Arg>
+      static void checkArgument(Arg const& arg) {
+        if (0.0 > RealTraits::getPassiveValue(arg)) {
+          CODI_EXCEPTION("Logarithm of negative value or zero.(Value: %0.15e)", RealTraits::getPassiveValue(arg));
+        }
+      }
+
+      template<typename Arg>
+      static void checkArgument(std::complex<Arg> const& arg) {
+        if (0.0 == RealTraits::getPassiveValue(abs(arg))) {
+          CODI_EXCEPTION("Logarithm of zero.(Value: %0.15e)", RealTraits::getPassiveValue(abs(arg)));
+        }
       }
   };
 #define OPERATION_LOGIC OperationLog10
@@ -575,15 +723,26 @@ namespace codi {
       template<typename Arg>
       static CODI_INLINE Real gradient(Arg const& arg, Real const& result) {
         if (Config::CheckExpressionArguments) {
-          if (0.0 > RealTraits::getPassiveValue(arg)) {
-            CODI_EXCEPTION("Sqrt of negative value or zero.(Value: %0.15e)", RealTraits::getPassiveValue(arg));
-          }
+          checkArgument(arg);
         }
         if (result != 0.0) {
           return 0.5 / result;
         } else {
           return (Real)0.0;
         }
+      }
+
+    private:
+      template<typename Arg>
+      static void checkArgument(Arg const& arg) {
+        if (0.0 > RealTraits::getPassiveValue(arg)) {
+          CODI_EXCEPTION("Sqrt of negative value or zero.(Value: %0.15e)", RealTraits::getPassiveValue(arg));
+        }
+      }
+
+      template<typename Arg>
+      static void checkArgument(std::complex<Arg> const& arg) {
+        CODI_UNUSED(arg);
       }
   };
 #define OPERATION_LOGIC OperationSqrt
@@ -608,12 +767,18 @@ namespace codi {
       static CODI_INLINE Real gradient(Arg const& arg, Real const& result) {
         CODI_UNUSED(result);
         if (Config::CheckExpressionArguments) {
-          if (0.0 == cos(RealTraits::getPassiveValue(arg))) {
-            CODI_EXCEPTION("Tan evaluated at (0.5  + i) * PI.(Value: %0.15e)", RealTraits::getPassiveValue(arg));
-          }
+          checkArgument(arg);
         }
         Real tmp = 1.0 / cos(arg);
         return tmp * tmp;
+      }
+
+    private:
+      template<typename Arg>
+      static void checkArgument(Arg const& arg) {
+        if (0.0 == abs(cos(RealTraits::getPassiveValue(arg)))) {
+          CODI_EXCEPTION("Tan evaluated at (0.5  + i) * PI.(Value: %0.15e)", RealTraits::getPassiveValue(arg));
+        }
       }
   };
 #define OPERATION_LOGIC OperationTan
@@ -723,7 +888,9 @@ namespace std {
 
   using codi::abs;
   using codi::acos;
+  using codi::acosh;
   using codi::asin;
+  using codi::asinh;
   using codi::atan;
   using codi::atanh;
   using codi::cbrt;

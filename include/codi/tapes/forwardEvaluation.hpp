@@ -103,10 +103,14 @@ namespace codi {
 
       struct LocalReverseLogic : public JacobianComputationLogic<LocalReverseLogic> {
         public:
-          template<typename Node>
-          CODI_INLINE void handleJacobianOnActive(Node const& node, Real jacobian, Gradient& lhsGradient) {
-            if (CODI_ENABLE_CHECK(Config::IgnoreInvalidJacobians, RealTraits::isTotalFinite(jacobian))) {
-              lhsGradient += node.gradient() * jacobian;
+          template<typename Node, typename Jacobian>
+          CODI_INLINE void handleJacobianOnActive(Node const& node, Jacobian jacobianExpr, Gradient& lhsGradient) {
+
+            ExpressionTraits::ActiveResultFromExpr<Jacobian> jacobian = jacobianExpr;
+            Real jacobianReal = ComputationTraits::adjointConversion<Real>(jacobian);
+
+            if (CODI_ENABLE_CHECK(Config::IgnoreInvalidJacobians, RealTraits::isTotalFinite(jacobianReal))) {
+              lhsGradient += node.gradient() * jacobianReal;
             }
           }
       };
@@ -126,6 +130,27 @@ namespace codi {
 
         lhs.cast().value() = rhs.cast().getValue();
         lhs.cast().gradient() = newGradient;
+      }
+
+      template<typename Aggregated, typename Type, typename Lhs, typename Rhs>
+      CODI_INLINE void store(AggregatedExpressionType<Aggregated, Type, Lhs>& lhs,
+                             ExpressionInterface<Aggregated, Rhs> const& rhs) {
+
+        using AggregatedTraits = RealTraits::AggregatedTypeTraits<Aggregated>;
+        int constexpr Elements = AggregatedTraits::Elements;
+        LocalReverseLogic reversal;
+
+
+        Gradient newGradient[Elements] = {};
+        static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
+          reversal.eval(ExtractExpression<Aggregated, i.value, Rhs>(rhs), Real(1.0), newGradient[i.value]);
+        });
+
+        Aggregated newValue = rhs.cast().getValue();
+        static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
+          lhs.arrayValue[i.value].value() = AggregatedTraits::template arrayAccess<i.value>(newValue);
+          lhs.arrayValue[i.value].gradient() = newGradient[i.value];
+        });
       }
 
       /// \copydoc codi::InternalStatementRecordingTapeInterface::store() <br>

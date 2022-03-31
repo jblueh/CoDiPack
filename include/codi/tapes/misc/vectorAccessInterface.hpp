@@ -123,6 +123,14 @@ namespace codi {
                                                                     /// u_{\text{index}} \f$.
 
       /*******************************************************************************/
+      /// @name Indirect adjoint/tangent access for functions with multiple outputs
+
+      virtual void setSizeForIndirectAccess(size_t size) = 0;  ///< Set the number of lhs variables \f$ wArray \f$ and
+                                                                      ///< allocate enough space to store them.
+
+      virtual void setActiveViariableForIndirectAccess(size_t pos) = 0;  ///< Set \f$ w = wArray[pos]\f$ for the other indirect access routines.
+
+      /*******************************************************************************/
       /// @name Direct adjoint access
 
       virtual void resetAdjoint(Identifier const& index, size_t dim) = 0;  ///< Set the adjoint component to zero.

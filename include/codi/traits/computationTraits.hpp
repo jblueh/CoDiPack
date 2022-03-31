@@ -60,14 +60,16 @@ namespace codi {
     template<typename T_Outer, typename T_Inner, typename = void>
     struct AdjointConversionImpl {
       public:
-        static_assert(false && std::is_void<T_Outer>::value, "Instantiation of unspecialized adjoint conversion.");
+        //static_assert(false && std::is_void<T_Outer>::value, "Instantiation of unspecialized adjoint conversion.");
         using Outer = CODI_DD(T_Outer, CODI_ANY);  ///< See ReduceImpl.
         using Inner = CODI_DD(T_Inner, CODI_ANY);  ///< See ReduceImpl.
 
-        using Return = CODI_ANY;  ///< Deduced return type.
+        using Return = Outer;
 
         /// @brief Perform the adjoint of Outer(Inner).
-        static Return adjointConversion(Inner const& jacobian);
+        static Return adjointConversion(Inner const& jacobian) {
+          return jacobian;
+        }
     };
 
     /// Perform the conversion of Outer(Inner) in the adjoint context. Logic can be specialized via
@@ -180,41 +182,6 @@ namespace codi {
   }
 
 #ifndef DOXYGEN_DISABLE
-
-  /// Adjoint conversion specialization for Inner == Outer
-  template<typename Type>
-  struct ComputationTraits::AdjointConversionImpl<Type, Type> {
-    public:
-      using Outer = Type;
-      using Inner = Type;
-
-      using Return = Type;
-
-      static Return adjointConversion(Inner const& jacobian) {
-        return jacobian;
-      }
-  };
-
-  /// Adjoint conversion specialization for Inner == codi::Expression
-  template<typename T_Outer, typename T_Inner>
-  struct ComputationTraits::AdjointConversionImpl<
-      T_Outer, T_Inner,
-      typename std::enable_if<!std::is_same<T_Outer, T_Inner>::value &
-                              ExpressionTraits::IsExpression<T_Inner>::value>::type> {
-    public:
-
-      using Outer = T_Outer;
-      using Inner = T_Inner;
-
-      using InnerActive = typename Inner::ActiveResult;
-      using InnerActiveConversion = ComputationTraits::AdjointConversionImpl<Outer, InnerActive>;
-
-      using Return = typename InnerActiveConversion::Return;
-
-      static Return adjointConversion(Inner const& jacobian) {
-        return InnerActiveConversion::adjointConversion(jacobian);
-      }
-  };
 
   /// Adjoint conversion specialization for Outer == std::complex<Inner>
   template<typename Type>

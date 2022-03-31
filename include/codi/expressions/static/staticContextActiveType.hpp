@@ -74,6 +74,14 @@ namespace codi {
       CODI_INLINE StaticContextActiveType(Real const& primal, Identifier const& identifier)
           : primal(primal), identifier(identifier) {}
 
+      /// Copy Constructor
+      CODI_INLINE StaticContextActiveType(StaticContextActiveType const& value)
+          : primal(value.primal), identifier(value.identifier) {}
+
+      /// Empty constructor for delayed construction that is overwritten with placement new operators
+      CODI_INLINE StaticContextActiveType()
+          : primal(), identifier() {}
+
       /*******************************************************************************/
       /// @name Partial implementation of LhsExpressionInterface
       /// @{
@@ -89,7 +97,7 @@ namespace codi {
       /// @{
 
       using StoreAs = StaticContextActiveType;       ///< \copydoc codi::ExpressionInterface::EndPoint
-      using ActiveResult = StaticContextActiveType;  ///< \copydoc codi::ExpressionInterface::ActiveResult
+      using ADLogic = Tape;  ///< \copydoc codi::ExpressionInterface::ADLogic
 
       /// \copydoc codi::ExpressionInterface::getValue()
       CODI_INLINE Real const getValue() const {
@@ -125,5 +133,15 @@ namespace codi {
 
     private:
       StaticContextActiveType& operator=(StaticContextActiveType const&) = delete;
+  };
+
+  template<typename T_Real, typename T_Tape>
+  struct ExpressionTraits::ActiveResultImpl<T_Real, T_Tape, true> {
+
+      using Real = CODI_DD(T_Real, CODI_ANY);
+      using Tape = CODI_DD(T_Tape, CODI_ANY);
+
+      /// The resulting active type of an expression.
+      using ActiveResult = StaticContextActiveType<Tape>;
   };
 }

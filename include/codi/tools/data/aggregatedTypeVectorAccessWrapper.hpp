@@ -105,6 +105,7 @@ namespace codi {
       InnerInterface& innerInterface;  ///< Reference to the accessor of the underlying tape.
 
       std::vector<Real> lhs;  ///< Temporary storage for indirect adjoint or tangent updates.
+      size_t lhsOffset;       ///< Offset into lhs vector
 
     public:
 
@@ -124,8 +125,8 @@ namespace codi {
       bool isLhsZero() {
         bool isZero = true;
 
-        for (size_t curDim = 0; isZero && curDim < lhs.size(); curDim += 1) {
-          isZero &= RealTraits::isTotalZero(lhs[curDim]);
+        for (size_t curDim = 0; isZero && curDim < innerInterface.getVectorSize(); curDim += 1) {
+          isZero &= RealTraits::isTotalZero(lhs[lhsOffset + curDim]);
         }
 
         return isZero;
@@ -136,14 +137,14 @@ namespace codi {
 
       /// \copydoc VectorAccessInterface::setLhsAdjoint()
       void setLhsAdjoint(Identifier const& index) {
-        getAdjointVec(index, lhs.data());
+        getAdjointVec(index, &lhs[lhsOffset]);
         this->resetAdjointVec(index);
       }
 
       /// \copydoc VectorAccessInterface::updateAdjointWithLhs()
       void updateAdjointWithLhs(Identifier const& index, Real const& jacobian) {
-        for (size_t curDim = 0; curDim < lhs.size(); curDim += 1) {
-          Real update = jacobian * lhs[curDim];
+        for (size_t curDim = 0; curDim < innerInterface.getVectorSize(); curDim += 1) {
+          Real update = jacobian * lhs[lhsOffset + curDim];
           this->updateAdjoint(index, curDim, update);
         }
       }
@@ -162,24 +163,41 @@ namespace codi {
 
       /// \copydoc VectorAccessInterface::updateTangentWithLhs()
       void updateTangentWithLhs(Identifier const& index, Real const& jacobian) {
-        for (size_t curDim = 0; curDim < lhs.size(); curDim += 1) {
-          lhs[curDim] += jacobian * this->getAdjoint(index, curDim);
+        for (size_t curDim = 0; curDim < innerInterface.getVectorSize(); curDim += 1) {
+          lhs[lhsOffset + curDim] += jacobian * this->getAdjoint(index, curDim);
         }
       }
+
+      /*******************************************************************************/
+      /// @name Indirect adjoint/tangent access for functions with multiple outputs
+
+      /// \copydoc VectorAccessInterface::setSizeForIndirectAccess()
+      void setSizeForIndirectAccess(size_t size) {
+        size_t newSize = size * innerInterface.getVectorSize();
+        if(newSize > lhs.size()) {
+          lhs.resize(newSize);
+        }
+      }
+
+      /// \copydoc VectorAccessInterface::setActiveViariableForIndirectAccess()
+      void setActiveViariableForIndirectAccess(size_t pos) {
+        lhsOffset = pos * innerInterface.getVectorSize();
+      }
+
 
       /*******************************************************************************/
       /// @name Direct adjoint access
 
       /// \copydoc VectorAccessInterface::getAdjointVec()
       void getAdjointVec(Identifier const& index, Real* const vec) {
-        for (size_t curDim = 0; curDim < lhs.size(); curDim += 1) {
+        for (size_t curDim = 0; curDim < innerInterface.getVectorSize(); curDim += 1) {
           vec[curDim] = this->getAdjoint(index, curDim);
         }
       }
 
       /// \copydoc VectorAccessInterface::updateAdjointVec()
       void updateAdjointVec(Identifier const& index, Real const* const vec) {
-        for (size_t curDim = 0; curDim < lhs.size(); curDim += 1) {
+        for (size_t curDim = 0; curDim < innerInterface.getVectorSize(); curDim += 1) {
           this->updateAdjoint(index, curDim, vec[curDim]);
         }
       }
@@ -226,77 +244,6 @@ namespace codi {
   };
 
 #ifndef DOXYGEN_DISABLE
-  /// Specialization of AggregatedTypeVectorAccessWrapper for std::complex.
-  ///
-  /// @tparam The nested type of the complex data type.
-  template<typename T_InnerType>
-  struct AggregatedTypeVectorAccessWrapper<std::complex<T_InnerType>>
-      : public AggregatedTypeVectorAccessWrapperBase<
-            std::complex<typename T_InnerType::Real>, std::complex<typename T_InnerType::Identifier>,
-            VectorAccessInterface<typename T_InnerType::Real, typename T_InnerType::Identifier>> {
-    public:
-
-      using InnerType = CODI_DD(
-          T_InnerType,
-          CODI_T(LhsExpressionInterface<double, double, CODI_ANY, CODI_ANY>));  ///< See
-                                                                                ///< AggregatedTypeVectorAccessWrapper.
-      using Type = std::complex<InnerType>;  ///< See AggregatedTypeVectorAccessWrapper.
-
-      using InnerInterface = VectorAccessInterface<
-          typename InnerType::Real,
-          typename InnerType::Identifier>;  ///< See AggregatedTypeVectorAccessWrapperBase::InnerInterface.
-
-      using Real = std::complex<typename InnerType::Real>;              ///< See RealTraits::DataExtraction::Real.
-      using Identifier = std::complex<typename InnerType::Identifier>;  ///< See RealTraits::DataExtraction::Real.
-
-      using Base =
-          AggregatedTypeVectorAccessWrapperBase<Real, Identifier, InnerInterface>;  ///< Base class abbreviation.
-
-      /// Constructor
-      AggregatedTypeVectorAccessWrapper(InnerInterface* innerInterface) : Base(innerInterface) {}
-
-      /*******************************************************************************/
-      /// @name Direct adjoint access
-
-      /// \copydoc VectorAccessInterface::resetAdjoint()
-      void resetAdjoint(Identifier const& index, size_t dim) {
-        Base::innerInterface.resetAdjoint(std::real(index), dim);
-        Base::innerInterface.resetAdjoint(std::imag(index), dim);
-      }
-
-      /// \copydoc VectorAccessInterface::resetAdjointVec()
-      void resetAdjointVec(Identifier const& index) {
-        Base::innerInterface.resetAdjointVec(std::real(index));
-        Base::innerInterface.resetAdjointVec(std::imag(index));
-      }
-
-      /// \copydoc VectorAccessInterface::getAdjoint()
-      Real getAdjoint(Identifier const& index, size_t dim) {
-        return Real(Base::innerInterface.getAdjoint(std::real(index), dim),
-                    Base::innerInterface.getAdjoint(std::imag(index), dim));
-      }
-
-      /// \copydoc VectorAccessInterface::updateAdjoint()
-      void updateAdjoint(Identifier const& index, size_t dim, Real const& adjoint) {
-        Base::innerInterface.updateAdjoint(std::real(index), dim, std::real(adjoint));
-        Base::innerInterface.updateAdjoint(std::imag(index), dim, std::imag(adjoint));
-      }
-
-      /*******************************************************************************/
-      /// @name Primal access
-
-      /// \copydoc VectorAccessInterface::setPrimal()
-      void setPrimal(Identifier const& index, Real const& primal) {
-        Base::innerInterface.setPrimal(std::real(index), std::real(primal));
-        Base::innerInterface.setPrimal(std::imag(index), std::imag(primal));
-      }
-
-      /// \copydoc VectorAccessInterface::getPrimal()
-      Real getPrimal(Identifier const& index) {
-        return Real(Base::innerInterface.getPrimal(std::real(index)), Base::innerInterface.getPrimal(std::imag(index)));
-      }
-  };
-
   /// Specialization of AggregatedTypeVectorAccessWrapperFactory for CoDiPack active types.
   ///
   /// @tparam T_Type  A CoDiPack active type.
