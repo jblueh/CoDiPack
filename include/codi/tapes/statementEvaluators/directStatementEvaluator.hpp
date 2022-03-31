@@ -103,14 +103,14 @@ namespace codi {
 
       /// \copydoc StatementEvaluatorInterface::callForward
       template<typename Tape, typename... Args>
-      static Real callForward(Handle const& h, Args&&... args) {
-        return ((FunctionForward<Tape>)h->forward)(std::forward<Args>(args)...);
+      static void callForward(Handle const& h, Args&&... args) {
+        ((FunctionForward<Tape>)h->forward)(std::forward<Args>(args)...);
       }
 
       /// \copydoc StatementEvaluatorInterface::callPrimal
       template<typename Tape, typename... Args>
-      static Real callPrimal(Handle const& h, Args&&... args) {
-        return ((FunctionPrimal<Tape>)h->primal)(std::forward<Args>(args)...);
+      static void callPrimal(Handle const& h, Args&&... args) {
+        ((FunctionPrimal<Tape>)h->primal)(std::forward<Args>(args)...);
       }
 
       /// \copydoc StatementEvaluatorInterface::callReverse
@@ -131,14 +131,14 @@ namespace codi {
 
       /// Full forward function type.
       template<typename Tape>
-      using FunctionForward = decltype(&Tape::template statementEvaluateForward<ActiveType<Tape>>);
+      using FunctionForward = decltype(&Tape::template statementEvaluateForward<AssignExpression<ActiveType<Tape>, ActiveType<Tape>>>);
 
       /// Full primal function type.
       template<typename Tape>
-      using FunctionPrimal = decltype(&Tape::template statementEvaluatePrimal<ActiveType<Tape>>);
+      using FunctionPrimal = decltype(&Tape::template statementEvaluatePrimal<AssignExpression<ActiveType<Tape>, ActiveType<Tape>>>);
 
       /// Full reverse function type.
       template<typename Tape>
-      using FunctionReverse = decltype(&Tape::template statementEvaluateReverse<ActiveType<Tape>>);
+      using FunctionReverse = decltype(&Tape::template statementEvaluateReverse<AssignExpression<ActiveType<Tape>, ActiveType<Tape>>>);
   };
 }

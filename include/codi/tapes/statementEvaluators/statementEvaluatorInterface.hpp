@@ -113,7 +113,7 @@ namespace codi {
       /// @tparam Tape  Has to implement StatementEvaluatorTapeInterface or StatementEvaluatorInnerTapeInterface,
       ///               depending on the interface the implementation uses.
       template<typename Tape, typename... Args>
-      static Real callForward(Handle const& h, Args&&... args);
+      static void callForward(Handle const& h, Args&&... args);
 
       /// @tparam Tape  Has to implement StatementEvaluatorTapeInterface or StatementEvaluatorInnerTapeInterface,
       ///               depending on the interface the implementation uses.

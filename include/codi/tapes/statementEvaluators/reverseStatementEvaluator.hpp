@@ -68,22 +68,18 @@ namespace codi {
 
       /// Throws CODI_EXCEPTION on call.
       template<typename Tape, typename... Args>
-      static Real callForward(Handle const& h, Args&&... args) {
+      static void callForward(Handle const& h, Args&&... args) {
         CODI_UNUSED(h, args...);
 
         CODI_EXCEPTION("ReverseStatementEvaluator does not support forward evaluation calls.");
-
-        return Real();
       }
 
       /// Throws CODI_EXCEPTION on call.
       template<typename Tape, typename... Args>
-      static Real callPrimal(Handle const& h, Args&&... args) {
+      static void callPrimal(Handle const& h, Args&&... args) {
         CODI_UNUSED(h, args...);
 
         CODI_EXCEPTION("ReverseStatementEvaluator does not support primal evaluation calls.");
-
-        return Real();
       }
 
       /// \copydoc StatementEvaluatorInterface::callReverse
@@ -106,6 +102,6 @@ namespace codi {
 
       /// Full reverse function type.
       template<typename Tape>
-      using HandleTyped = decltype(&Tape::template statementEvaluateReverse<ActiveType<Tape>>);
+      using HandleTyped = decltype(&Tape::template statementEvaluateReverse<AssignExpression<ActiveType<Tape>, ActiveType<Tape>>>);
   };
 }

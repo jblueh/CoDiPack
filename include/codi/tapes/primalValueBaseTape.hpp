@@ -43,6 +43,7 @@
 #include "../misc/macros.hpp"
 #include "../misc/memberStore.hpp"
 #include "../config.h"
+#include "../expressions/assignExpression.hpp"
 #include "../expressions/lhsExpressionInterface.hpp"
 #include "../expressions/logic/compileTimeTraversalLogic.hpp"
 #include "../expressions/logic/constructStaticContext.hpp"
@@ -57,6 +58,7 @@
 #include "indices/indexManagerInterface.hpp"
 #include "statementEvaluators/statementEvaluatorInterface.hpp"
 #include "statementEvaluators/statementEvaluatorTapeInterface.hpp"
+
 
 /** \copydoc codi::Namespace */
 namespace codi {
@@ -395,7 +397,7 @@ namespace codi {
             dynamicData.pushData(primalEntry);
 
             staticData.pushData((Config::ArgumentSize)passiveArguments);
-            staticData.pushData(StatementEvaluator::template createHandle<Impl, Impl, Rhs>());
+            staticData.pushData(StatementEvaluator::template createHandle<Impl, Impl, AssignExpression<Lhs, Rhs>>());
 
             primalEntry = rhs.cast().getValue();
           } else {
@@ -1039,34 +1041,44 @@ namespace codi {
       }
 
       /// \copydoc codi::StatementEvaluatorInnerTapeInterface::statementEvaluateReverseInner()
-      template<typename Rhs>
+      template<typename Expr>
       CODI_INLINE static void statementEvaluateReverseInner(Real* primalVector, ADJOINT_VECTOR_TYPE* adjointVector,
                                                             StackArray<Gradient>& lhsAdjoints,
                                                             PassiveReal const* const constantValues,
                                                             Identifier const* const rhsIdentifiers) {
+
+        using Lhs = typename Expr::Lhs;
+        using Rhs = typename Expr::Rhs;
+        using LhsReal = typename Lhs::Real;
+        using AggregateTraits = RealTraits::AggregatedTypeTraits<LhsReal>;
+
         using Constructor = ConstructStaticContextLogic<Rhs, Impl, 0, 0>;
         using StaticRhs = typename Constructor::ResultType;
 
         StaticRhs staticsRhs = Constructor::construct(primalVector, rhsIdentifiers, constantValues);
 
         IncrementReversalLogic incrementReverse;
+        static_for<AggregateTraits::Elements>([&](auto i) CODI_LAMBDA_INLINE {
+          using ExtractExpr = ExtractExpression<LhsReal, i.value, StaticRhs>;
+          ExtractExpr expr(staticsRhs);
 
-        incrementReverse.eval(staticsRhs, Real(1.0), const_cast<Gradient const&>(lhsAdjoints[0]), adjointVector);
+          incrementReverse.eval(expr, Real(1.0), const_cast<Gradient const&>(lhsAdjoints[i.value]), adjointVector);
+        });
       }
 
       /// \copydoc codi::StatementEvaluatorInnerTapeInterface::statementEvaluateReverseFull()
       template<typename Func>
       CODI_INLINE static void statementEvaluateReverseFull(
-          Func const& evalInner, size_t const& maxActiveArgs, size_t const& maxConstantArgs, Real* primalVector,
+          Func const& evalInner, size_t const& maxOutputArgs, size_t const& maxActiveArgs, size_t const& maxConstantArgs, Real* primalVector,
           ADJOINT_VECTOR_TYPE* adjointVector, StackArray<Gradient>& lhsAdjoints, Config::ArgumentSize numberOfPassiveArguments,
           size_t& curDynamicPos, char const* const dynamicValues
       ) {
 
         // Adapt vector positions.
-        curDynamicPos -= sizeof(Real);
-        Real oldPrimalValue = *((Real const*)(&dynamicValues[curDynamicPos]));
-        curDynamicPos -= sizeof(Identifier);
-        Identifier lhsIdentifier = *((Identifier const*)(&dynamicValues[curDynamicPos]));
+        curDynamicPos -= maxOutputArgs * sizeof(Real);
+        Real const* oldPrimalValues = ((Real const*)(&dynamicValues[curDynamicPos]));
+        curDynamicPos -= maxOutputArgs * sizeof(Identifier);
+        Identifier const* lhsIdentifiers = ((Identifier const*)(&dynamicValues[curDynamicPos]));
 
         curDynamicPos -= maxConstantArgs * sizeof(PassiveReal);
         PassiveReal const* constantValues = (PassiveReal const*)(&dynamicValues[curDynamicPos]);
@@ -1075,12 +1087,18 @@ namespace codi {
         curDynamicPos -= numberOfPassiveArguments * sizeof(Real);
         Real const* passiveValues = (Real*)(&dynamicValues[curDynamicPos]);
 
-        lhsAdjoints[0] = adjointVector[lhsIdentifier];
-        adjointVector[lhsIdentifier] = Gradient();
+        bool allZero = true;
+        for(size_t iLhs = 0; iLhs < maxOutputArgs; iLhs += 1) {
+          Identifier const lhsIdentifier = lhsIdentifiers[iLhs];
 
-        primalVector[lhsIdentifier] = oldPrimalValue;
+          primalVector[lhsIdentifier] = oldPrimalValues[iLhs];
 
-        if (CODI_ENABLE_CHECK(Config::SkipZeroAdjointEvaluation, !RealTraits::isTotalZero(lhsAdjoints[0]))) {
+          lhsAdjoints[iLhs] = adjointVector[lhsIdentifier];
+          adjointVector[lhsIdentifier] = Gradient();
+          allZero &= RealTraits::isTotalZero(lhsAdjoints[iLhs]);
+        }
+
+        if (CODI_ENABLE_CHECK(Config::SkipZeroAdjointEvaluation, !allZero)) {
           for (Config::ArgumentSize curPos = 0; curPos < numberOfPassiveArguments; curPos += 1) {
             primalVector[curPos] = passiveValues[curPos];
           }
@@ -1109,14 +1127,19 @@ namespace codi {
       }
 
       /// \copydoc codi::StatementEvaluatorTapeInterface::statementEvaluateReverse()
-      template<typename Rhs>
+      template<typename Expr>
       CODI_INLINE static void statementEvaluateReverse(Real* primalVector, ADJOINT_VECTOR_TYPE* adjointVector,
                                                        StackArray<Gradient>& lhsAdjoints,
                                                        Config::ArgumentSize numberOfPassiveArguments,
                                                        size_t& curDynamicPos, char const* const dynamicValues) {
+
+        using Lhs = typename Expr::Lhs;
+        using Rhs = typename Expr::Rhs;
+
         size_t constexpr maxActiveArgs = ExpressionTraits::NumberOfActiveTypeArguments<Rhs>::value;
         size_t constexpr maxConstantArgs = ExpressionTraits::NumberOfConstantTypeArguments<Rhs>::value;
-        statementEvaluateReverseFull(statementEvaluateReverseInner<Rhs>, maxActiveArgs, maxConstantArgs, primalVector,
+        size_t constexpr maxOutputArgs = ExpressionTraits::NumberOfActiveTypeArguments<Lhs>::value;
+        statementEvaluateReverseFull(statementEvaluateReverseInner<Expr>, maxOutputArgs, maxActiveArgs, maxConstantArgs, primalVector,
                                      adjointVector, lhsAdjoints, numberOfPassiveArguments, curDynamicPos, dynamicValues);
       }
 
