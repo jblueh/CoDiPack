@@ -125,6 +125,8 @@ namespace codi {
           size_t& curStaticPos, size_t const& endStaticPos, char const* const staticValues) {
         CODI_UNUSED(endDynamicPos);
 
+        StackArray<Gradient> lhsAdjoints{};
+
         while (curStaticPos > endStaticPos) {
 
           curStaticPos -= sizeof(EvalHandle);
@@ -133,7 +135,7 @@ namespace codi {
           Config::ArgumentSize numberOfPassiveArguments = *((Config::ArgumentSize const*)(&staticValues[curStaticPos]));
 
           StatementEvaluator::template callReverse<PrimalValueReuseTape>(
-              handle, primalVector, adjointVector,
+              handle, primalVector, adjointVector, lhsAdjoints,
               numberOfPassiveArguments, curDynamicPos, dynamicValues);
         }
       }

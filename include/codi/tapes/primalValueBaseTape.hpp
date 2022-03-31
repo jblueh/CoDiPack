@@ -61,6 +61,9 @@
 /** \copydoc codi::Namespace */
 namespace codi {
 
+  template<typename T>
+  using StackArray = std::array<T, Config::MaxArgumentSize>;
+
   /**
    * @brief Type definitions for the primal value tapes.
    *
@@ -1038,7 +1041,7 @@ namespace codi {
       /// \copydoc codi::StatementEvaluatorInnerTapeInterface::statementEvaluateReverseInner()
       template<typename Rhs>
       CODI_INLINE static void statementEvaluateReverseInner(Real* primalVector, ADJOINT_VECTOR_TYPE* adjointVector,
-                                                            Gradient lhsAdjoint,
+                                                            StackArray<Gradient>& lhsAdjoints,
                                                             PassiveReal const* const constantValues,
                                                             Identifier const* const rhsIdentifiers) {
         using Constructor = ConstructStaticContextLogic<Rhs, Impl, 0, 0>;
@@ -1048,14 +1051,14 @@ namespace codi {
 
         IncrementReversalLogic incrementReverse;
 
-        incrementReverse.eval(staticsRhs, Real(1.0), const_cast<Gradient const&>(lhsAdjoint), adjointVector);
+        incrementReverse.eval(staticsRhs, Real(1.0), const_cast<Gradient const&>(lhsAdjoints[0]), adjointVector);
       }
 
       /// \copydoc codi::StatementEvaluatorInnerTapeInterface::statementEvaluateReverseFull()
       template<typename Func>
       CODI_INLINE static void statementEvaluateReverseFull(
           Func const& evalInner, size_t const& maxActiveArgs, size_t const& maxConstantArgs, Real* primalVector,
-          ADJOINT_VECTOR_TYPE* adjointVector, Config::ArgumentSize numberOfPassiveArguments,
+          ADJOINT_VECTOR_TYPE* adjointVector, StackArray<Gradient>& lhsAdjoints, Config::ArgumentSize numberOfPassiveArguments,
           size_t& curDynamicPos, char const* const dynamicValues
       ) {
 
@@ -1072,17 +1075,17 @@ namespace codi {
         curDynamicPos -= numberOfPassiveArguments * sizeof(Real);
         Real const* passiveValues = (Real*)(&dynamicValues[curDynamicPos]);
 
-        Gradient const lhsAdjoint = adjointVector[lhsIdentifier];
+        lhsAdjoints[0] = adjointVector[lhsIdentifier];
         adjointVector[lhsIdentifier] = Gradient();
 
         primalVector[lhsIdentifier] = oldPrimalValue;
 
-        if (CODI_ENABLE_CHECK(Config::SkipZeroAdjointEvaluation, !RealTraits::isTotalZero(lhsAdjoint))) {
+        if (CODI_ENABLE_CHECK(Config::SkipZeroAdjointEvaluation, !RealTraits::isTotalZero(lhsAdjoints[0]))) {
           for (Config::ArgumentSize curPos = 0; curPos < numberOfPassiveArguments; curPos += 1) {
             primalVector[curPos] = passiveValues[curPos];
           }
 
-          evalInner(primalVector, adjointVector, lhsAdjoint, constantValues, rhsIdentifiers);
+          evalInner(primalVector, adjointVector, lhsAdjoints, constantValues, rhsIdentifiers);
         }
       }
 
@@ -1108,12 +1111,13 @@ namespace codi {
       /// \copydoc codi::StatementEvaluatorTapeInterface::statementEvaluateReverse()
       template<typename Rhs>
       CODI_INLINE static void statementEvaluateReverse(Real* primalVector, ADJOINT_VECTOR_TYPE* adjointVector,
+                                                       StackArray<Gradient>& lhsAdjoints,
                                                        Config::ArgumentSize numberOfPassiveArguments,
                                                        size_t& curDynamicPos, char const* const dynamicValues) {
         size_t constexpr maxActiveArgs = ExpressionTraits::NumberOfActiveTypeArguments<Rhs>::value;
         size_t constexpr maxConstantArgs = ExpressionTraits::NumberOfConstantTypeArguments<Rhs>::value;
         statementEvaluateReverseFull(statementEvaluateReverseInner<Rhs>, maxActiveArgs, maxConstantArgs, primalVector,
-                                     adjointVector, numberOfPassiveArguments, curDynamicPos, dynamicValues);
+                                     adjointVector, lhsAdjoints, numberOfPassiveArguments, curDynamicPos, dynamicValues);
       }
 
     private:
