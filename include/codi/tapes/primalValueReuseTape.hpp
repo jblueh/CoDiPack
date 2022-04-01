@@ -126,17 +126,15 @@ namespace codi {
         CODI_UNUSED(endDynamicPos);
 
         StackArray<Gradient> lhsAdjoints{};
+        typename Base::StatementData data;
 
         while (curStaticPos > endStaticPos) {
 
-          curStaticPos -= sizeof(EvalHandle);
-          EvalHandle handle = *((EvalHandle const*)(&staticValues[curStaticPos]));
-          curStaticPos -= sizeof(Config::ArgumentSize);
-          Config::ArgumentSize numberOfPassiveArguments = *((Config::ArgumentSize const*)(&staticValues[curStaticPos]));
+          curStaticPos = data.readStatickReverse(staticValues, curStaticPos);
 
           StatementEvaluator::template callReverse<PrimalValueReuseTape>(
-              handle, primalVector, adjointVector, lhsAdjoints.data(),
-              numberOfPassiveArguments, curDynamicPos, dynamicValues);
+              data.handle, primalVector, adjointVector, lhsAdjoints.data(),
+              data, curDynamicPos, dynamicValues);
         }
       }
 
