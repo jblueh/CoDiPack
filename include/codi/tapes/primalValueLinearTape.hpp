@@ -133,6 +133,8 @@ namespace codi {
         StackArray<Gradient> lhsAdjoints{};
         typename Base::StaticStatementData data;
 
+        using LinearReverseArguments = typename Base::LinearReverseArguments;
+
         size_t curAdjointPos = startAdjointPos;
 
         while (curAdjointPos > endAdjointPos) {
@@ -142,8 +144,8 @@ namespace codi {
           if (Config::StatementInputTag != data.numberOfPassiveArguments) {
 
             StatementEvaluator::template callReverse<PrimalValueLinearTape>(
-                data.handle, primalVector, adjointVector, lhsAdjoints.data(),
-                data.numberOfPassiveArguments, curDynamicPos, dynamicValues, curAdjointPos);
+                data.handle, LinearReverseArguments{primalVector, curAdjointPos}, adjointVector, lhsAdjoints.data(),
+                data.numberOfPassiveArguments, curDynamicPos, dynamicValues);
           } else {
             curAdjointPos -= 1;
           }

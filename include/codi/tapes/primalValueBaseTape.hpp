@@ -194,6 +194,17 @@ namespace codi {
 
     protected:
 
+      struct LinearReverseArguments {
+          Real* __restrict__ primalVector;
+          size_t&  __restrict__ linearAdjointPos;
+      };
+
+      struct ReuseReverseArguments {
+          Real* __restrict__ primalVector;
+      };
+
+      using ReverseArguments = typename std::conditional<LinearIndexHandling, LinearReverseArguments, ReuseReverseArguments>::type;
+
       /*******************************************************************************/
       /// @name Interface definition
       /// @{
@@ -1135,28 +1146,27 @@ namespace codi {
       /// \copydoc codi::StatementEvaluatorInnerTapeInterface::statementEvaluateReverseFull()
       template<typename Func>
       CODI_INLINE static void statementEvaluateReverseFull(
-          Func const& evalInner, size_t const& __restrict__ maxOutputArgs, size_t const& __restrict__ maxActiveArgs, size_t const& __restrict__ maxConstantArgs, Real* __restrict__ primalVector,
+          Func const& evalInner, size_t const& __restrict__ maxOutputArgs, size_t const& __restrict__ maxActiveArgs, size_t const& __restrict__ maxConstantArgs, ReverseArguments revArgs,
           ADJOINT_VECTOR_TYPE* __restrict__ adjointVector, Gradient* __restrict__ lhsAdjoints, Config::ArgumentSize numberOfPassiveArguments,
-          size_t& __restrict__ linearAdjointPos,
           size_t& __restrict__ curDynamicPos, char const* const __restrict__ dynamicValues
       ) {
 
         DynamicStatementData data;
         curDynamicPos = data.readDynamicReverse(dynamicValues, curDynamicPos, maxOutputArgs, maxActiveArgs, maxConstantArgs, numberOfPassiveArguments);
 
-        if(LinearIndexHandling) {
-          linearAdjointPos -= maxOutputArgs;
+        if constexpr (LinearIndexHandling) {
+          revArgs.linearAdjointPos -= maxOutputArgs;
         }
 
         bool allZero = true;
         for (size_t iLhs = 0; iLhs < maxOutputArgs; iLhs += 1) {
           Identifier lhsIdentifier;
 
-          if (LinearIndexHandling) {
-            lhsIdentifier = linearAdjointPos + 1 + iLhs;
+          if constexpr (LinearIndexHandling) {
+            lhsIdentifier = revArgs.linearAdjointPos + 1 + iLhs;
           } else {
             lhsIdentifier = data.lhsIdentifiers[iLhs];
-            primalVector[lhsIdentifier] = data.oldPrimalValues[iLhs];
+            revArgs.primalVector[lhsIdentifier] = data.oldPrimalValues[iLhs];
           }
 
           lhsAdjoints[iLhs] = adjointVector[lhsIdentifier];
@@ -1166,10 +1176,10 @@ namespace codi {
 
         if (CODI_ENABLE_CHECK(Config::SkipZeroAdjointEvaluation, !allZero)) {
           for (Config::ArgumentSize curPos = 0; curPos < numberOfPassiveArguments; curPos += 1) {
-            primalVector[curPos] = data.passiveValues[curPos];
+            revArgs.primalVector[curPos] = data.passiveValues[curPos];
           }
 
-          evalInner(primalVector, adjointVector, lhsAdjoints, data.constantValues, data.rhsIdentifiers);
+          evalInner(revArgs.primalVector, adjointVector, lhsAdjoints, data.constantValues, data.rhsIdentifiers);
         }
       }
 
@@ -1194,10 +1204,10 @@ namespace codi {
 
       /// \copydoc codi::StatementEvaluatorTapeInterface::statementEvaluateReverse()
       template<typename Expr>
-      CODI_INLINE static void statementEvaluateReverse(Real* __restrict__ primalVector, ADJOINT_VECTOR_TYPE* __restrict__ adjointVector,
+      CODI_INLINE static void statementEvaluateReverse(ReverseArguments revArgs, ADJOINT_VECTOR_TYPE* __restrict__ adjointVector,
                                                        Gradient* __restrict__ lhsAdjoints,
                                                        Config::ArgumentSize numberOfPassiveArguments,
-                                                       size_t& __restrict__ curDynamicPos, char const* const __restrict__ dynamicValues, size_t& __restrict__ linearAdjointPos) {
+                                                       size_t& __restrict__ curDynamicPos, char const* const __restrict__ dynamicValues) {
 
 
         using Lhs = typename Expr::Lhs;
@@ -1206,8 +1216,8 @@ namespace codi {
         size_t constexpr maxActiveArgs = ExpressionTraits::NumberOfActiveTypeArguments<Rhs>::value;
         size_t constexpr maxConstantArgs = ExpressionTraits::NumberOfConstantTypeArguments<Rhs>::value;
         size_t constexpr maxOutputArgs = ExpressionTraits::NumberOfActiveTypeArguments<Lhs>::value;
-        statementEvaluateReverseFull(statementEvaluateReverseInner<Expr>, maxOutputArgs, maxActiveArgs, maxConstantArgs, primalVector,
-                                     adjointVector, lhsAdjoints, numberOfPassiveArguments, linearAdjointPos, curDynamicPos, dynamicValues);
+        statementEvaluateReverseFull(statementEvaluateReverseInner<Expr>, maxOutputArgs, maxActiveArgs, maxConstantArgs, revArgs,
+                                     adjointVector, lhsAdjoints, numberOfPassiveArguments, curDynamicPos, dynamicValues);
       }
 
     private:

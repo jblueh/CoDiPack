@@ -127,15 +127,15 @@ namespace codi {
         StackArray<Gradient> lhsAdjoints{};
         typename Base::StaticStatementData data;
 
-        size_t tempAdjointPos = 0; // Temporary for the argument for linear index managers.
+        using ReuseReverseArguments = typename Base::ReuseReverseArguments;
 
         while (curStaticPos > endStaticPos) {
 
           curStaticPos = data.readReverse(staticValues, curStaticPos);
 
           StatementEvaluator::template callReverse<PrimalValueReuseTape>(
-              data.handle, primalVector, adjointVector, lhsAdjoints.data(),
-              data.numberOfPassiveArguments, curDynamicPos, dynamicValues, tempAdjointPos);
+                data.handle, ReuseReverseArguments{primalVector}, adjointVector, lhsAdjoints.data(),
+              data.numberOfPassiveArguments, curDynamicPos, dynamicValues);
         }
       }
 
