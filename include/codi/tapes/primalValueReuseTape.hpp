@@ -108,7 +108,6 @@ namespace codi {
       CODI_INLINE static void internalEvaluatePrimal_Step3_EvalStatements(
           /* data from call */
           Real* primalVector,
-          /* data from constantValueData */
           /* data from dynamicData */
           size_t& curDynamicPos, size_t const& endDynamicPos, char const* const dynamicValues,
           /* data from staticData */
@@ -126,15 +125,17 @@ namespace codi {
         CODI_UNUSED(endDynamicPos);
 
         StackArray<Gradient> lhsAdjoints{};
-        typename Base::StatementData data;
+        typename Base::StaticStatementData data;
+
+        size_t tempAdjointPos = 0; // Temporary for the argument for linear index managers.
 
         while (curStaticPos > endStaticPos) {
 
-          curStaticPos = data.readStatickReverse(staticValues, curStaticPos);
+          curStaticPos = data.readReverse(staticValues, curStaticPos);
 
           StatementEvaluator::template callReverse<PrimalValueReuseTape>(
               data.handle, primalVector, adjointVector, lhsAdjoints.data(),
-              data.numberOfPassiveArguments, curDynamicPos, dynamicValues);
+              data.numberOfPassiveArguments, tempAdjointPos, curDynamicPos, dynamicValues);
         }
       }
 

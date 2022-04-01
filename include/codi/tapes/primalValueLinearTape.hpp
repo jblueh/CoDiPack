@@ -88,16 +88,7 @@ namespace codi {
 
       /// \copydoc codi::PositionalEvaluationTapeInterface::clearAdjoints
       void clearAdjoints(Position const& start, Position const& end) {
-        using IndexPosition = typename IndexManager::Position;
-        IndexPosition startIndex = this->externalFunctionData.template extractPosition<IndexPosition>(start);
-        IndexPosition endIndex = this->externalFunctionData.template extractPosition<IndexPosition>(end);
-
-        startIndex = std::min(startIndex, (IndexPosition)this->adjoints.size() - 1);
-        endIndex = std::min(endIndex, (IndexPosition)this->adjoints.size() - 1);
-
-        for (IndexPosition curPos = endIndex + 1; curPos <= startIndex; curPos += 1) {
-          this->adjoints[curPos] = Gradient();
-        }
+        CODI_UNUSED(start, end);
       }
 
     protected:
@@ -106,119 +97,56 @@ namespace codi {
       CODI_INLINE static void internalEvaluateForward_Step3_EvalStatements(
           /* data from call */
           Real* primalVector, ADJOINT_VECTOR_TYPE* adjointVector,
-          /* data from constantValueData */
-          size_t& curConstantPos, size_t const& endConstantPos, PassiveReal const* const constantValues,
-          /* data from passiveValueData */
-          size_t& curPassivePos, size_t const& endPassivePos, Real const* const passiveValues,
-          /* data from rhsIdentifiersData */
-          size_t& curRhsIdentifiersPos, size_t const& endRhsIdentifiersPos, Identifier const* const rhsIdentifiers,
-          /* data from statementData */
-          size_t& curStatementPos, size_t const& endStatementPos,
-          Config::ArgumentSize const* const numberOfPassiveArguments, EvalHandle const* const stmtEvalhandle,
+          /* data from dynamicData */
+          size_t& curDynamicPos, size_t const& endDynamicPos, char const* const dynamicValues,
+          /* data from staticData */
+          size_t& curStaticPos, size_t const& endStaticPos, char const* const staticValues,
           /* data from index handler */
           size_t const& startAdjointPos, size_t const& endAdjointPos) {
-        CODI_UNUSED(endConstantPos, endPassivePos, endRhsIdentifiersPos, endStatementPos);
-
-        size_t curAdjointPos = startAdjointPos;
-
-        while (curAdjointPos < endAdjointPos) {
-          curAdjointPos += 1;
-
-          Config::ArgumentSize nPassiveValues = numberOfPassiveArguments[curStatementPos];
-
-          if (Config::StatementInputTag != nPassiveValues) {
-            Gradient lhsTangent = Gradient();
-
-            primalVector[curAdjointPos] = StatementEvaluator::template callForward<PrimalValueLinearTape>(
-                stmtEvalhandle[curStatementPos], primalVector, adjointVector, lhsTangent, nPassiveValues,
-                curConstantPos, constantValues, curPassivePos, passiveValues, curRhsIdentifiersPos, rhsIdentifiers);
-
-#if CODI_VariableAdjointInterfaceInPrimalTapes
-            adjointVector->setLhsTangent(curAdjointPos);
-#else
-            adjointVector[curAdjointPos] = lhsTangent;
-#endif
-          }
-
-          curStatementPos += 1;
-        }
       }
 
       /// \copydoc codi::PrimalValueBaseTape::internalEvaluatePrimal_Step3_EvalStatements
       CODI_INLINE static void internalEvaluatePrimal_Step3_EvalStatements(
           /* data from call */
           Real* primalVector,
-          /* data from constantValueData */
-          size_t& curConstantPos, size_t const& endConstantPos, PassiveReal const* const constantValues,
-          /* data from passiveValueData */
-          size_t& curPassivePos, size_t const& endPassivePos, Real const* const passiveValues,
-          /* data from rhsIdentifiersData */
-          size_t& curRhsIdentifiersPos, size_t const& endRhsIdentifiersPos, Identifier const* const rhsIdentifiers,
-          /* data from statementData */
-          size_t& curStatementPos, size_t const& endStatementPos,
-          Config::ArgumentSize const* const numberOfPassiveArguments, EvalHandle const* const stmtEvalhandle,
+          /* data from dynamicData */
+          size_t& curDynamicPos, size_t const& endDynamicPos, char const* const dynamicValues,
+          /* data from staticData */
+          size_t& curStaticPos, size_t const& endStaticPos, char const* const staticValues,
           /* data from index handler */
           size_t const& startAdjointPos, size_t const& endAdjointPos) {
-        CODI_UNUSED(endConstantPos, endPassivePos, endRhsIdentifiersPos, endStatementPos);
 
-        size_t curAdjointPos = startAdjointPos;
-
-        while (curAdjointPos < endAdjointPos) {
-          curAdjointPos += 1;
-
-          Config::ArgumentSize nPassiveValues = numberOfPassiveArguments[curStatementPos];
-
-          if (Config::StatementInputTag != nPassiveValues) {
-            primalVector[curAdjointPos] = StatementEvaluator::template callPrimal<PrimalValueLinearTape>(
-                stmtEvalhandle[curStatementPos], primalVector, nPassiveValues, curConstantPos, constantValues,
-                curPassivePos, passiveValues, curRhsIdentifiersPos, rhsIdentifiers);
-          }
-
-          curStatementPos += 1;
-        }
       }
 
       /// \copydoc codi::PrimalValueBaseTape::internalEvaluateReverse_Step3_EvalStatements
       CODI_INLINE static void internalEvaluateReverse_Step3_EvalStatements(
           /* data from call */
           Real* primalVector, ADJOINT_VECTOR_TYPE* adjointVector,
-          /* data from constantValueData */
-          size_t& curConstantPos, size_t const& endConstantPos, PassiveReal const* const constantValues,
-          /* data from passiveValueData */
-          size_t& curPassivePos, size_t const& endPassivePos, Real const* const passiveValues,
-          /* data from rhsIdentifiersData */
-          size_t& curRhsIdentifiersPos, size_t const& endRhsIdentifiersPos, Identifier const* const rhsIdentifiers,
-          /* data from statementData */
-          size_t& curStatementPos, size_t const& endStatementPos,
-          Config::ArgumentSize const* const numberOfPassiveArguments, EvalHandle const* const stmtEvalhandle,
+          /* data from dynamicData */
+          size_t& curDynamicPos, size_t const& endDynamicPos, char const* const dynamicValues,
+          /* data from staticData */
+          size_t& curStaticPos, size_t const& endStaticPos, char const* const staticValues,
           /* data from index handler */
           size_t const& startAdjointPos, size_t const& endAdjointPos) {
-        CODI_UNUSED(endConstantPos, endPassivePos, endRhsIdentifiersPos, endStatementPos);
+        CODI_UNUSED(endDynamicPos, endStaticPos);
+
+        StackArray<Gradient> lhsAdjoints{};
+        typename Base::StaticStatementData data;
 
         size_t curAdjointPos = startAdjointPos;
 
         while (curAdjointPos > endAdjointPos) {
-          curStatementPos -= 1;
 
-          Config::ArgumentSize nPassiveValues = numberOfPassiveArguments[curStatementPos];
+          curStaticPos = data.readReverse(staticValues, curStaticPos);
 
-          if (Config::StatementInputTag != nPassiveValues) {
-#if CODI_VariableAdjointInterfaceInPrimalTapes
-            Gradient const lhsAdjoint{};
-            adjointVector->setLhsAdjoint(curAdjointPos);
-#else
-            Gradient const lhsAdjoint = adjointVector[curAdjointPos];
-            if (Config::ReversalZeroesAdjoints) {
-              adjointVector[curAdjointPos] = Gradient();
-            }
-#endif
+          if (Config::StatementInputTag != data.numberOfPassiveArguments) {
 
             StatementEvaluator::template callReverse<PrimalValueLinearTape>(
-                stmtEvalhandle[curStatementPos], primalVector, adjointVector, lhsAdjoint, nPassiveValues,
-                curConstantPos, constantValues, curPassivePos, passiveValues, curRhsIdentifiersPos, rhsIdentifiers);
+                data.handle, primalVector, adjointVector, lhsAdjoints.data(),
+                data.numberOfPassiveArguments, curAdjointPos, curDynamicPos, dynamicValues);
+          } else {
+            curAdjointPos -= 1;
           }
-
-          curAdjointPos -= 1;
         }
       }
 
