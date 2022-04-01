@@ -143,7 +143,7 @@ namespace codi {
 
             StatementEvaluator::template callReverse<PrimalValueLinearTape>(
                 data.handle, primalVector, adjointVector, lhsAdjoints.data(),
-                data.numberOfPassiveArguments, curAdjointPos, curDynamicPos, dynamicValues);
+                data.numberOfPassiveArguments, curDynamicPos, dynamicValues, curAdjointPos);
           } else {
             curAdjointPos -= 1;
           }

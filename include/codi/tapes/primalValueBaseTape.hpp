@@ -1197,8 +1197,7 @@ namespace codi {
       CODI_INLINE static void statementEvaluateReverse(Real* __restrict__ primalVector, ADJOINT_VECTOR_TYPE* __restrict__ adjointVector,
                                                        Gradient* __restrict__ lhsAdjoints,
                                                        Config::ArgumentSize numberOfPassiveArguments,
-                                                       size_t& __restrict__ linearAdjointPos,
-                                                       size_t& __restrict__ curDynamicPos, char const* const __restrict__ dynamicValues) {
+                                                       size_t& __restrict__ curDynamicPos, char const* const __restrict__ dynamicValues, size_t& __restrict__ linearAdjointPos) {
 
 
         using Lhs = typename Expr::Lhs;
