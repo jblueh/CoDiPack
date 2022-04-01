@@ -134,7 +134,7 @@ namespace codi {
 
           StatementEvaluator::template callReverse<PrimalValueReuseTape>(
               data.handle, primalVector, adjointVector, lhsAdjoints.data(),
-              data, curDynamicPos, dynamicValues);
+              data.numberOfPassiveArguments, curDynamicPos, dynamicValues);
         }
       }
 

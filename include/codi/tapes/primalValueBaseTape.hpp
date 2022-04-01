@@ -1107,10 +1107,12 @@ namespace codi {
       template<typename Func>
       CODI_INLINE static void statementEvaluateReverseFull(
           Func const& evalInner, size_t const& __restrict__ maxOutputArgs, size_t const& __restrict__ maxActiveArgs, size_t const& __restrict__ maxConstantArgs, Real* __restrict__ primalVector,
-          ADJOINT_VECTOR_TYPE* __restrict__ adjointVector, Gradient* __restrict__ lhsAdjoints, StatementData& __restrict__ data,
+          ADJOINT_VECTOR_TYPE* __restrict__ adjointVector, Gradient* __restrict__ lhsAdjoints, Config::ArgumentSize numberOfPassiveArguments,
           size_t& __restrict__ curDynamicPos, char const* const __restrict__ dynamicValues
       ) {
 
+        StatementData data;
+        data.numberOfPassiveArguments = numberOfPassiveArguments;
         curDynamicPos = data.readDynamicReverse(dynamicValues, curDynamicPos, maxOutputArgs, maxActiveArgs, maxConstantArgs);
 
         bool allZero = true;
@@ -1156,7 +1158,7 @@ namespace codi {
       template<typename Expr>
       CODI_INLINE static void statementEvaluateReverse(Real* __restrict__ primalVector, ADJOINT_VECTOR_TYPE* __restrict__ adjointVector,
                                                        Gradient* __restrict__ lhsAdjoints,
-                                                       StatementData& __restrict__ data,
+                                                       Config::ArgumentSize numberOfPassiveArguments,
                                                        size_t& __restrict__ curDynamicPos, char const* const __restrict__ dynamicValues) {
 
 
@@ -1167,7 +1169,7 @@ namespace codi {
         size_t constexpr maxConstantArgs = ExpressionTraits::NumberOfConstantTypeArguments<Rhs>::value;
         size_t constexpr maxOutputArgs = ExpressionTraits::NumberOfActiveTypeArguments<Lhs>::value;
         statementEvaluateReverseFull(statementEvaluateReverseInner<Expr>, maxOutputArgs, maxActiveArgs, maxConstantArgs, primalVector,
-                                     adjointVector, lhsAdjoints, data, curDynamicPos, dynamicValues);
+                                     adjointVector, lhsAdjoints, numberOfPassiveArguments, curDynamicPos, dynamicValues);
       }
 
     private:
