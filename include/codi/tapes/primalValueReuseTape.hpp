@@ -135,7 +135,7 @@ namespace codi {
           Config::ArgumentSize numberOfPassiveArguments = *((Config::ArgumentSize const*)(&staticValues[curStaticPos]));
 
           StatementEvaluator::template callReverse<PrimalValueReuseTape>(
-              handle, primalVector, adjointVector, lhsAdjoints,
+              handle, primalVector, adjointVector, lhsAdjoints.data(),
               numberOfPassiveArguments, curDynamicPos, dynamicValues);
         }
       }

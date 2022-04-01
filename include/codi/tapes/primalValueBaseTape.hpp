@@ -1042,10 +1042,10 @@ namespace codi {
 
       /// \copydoc codi::StatementEvaluatorInnerTapeInterface::statementEvaluateReverseInner()
       template<typename Expr>
-      CODI_INLINE static void statementEvaluateReverseInner(Real* primalVector, ADJOINT_VECTOR_TYPE* adjointVector,
-                                                            StackArray<Gradient>& lhsAdjoints,
-                                                            PassiveReal const* const constantValues,
-                                                            Identifier const* const rhsIdentifiers) {
+      CODI_INLINE static void statementEvaluateReverseInner(Real* __restrict__ primalVector, ADJOINT_VECTOR_TYPE* __restrict__ adjointVector,
+                                                            Gradient* __restrict__ lhsAdjoints,
+                                                            PassiveReal const* const __restrict__ constantValues,
+                                                            Identifier const* const __restrict__ rhsIdentifiers) {
 
         using Lhs = typename Expr::Lhs;
         using Rhs = typename Expr::Rhs;
@@ -1069,9 +1069,9 @@ namespace codi {
       /// \copydoc codi::StatementEvaluatorInnerTapeInterface::statementEvaluateReverseFull()
       template<typename Func>
       CODI_INLINE static void statementEvaluateReverseFull(
-          Func const& evalInner, size_t const& maxOutputArgs, size_t const& maxActiveArgs, size_t const& maxConstantArgs, Real* primalVector,
-          ADJOINT_VECTOR_TYPE* adjointVector, StackArray<Gradient>& lhsAdjoints, Config::ArgumentSize numberOfPassiveArguments,
-          size_t& curDynamicPos, char const* const dynamicValues
+          Func const& evalInner, size_t const& __restrict__ maxOutputArgs, size_t const& __restrict__ maxActiveArgs, size_t const& __restrict__ maxConstantArgs, Real* __restrict__ primalVector,
+          ADJOINT_VECTOR_TYPE* __restrict__ adjointVector, Gradient* __restrict__ lhsAdjoints, Config::ArgumentSize numberOfPassiveArguments,
+          size_t& __restrict__ curDynamicPos, char const* const __restrict__ dynamicValues
       ) {
 
         // Adapt vector positions.
@@ -1128,10 +1128,10 @@ namespace codi {
 
       /// \copydoc codi::StatementEvaluatorTapeInterface::statementEvaluateReverse()
       template<typename Expr>
-      CODI_INLINE static void statementEvaluateReverse(Real* primalVector, ADJOINT_VECTOR_TYPE* adjointVector,
-                                                       StackArray<Gradient>& lhsAdjoints,
+      CODI_INLINE static void statementEvaluateReverse(Real* __restrict__ primalVector, ADJOINT_VECTOR_TYPE* __restrict__ adjointVector,
+                                                       Gradient* __restrict__ lhsAdjoints,
                                                        Config::ArgumentSize numberOfPassiveArguments,
-                                                       size_t& curDynamicPos, char const* const dynamicValues) {
+                                                       size_t& __restrict__ curDynamicPos, char const* const __restrict__ dynamicValues) {
 
         using Lhs = typename Expr::Lhs;
         using Rhs = typename Expr::Rhs;
