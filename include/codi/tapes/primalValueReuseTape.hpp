@@ -93,7 +93,7 @@ namespace codi {
             /* data from call */
             ADJOINT_VECTOR_TYPE* adjointVector,
             /* data from dynamicData */
-            size_t& curDynamicPos, size_t const& endDynamicPos, char const* const dynamicValues,
+            size_t& curDynamicPos, size_t const& endDynamicPos, char* const dynamicValues,
             /* data from staticData */
             size_t& curStaticPos, size_t const& endStaticPos, char const* const staticValues)
         {
@@ -124,11 +124,24 @@ namespace codi {
           /* data from call */
           Real* primalVector, ADJOINT_VECTOR_TYPE* adjointVector,
           /* data from dynamicData */
-          size_t& curDynamicPos, size_t const& endDynamicPos, char const* const dynamicValues,
+          size_t& curDynamicPos, size_t const& endDynamicPos, char* const dynamicValues,
           /* data from staticData */
           size_t& curStaticPos, size_t const& endStaticPos, char const* const staticValues
       ) {
+        CODI_UNUSED(endDynamicPos);
 
+        StackArray<Real> lhsPrimals{};
+        StackArray<Gradient> lhsTangents{};
+        typename Base::StaticStatementData data;
+
+        while (curStaticPos < endStaticPos) {
+
+          curStaticPos = data.readForward(staticValues, curStaticPos);
+
+          StatementEvaluator::template callForward<PrimalValueReuseTape>(
+              data.handle, ReuseReverseArguments{primalVector}, adjointVector, lhsPrimals.data(), lhsTangents.data(),
+              data.numberOfPassiveArguments, curDynamicPos, dynamicValues);
+        }
       }
 
       /// \copydoc codi::PrimalValueBaseTape::internalEvaluatePrimal_Step3_EvalStatements
@@ -136,9 +149,22 @@ namespace codi {
           /* data from call */
           Real* primalVector,
           /* data from dynamicData */
-          size_t& curDynamicPos, size_t const& endDynamicPos, char const* const dynamicValues,
+          size_t& curDynamicPos, size_t const& endDynamicPos, char* const dynamicValues,
           /* data from staticData */
           size_t& curStaticPos, size_t const& endStaticPos, char const* const staticValues) {
+        CODI_UNUSED(endDynamicPos);
+
+        StackArray<Real> lhsPrimals{};
+        typename Base::StaticStatementData data;
+
+        while (curStaticPos < endStaticPos) {
+
+          curStaticPos = data.readForward(staticValues, curStaticPos);
+
+          StatementEvaluator::template callPrimal<PrimalValueReuseTape>(
+              data.handle, ReuseReverseArguments{primalVector}, lhsPrimals.data(),
+              data.numberOfPassiveArguments, curDynamicPos, dynamicValues);
+        }
       }
 
       /// \copydoc codi::PrimalValueBaseTape::internalEvaluateReverse_Step3_EvalStatements
@@ -146,7 +172,7 @@ namespace codi {
           /* data from call */
           Real* primalVector, ADJOINT_VECTOR_TYPE* adjointVector,
           /* data from dynamicData */
-          size_t& curDynamicPos, size_t const& endDynamicPos, char const* const dynamicValues,
+          size_t& curDynamicPos, size_t const& endDynamicPos, char* const dynamicValues,
           /* data from staticData */
           size_t& curStaticPos, size_t const& endStaticPos, char const* const staticValues) {
         CODI_UNUSED(endDynamicPos);
@@ -170,7 +196,7 @@ namespace codi {
             /* data from call */
             Real* primalVector,
             /* data from dynamicData */
-            size_t& curDynamicPos, size_t const& endDynamicPos, char const* const dynamicValues,
+            size_t& curDynamicPos, size_t const& endDynamicPos, char* const dynamicValues,
             /* data from staticData */
             size_t& curStaticPos, size_t const& endStaticPos, char const* const staticValues)
         {

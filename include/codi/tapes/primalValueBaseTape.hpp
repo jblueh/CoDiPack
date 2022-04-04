@@ -199,6 +199,10 @@ namespace codi {
           Real* __restrict__ primalVector;
           size_t&  __restrict__ linearAdjointPos;
 
+          void updateAdjointPosForward(size_t nOutputArgs) {
+            linearAdjointPos += nOutputArgs;
+          }
+
           void updateAdjointPosReverse(size_t nOutputArgs) {
             linearAdjointPos -= nOutputArgs;
           }
@@ -212,6 +216,10 @@ namespace codi {
 
       struct ReuseReverseArguments {
           Real* __restrict__ primalVector;
+
+          void updateAdjointPosForward(size_t nOutputArgs) {
+            CODI_UNUSED(nOutputArgs);
+          }
 
           void updateAdjointPosReverse(size_t nOutputArgs) {
             CODI_UNUSED(nOutputArgs);
@@ -383,6 +391,15 @@ namespace codi {
           EvalHandle handle;
           Config::ArgumentSize numberOfPassiveArguments;
 
+          CODI_INLINE size_t readForward(char const* const values, size_t pos) {
+            numberOfPassiveArguments = *((Config::ArgumentSize const*)(&values[pos]));
+            pos += sizeof(Config::ArgumentSize);
+            handle = *((EvalHandle const*)(&values[pos]));
+            pos += sizeof(EvalHandle);
+
+            return pos;
+          }
+
           CODI_INLINE size_t readReverse(char const* const values, size_t pos) {
             pos -= sizeof(EvalHandle);
             handle = *((EvalHandle const*)(&values[pos]));
@@ -404,17 +421,34 @@ namespace codi {
 
       struct DynamicStatementData {
         public:
-          Real const* __restrict__ oldPrimalValues;
+          Real* __restrict__ oldPrimalValues;
           Identifier const* __restrict__ lhsIdentifiers;
 
           PassiveReal const* __restrict__ constantValues;
           Identifier const* __restrict__ rhsIdentifiers;
           Real const* __restrict__ passiveValues;
 
-          CODI_INLINE size_t readDynamicReverse(char const* const values, size_t pos, StatementSizes stmtSizes, Config::ArgumentSize numberOfPassiveArguments) {
+          CODI_INLINE size_t readDynamicForward(char* const values, size_t pos, StatementSizes stmtSizes, Config::ArgumentSize numberOfPassiveArguments) {
+            passiveValues = (Real*)(&values[pos]);
+            pos += numberOfPassiveArguments * sizeof(Real);
+            rhsIdentifiers = (Identifier const*)(&values[pos]);
+            pos += stmtSizes.maxActiveArgs * sizeof(Identifier);
+            constantValues = (PassiveReal const*)(&values[pos]);
+            pos += stmtSizes.maxConstantArgs * sizeof(PassiveReal);
+
+            if(!LinearIndexHandling) {
+              lhsIdentifiers = ((Identifier const*)(&values[pos]));
+              pos += stmtSizes.maxOutputArgs * sizeof(Identifier);
+              oldPrimalValues = ((Real*)(&values[pos]));
+              pos += stmtSizes.maxOutputArgs * sizeof(Real);
+            }
+            return pos;
+          }
+
+          CODI_INLINE size_t readDynamicReverse(char* const values, size_t pos, StatementSizes stmtSizes, Config::ArgumentSize numberOfPassiveArguments) {
             if(!LinearIndexHandling) {
               pos -= stmtSizes.maxOutputArgs * sizeof(Real);
-              oldPrimalValues = ((Real const*)(&values[pos]));
+              oldPrimalValues = ((Real*)(&values[pos]));
               pos -= stmtSizes.maxOutputArgs * sizeof(Identifier);
               lhsIdentifiers = ((Identifier const*)(&values[pos]));
             }
@@ -1114,7 +1148,7 @@ namespace codi {
       CODI_INLINE static void statementClearAdjointFull(
           Func const& evalInner, StatementSizes stmtSizes, ReverseArguments revArgs,
           ADJOINT_VECTOR_TYPE* __restrict__ adjointVector, Config::ArgumentSize numberOfPassiveArguments,
-          size_t& __restrict__ curDynamicPos, char const* const __restrict__ dynamicValues
+          size_t& __restrict__ curDynamicPos, char* const __restrict__ dynamicValues
       ) {
         CODI_UNUSED(evalInner);
 
@@ -1131,32 +1165,134 @@ namespace codi {
       }
 
       /// \copydoc codi::StatementEvaluatorInnerTapeInterface::statementEvaluateForwardInner()
-      template<typename Rhs, typename... Args>
-      static Real statementEvaluateForwardInner(Args&&... args) {
-        CODI_UNUSED(args...);
-        return Real();
+      template<typename Expr>
+      static void statementEvaluateForwardInner(Real* __restrict__ primalVector, ADJOINT_VECTOR_TYPE* adjointVector,
+                                                Real* __restrict__ lhsPrimals,
+                                                Gradient* __restrict__ lhsTangents,
+                                                PassiveReal const* const __restrict__ constantValues,
+                                                Identifier const* const __restrict__ identifiers) {
+        using Lhs = typename Expr::Lhs;
+        using Rhs = typename Expr::Rhs;
+        using LhsReal = typename Lhs::Real;
+        using AggregateTraits = RealTraits::AggregatedTypeTraits<LhsReal>;
+
+        using Constructor = ConstructStaticContextLogic<Rhs, Impl, 0, 0>;
+        using StaticRhs = typename Constructor::ResultType;
+
+        StaticRhs staticsRhs = Constructor::construct(primalVector, identifiers, constantValues);
+
+        IncrementForwardLogic incrementForward;
+
+        static_for<AggregateTraits::Elements>([&](auto i) CODI_LAMBDA_INLINE {
+#if CODI_VariableAdjointInterfaceInPrimalTapes
+          adjointVector->setActiveViariableForIndirectAccess(i.value);
+#endif
+          using ExtractExpr = ExtractExpression<LhsReal, i.value, StaticRhs>;
+          ExtractExpr expr(staticsRhs);
+
+          incrementForward.eval(expr, Real(1.0), lhsTangents[i.value], adjointVector);
+          lhsPrimals[i.value] = expr.getValue();
+        });
+
       }
 
       /// \copydoc codi::StatementEvaluatorInnerTapeInterface::statementEvaluateForwardFull()
-      template<typename Func, typename... Args>
-      static Real statementEvaluateForwardFull(Args&&... args) {
-        CODI_UNUSED(args...);
+      template<typename Func>
+      static void statementEvaluateForwardFull(Func const& evalInner, StatementSizes stmtSizes, ReverseArguments revArgs,
+                                               ADJOINT_VECTOR_TYPE* __restrict__ adjointVector,
+                                               Real* __restrict__ lhsPrimals,
+                                               Gradient* __restrict__ lhsTangents,
+                                               Config::ArgumentSize numberOfPassiveArguments,
+                                               size_t& __restrict__ curDynamicPos, char* const __restrict__ dynamicValues) {
+        DynamicStatementData data;
+        curDynamicPos = data.readDynamicForward(dynamicValues, curDynamicPos, stmtSizes, numberOfPassiveArguments);
 
-        return Real();
+        if(!TapeTypes::IsLinearIndexHandler) {
+          for(size_t iLhs = 0; iLhs < stmtSizes.maxOutputArgs; iLhs += 1) {
+            Identifier const lhsIdentifier = revArgs.getLhsIdentifier(iLhs, data.lhsIdentifiers);
+            data.oldPrimalValues[iLhs] = revArgs.primalVector[lhsIdentifier];
+          }
+        }
+
+        for (Config::ArgumentSize curPos = 0; curPos < numberOfPassiveArguments; curPos += 1) {
+          revArgs.primalVector[curPos] = data.passiveValues[curPos];
+        }
+
+#if CODI_VariableAdjointInterfaceInPrimalTapes
+        adjointVector->setSizeForIndirectAccess(stmtSizes.maxOutputArgs);
+#endif
+
+        evalInner(revArgs.primalVector, adjointVector, lhsPrimals, lhsTangents, data.constantValues, data.rhsIdentifiers);
+
+        for(size_t iLhs = 0; iLhs < stmtSizes.maxOutputArgs; iLhs += 1) {
+          Identifier const lhsIdentifier = revArgs.getLhsIdentifier(iLhs, data.lhsIdentifiers);
+
+          revArgs.primalVector[lhsIdentifier] = lhsPrimals[iLhs];
+#if CODI_VariableAdjointInterfaceInPrimalTapes
+          adjointVector->setActiveViariableForIndirectAccess(iLhs);
+          adjointVector->setLhsTangent(lhsIdentifier);
+#else
+          adjointVector[lhsIdentifier] = lhsTangents[iLhs];
+          lhsTangents[iLhs] = Gradient();
+#endif
+        }
+
+        revArgs.updateAdjointPosForward(stmtSizes.maxOutputArgs);
       }
 
       /// \copydoc codi::StatementEvaluatorInnerTapeInterface::statementEvaluatePrimalInner()
-      template<typename Rhs, typename... Args>
-      static Real statementEvaluatePrimalInner(Args&&... args) {
-        CODI_UNUSED(args...);
-        return Real();
+      template<typename Expr>
+      static void statementEvaluatePrimalInner(Real* __restrict__ primalVector,
+                                               Real* __restrict__ lhsPrimals,
+                                               PassiveReal const* const __restrict__ constantValues,
+                                               Identifier const* const __restrict__ identifiers) {
+        using Lhs = typename Expr::Lhs;
+        using Rhs = typename Expr::Rhs;
+        using LhsReal = typename Lhs::Real;
+        using AggregateTraits = RealTraits::AggregatedTypeTraits<LhsReal>;
+
+        using Constructor = ConstructStaticContextLogic<Rhs, Impl, 0, 0>;
+        using StaticRhs = typename Constructor::ResultType;
+
+        StaticRhs staticsRhs = Constructor::construct(primalVector, identifiers, constantValues);
+
+        static_for<AggregateTraits::Elements>([&](auto i) CODI_LAMBDA_INLINE {
+          using ExtractExpr = ExtractExpression<LhsReal, i.value, StaticRhs>;
+          ExtractExpr expr(staticsRhs);
+
+          lhsPrimals[i.value] = expr.getValue();
+        });
       }
 
       /// \copydoc codi::StatementEvaluatorInnerTapeInterface::statementEvaluatePrimalFull()
-      template<typename Func, typename... Args>
-      static Real statementEvaluatePrimalFull(Args&&... args) {
-        CODI_UNUSED(args...);
-        return Real();
+      template<typename Func>
+      static void statementEvaluatePrimalFull(Func const& evalInner, StatementSizes stmtSizes, ReverseArguments revArgs,
+                                              Real* __restrict__ lhsPrimals,
+                                              Config::ArgumentSize numberOfPassiveArguments,
+                                              size_t& __restrict__ curDynamicPos, char* const __restrict__ dynamicValues) {
+        DynamicStatementData data;
+        curDynamicPos = data.readDynamicForward(dynamicValues, curDynamicPos, stmtSizes, numberOfPassiveArguments);
+
+        if(!TapeTypes::IsLinearIndexHandler) {
+          for(size_t iLhs = 0; iLhs < stmtSizes.maxOutputArgs; iLhs += 1) {
+            Identifier const lhsIdentifier = revArgs.getLhsIdentifier(iLhs, data.lhsIdentifiers);
+            data.oldPrimalValues[iLhs] = revArgs.primalVector[lhsIdentifier];
+          }
+        }
+
+        for (Config::ArgumentSize curPos = 0; curPos < numberOfPassiveArguments; curPos += 1) {
+          revArgs.primalVector[curPos] = data.passiveValues[curPos];
+        }
+
+        evalInner(revArgs.primalVector, lhsPrimals, data.constantValues, data.rhsIdentifiers);
+
+        for(size_t iLhs = 0; iLhs < stmtSizes.maxOutputArgs; iLhs += 1) {
+          Identifier const lhsIdentifier = revArgs.getLhsIdentifier(iLhs, data.lhsIdentifiers);
+
+          revArgs.primalVector[lhsIdentifier] = lhsPrimals[iLhs];
+        }
+
+        revArgs.updateAdjointPosForward(stmtSizes.maxOutputArgs);
       }
 
       /// \copydoc codi::StatementEvaluatorInnerTapeInterface::statementResetPrimalInner()
@@ -1170,7 +1306,7 @@ namespace codi {
       CODI_INLINE static void statementResetPrimalFull(
           Func const& evalInner, StatementSizes stmtSizes, ReverseArguments revArgs,
           Config::ArgumentSize numberOfPassiveArguments,
-          size_t& __restrict__ curDynamicPos, char const* const __restrict__ dynamicValues
+          size_t& __restrict__ curDynamicPos, char* const __restrict__ dynamicValues
       ) {
 
         CODI_UNUSED(evalInner);
@@ -1208,6 +1344,9 @@ namespace codi {
 
         IncrementReversalLogic incrementReverse;
         static_for<AggregateTraits::Elements>([&](auto i) CODI_LAMBDA_INLINE {
+#if CODI_VariableAdjointInterfaceInPrimalTapes
+          adjointVector->setActiveViariableForIndirectAccess(i.value);
+#endif
           using ExtractExpr = ExtractExpression<LhsReal, i.value, StaticRhs>;
           ExtractExpr expr(staticsRhs);
 
@@ -1220,13 +1359,17 @@ namespace codi {
       CODI_INLINE static void statementEvaluateReverseFull(
           Func const& evalInner, StatementSizes stmtSizes, ReverseArguments revArgs,
           ADJOINT_VECTOR_TYPE* __restrict__ adjointVector, Gradient* __restrict__ lhsAdjoints, Config::ArgumentSize numberOfPassiveArguments,
-          size_t& __restrict__ curDynamicPos, char const* const __restrict__ dynamicValues
+          size_t& __restrict__ curDynamicPos, char* const __restrict__ dynamicValues
       ) {
 
         DynamicStatementData data;
         curDynamicPos = data.readDynamicReverse(dynamicValues, curDynamicPos, stmtSizes, numberOfPassiveArguments);
 
         revArgs.updateAdjointPosReverse(stmtSizes.maxOutputArgs);
+
+#if CODI_VariableAdjointInterfaceInPrimalTapes
+        adjointVector->setSizeForIndirectAccess(maxOutputArgs);
+#endif
 
         bool allZero = true;
         for (size_t iLhs = 0; iLhs < stmtSizes.maxOutputArgs; iLhs += 1) {
@@ -1236,9 +1379,15 @@ namespace codi {
             revArgs.primalVector[lhsIdentifier] = data.oldPrimalValues[iLhs];
           }
 
+#if CODI_VariableAdjointInterfaceInPrimalTapes
+          adjointVector->setActiveViariableForIndirectAccess(iLhs);
+          adjointVector->setLhsAdjoint(lhsIdentifier);
+          allZero &= adjointVector->isLhsZero();
+#else
           lhsAdjoints[iLhs] = adjointVector[lhsIdentifier];
           adjointVector[lhsIdentifier] = Gradient();
           allZero &= RealTraits::isTotalZero(lhsAdjoints[iLhs]);
+#endif
         }
 
         if (CODI_ENABLE_CHECK(Config::SkipZeroAdjointEvaluation, !allZero)) {
@@ -1256,34 +1405,41 @@ namespace codi {
       /// @{
 
       /// \copydoc codi::StatementEvaluatorTapeInterface::statementClearAdjoint()
-      template<typename Expr, typename ... Args>
+      template<typename Expr>
       CODI_INLINE static void statementClearAdjoint(ReverseArguments revArgs, ADJOINT_VECTOR_TYPE* __restrict__ adjointVector,
                                                     Config::ArgumentSize numberOfPassiveArguments,
-                                                    size_t& __restrict__ curDynamicPos, char const* const __restrict__ dynamicValues) {
+                                                    size_t& __restrict__ curDynamicPos, char* const __restrict__ dynamicValues) {
         statementClearAdjointFull(statementClearAdjointInner<Expr>, StatementSizes::create<Expr>(), revArgs,
-                                     adjointVector, numberOfPassiveArguments, curDynamicPos, dynamicValues);
+                                  adjointVector, numberOfPassiveArguments, curDynamicPos, dynamicValues);
       }
 
       /// \copydoc codi::StatementEvaluatorTapeInterface::statementEvaluateForward()
-      template<typename Rhs, typename... Args>
-      static Real statementEvaluateForward(Args&&... args) {
-        CODI_UNUSED(args...);
-        return Real();
+      template<typename Expr>
+      static void statementEvaluateForward(ReverseArguments revArgs, ADJOINT_VECTOR_TYPE* __restrict__ adjointVector,
+                                           Real* __restrict__ lhsPrimals,
+                                           Gradient* __restrict__ lhsTangents,
+                                           Config::ArgumentSize numberOfPassiveArguments,
+                                           size_t& __restrict__ curDynamicPos, char* const __restrict__ dynamicValues) {
+        statementEvaluateForwardFull(statementEvaluateForwardInner<Expr>, StatementSizes::create<Expr>(), revArgs,
+                                     adjointVector, lhsPrimals, lhsTangents, numberOfPassiveArguments, curDynamicPos, dynamicValues);
       }
 
       /// \copydoc codi::StatementEvaluatorTapeInterface::statementEvaluatePrimal()
-      template<typename Rhs, typename... Args>
-      static Real statementEvaluatePrimal(Args&&... args) {
-        CODI_UNUSED(args...);
-        return Real();
+      template<typename Expr>
+      CODI_INLINE static void statementEvaluatePrimal(ReverseArguments revArgs,
+                                                      Real* __restrict__ lhsPrimals,
+                                                      Config::ArgumentSize numberOfPassiveArguments,
+                                                      size_t& __restrict__ curDynamicPos, char* const __restrict__ dynamicValues) {
+        statementEvaluatePrimalFull(statementEvaluatePrimalInner<Expr>, StatementSizes::create<Expr>(), revArgs, lhsPrimals,
+                                    numberOfPassiveArguments, curDynamicPos, dynamicValues);
       }
 
       /// \copydoc codi::StatementEvaluatorTapeInterface::statementResetPrimal()
       template<typename Expr>
       CODI_INLINE static void statementResetPrimal(ReverseArguments revArgs, Config::ArgumentSize numberOfPassiveArguments,
-                                                   size_t& __restrict__ curDynamicPos, char const* const __restrict__ dynamicValues) {
+                                                   size_t& __restrict__ curDynamicPos, char* const __restrict__ dynamicValues) {
         statementResetPrimalFull(statementResetPrimalInner<Expr>, StatementSizes::create<Expr>(), revArgs,
-                                     numberOfPassiveArguments, curDynamicPos, dynamicValues);
+                                 numberOfPassiveArguments, curDynamicPos, dynamicValues);
       }
 
       /// \copydoc codi::StatementEvaluatorTapeInterface::statementEvaluateReverse()
@@ -1291,7 +1447,7 @@ namespace codi {
       CODI_INLINE static void statementEvaluateReverse(ReverseArguments revArgs, ADJOINT_VECTOR_TYPE* __restrict__ adjointVector,
                                                        Gradient* __restrict__ lhsAdjoints,
                                                        Config::ArgumentSize numberOfPassiveArguments,
-                                                       size_t& __restrict__ curDynamicPos, char const* const __restrict__ dynamicValues) {
+                                                       size_t& __restrict__ curDynamicPos, char* const __restrict__ dynamicValues) {
         statementEvaluateReverseFull(statementEvaluateReverseInner<Expr>, StatementSizes::create<Expr>(), revArgs,
                                      adjointVector, lhsAdjoints, numberOfPassiveArguments, curDynamicPos, dynamicValues);
       }
