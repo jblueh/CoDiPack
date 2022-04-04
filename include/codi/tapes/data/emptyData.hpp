@@ -65,6 +65,14 @@ namespace codi {
       /// \copydoc DataInterface::pushData
       CODI_INLINE void pushData() {}
 
+      /// \copydoc DataInterface::getDataPointers
+      CODI_INLINE void getDataPointer() {}
+
+      /// \copydoc DataInterface::addDataSize
+      CODI_INLINE void addDataSize(size_t size) {
+        CODI_UNUSED(size);
+      }
+
       /// \copydoc DataInterface::reserveItems
       CODI_INLINE InternalPosHandle reserveItems(size_t const& items) {
         CODI_UNUSED(items);

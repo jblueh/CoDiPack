@@ -179,6 +179,16 @@ namespace codi {
       StaticData staticData;
       DynamicData dynamicData;
 
+      struct ManualStatementData {
+        public:
+          Real* jacobians;
+          Identifier* identifiers;
+
+          size_t pos;
+      };
+
+      ManualStatementData manualStatementData;
+
       std::vector<Gradient> adjoints;  ///< Evaluation vector for AD.
       std::vector<Real> primals;       ///< Current state of primal values in the program.
       std::vector<Real> primalsCopy;   ///< Copy of primal values for AD evaluations.
@@ -261,6 +271,7 @@ namespace codi {
             indexManager(Config::MaxArgumentSize),  // Reserve first items for passive values.
             staticData(Config::ChunkSize * 8),
             dynamicData(Config::ChunkSize * 8),
+            manualStatementData(),
             adjoints(1),  // Ensure that adjoint[0] exists, see its use in gradient() const.
             primals(0),
             primalsCopy(0) {
@@ -938,25 +949,68 @@ namespace codi {
           /// @name Implementation of StatementEvaluatorTapeInterface
           /// @{
 
+          /// \copydoc codi::StatementEvaluatorTapeInterface::statementClearAdjoint()
+          template<typename Expr>
+          CODI_INLINE static void statementClearAdjoint(ReverseArguments revArgs, ADJOINT_VECTOR_TYPE* __restrict__ adjointVector,
+                                                        Config::ArgumentSize numberOfPassiveArguments,
+                                                        size_t& __restrict__ curDynamicPos, char* const __restrict__ dynamicValues) {
+            PrimalValueBaseTape::statementClearAdjointFull(PrimalValueBaseTape::statementClearAdjointInner<Expr>, StatementSizes::create<Expr>(), revArgs,
+                                      adjointVector, numberOfPassiveArguments, curDynamicPos, dynamicValues);
+          }
+
           /// Throws exception.
           template<typename Expr, typename... Args>
-          static Real statementEvaluateForward(Args&&... args) {
+          static void statementEvaluateForward(Args&&... args) {
             CODI_UNUSED(args...);
             CODI_EXCEPTION("Forward evaluation of jacobian statement not possible.");
           }
 
           /// Throws exception.
           template<typename Expr, typename... Args>
-          static Real statementEvaluatePrimal(Args&&... args) {
+          static void statementEvaluatePrimal(Args&&... args) {
             CODI_UNUSED(args...);
             CODI_EXCEPTION("Primal evaluation of jacobian statement not possible.");
           }
 
+
+          /// \copydoc codi::StatementEvaluatorTapeInterface::statementResetPrimal()
+          template<typename Expr>
+          CODI_INLINE static void statementResetPrimal(ReverseArguments revArgs, Config::ArgumentSize numberOfPassiveArguments,
+                                                       size_t& __restrict__ curDynamicPos, char* const __restrict__ dynamicValues) {
+            PrimalValueBaseTape::statementResetPrimalFull(PrimalValueBaseTape::statementResetPrimalInner<Expr>, StatementSizes::create<Expr>(), revArgs,
+                                     numberOfPassiveArguments, curDynamicPos, dynamicValues);
+          }
+
           /// \copydoc codi::StatementEvaluatorTapeInterface::statementEvaluateReverse
-          template<typename Expr, typename... Args>
-          static void statementEvaluateReverse(Args&&... args) {
-            CODI_UNUSED(args...);
-            CODI_EXCEPTION("Forward evaluation of jacobian statement not possible.");
+          template<typename Expr>
+          static void statementEvaluateReverse(ReverseArguments revArgs, ADJOINT_VECTOR_TYPE* __restrict__ adjointVector,
+                                               Gradient* __restrict__ lhsAdjoints,
+                                               Config::ArgumentSize numberOfPassiveArguments,
+                                               size_t& __restrict__ curDynamicPos, char* const __restrict__ dynamicValues) {
+
+            DynamicStatementData data;
+            StatementSizes stmtSizes = StatementSizes::create<Expr>();
+            curDynamicPos = data.readDynamicReverse(dynamicValues, curDynamicPos, stmtSizes, numberOfPassiveArguments);
+
+            revArgs.updateAdjointPosReverse(1);
+
+#if CODI_VariableAdjointInterfaceInPrimalTapes
+            adjointVector->setSizeForIndirectAccess(1);
+#endif
+            Identifier lhsIdentifier = revArgs.getLhsIdentifier(0, data.lhsIdentifiers);
+
+            if (!LinearIndexHandling) {
+              revArgs.primalVector[lhsIdentifier] = data.oldPrimalValues[0];
+            }
+
+#if CODI_VariableAdjointInterfaceInPrimalTapes
+            adjointVector->setActiveViariableForIndirectAccess(0);
+            adjointVector->setLhsAdjoint(lhsIdentifier);
+#else
+            lhsAdjoints[0] = adjointVector[lhsIdentifier];
+            adjointVector[lhsIdentifier] = Gradient();
+#endif
+            evalJacobianReverse(adjointVector, lhsAdjoints[0], data.passiveValues, data.rhsIdentifiers);
           }
 
           /// @}
@@ -964,39 +1018,52 @@ namespace codi {
           /// @name Implementation of StatementEvaluatorInnerTapeInterface
           /// @{
 
-          /// Throws exception.
-          template<typename Expr, typename... Args>
-          static Real statementEvaluateForwardInner(Args&&... args) {
-            CODI_UNUSED(args...);
-            CODI_EXCEPTION("Forward evaluation of jacobian statement not possible.");
-
-            return Real();
+          /// \copydoc codi::StatementEvaluatorInnerTapeInterface::statementClearAdjointInner()
+          template<typename Expr>
+          CODI_INLINE static void statementClearAdjointInner() {
+            // Empty
           }
 
           /// Throws exception.
           template<typename Expr, typename... Args>
-          static Real statementEvaluatePrimalInner(Args&&... args) {
+          static void statementEvaluateForwardInner(Args&&... args) {
+            CODI_UNUSED(args...);
+            CODI_EXCEPTION("Forward evaluation of jacobian statement not possible.");
+          }
+
+          /// Throws exception.
+          template<typename Expr, typename... Args>
+          static void statementEvaluatePrimalInner(Args&&... args) {
             CODI_UNUSED(args...);
             CODI_EXCEPTION("Primal evaluation of jacobian statement not possible.");
+          }
 
-            return Real();
+          /// \copydoc codi::StatementEvaluatorInnerTapeInterface::statementResetPrimalInner()
+          template<typename Expr>
+          CODI_INLINE static void statementResetPrimalInner() {
+            // Empty
           }
 
           /// \copydoc codi::StatementEvaluatorInnerTapeInterface::statementEvaluateReverseInner
-          template<typename Expr, typename... Args>
-          static void statementEvaluateReverseInner(Args&&... args) {
-            CODI_UNUSED(args...);
-            CODI_EXCEPTION("Primal evaluation of jacobian statement not possible.");
+          template<typename Expr>
+          static void statementEvaluateReverseInner(
+              Real* __restrict__ primalVector, ADJOINT_VECTOR_TYPE* __restrict__ adjointVector,
+              Gradient* __restrict__ lhsAdjoints,
+              PassiveReal const* const __restrict__ constantValues,
+              Identifier const* const __restrict__ rhsIdentifiers
+          ) {
+            CODI_UNUSED(constantValues);
+
+            evalJacobianReverse(adjointVector, lhsAdjoints[0], primalVector, rhsIdentifiers);
           }
 
           /// @}
 
         private:
 
-          static bool evalJacobianReverse(ADJOINT_VECTOR_TYPE* adjointVector, Gradient lhsAdjoint,
-                                          size_t& curPassivePos, Real const* const passiveValues,
-                                          size_t& curRhsIdentifiersPos, Identifier const* const rhsIdentifiers,
-                                          size_t endRhsIdentifiersPos) {
+          static void evalJacobianReverse(ADJOINT_VECTOR_TYPE* adjointVector, Gradient lhsAdjoint,
+                                          Real const* const passiveValues,
+                                          Identifier const* const rhsIdentifiers) {
 #if CODI_VariableAdjointInterfaceInPrimalTapes
             bool const lhsZero = adjointVector->isLhsZero();
 #else
@@ -1004,20 +1071,15 @@ namespace codi {
 #endif
 
             if (CODI_ENABLE_CHECK(Config::SkipZeroAdjointEvaluation, !lhsZero)) {
-              while (curRhsIdentifiersPos > endRhsIdentifiersPos) {
-                curPassivePos -= 1;
-                curRhsIdentifiersPos -= 1;
-
-                Real const& jacobian = passiveValues[curPassivePos];
+              for(size_t pos = 0; pos < size; pos += 1) {
+                Real const& jacobian = passiveValues[pos];
 #if CODI_VariableAdjointInterfaceInPrimalTapes
-                adjointVector->updateAdjointWithLhs(rhsIdentifiers[curRhsIdentifiersPos], jacobian);
+                adjointVector->updateAdjointWithLhs(rhsIdentifiers[pos], jacobian);
 #else
-                adjointVector[rhsIdentifiers[curRhsIdentifiersPos]] += jacobian * lhsAdjoint;
+                adjointVector[rhsIdentifiers[pos]] += jacobian * lhsAdjoint;
 #endif
               }
             }
-
-            return lhsZero;
           }
       };
 
@@ -1031,12 +1093,43 @@ namespace codi {
       void pushJacobiManual(Real const& jacobian, Real const& value, Identifier const& index) {
         CODI_UNUSED(value);
 
-
+        manualStatementData.jacobians[manualStatementData.pos] = jacobian;
+        manualStatementData.identifiers[manualStatementData.pos] = index;
+        manualStatementData.pos += 1;
       }
 
       /// \copydoc codi::ManualStatementPushTapeInterface::storeManual()
       void storeManual(Real const& lhsValue, Identifier& lhsIndex, Config::ArgumentSize const& size) {
-        CODI_UNUSED(lhsValue, lhsIndex, size);
+        size_t preAccSize = (size) * sizeof(Real)
+            + (size) * sizeof(Identifier);
+        size_t dynamicSize = preAccSize;
+        if(!LinearIndexHandling) {
+          dynamicSize += sizeof(Identifier) + sizeof(Real);
+        }
+
+        StaticStatementData::reserve(staticData);
+        dynamicData.reserveItems(dynamicSize);
+
+        char* dynamicPointer;
+        dynamicData.getDataPointer(dynamicPointer);
+        dynamicData.addDataSize(preAccSize);
+
+        manualStatementData.pos = 0;
+        manualStatementData.jacobians = (Real*)dynamicPointer;
+        manualStatementData.identifiers = (Identifier*)(&dynamicPointer[size * sizeof(Real)]);
+
+        bool generatedNewIndex = indexManager.get().assignIndex(lhsIndex);
+        checkPrimalSize(generatedNewIndex);
+
+        Real& primalEntry = primals[lhsIndex];
+        if(!LinearIndexHandling) {
+          dynamicData.pushData(lhsIndex);
+          dynamicData.pushData(primalEntry);
+        }
+
+        StaticStatementData::store(staticData, (Config::ArgumentSize)0, PrimalValueBaseTape::jacobianExpressions[size]);
+
+        primalEntry = lhsValue;
       }
 
       /// @}
@@ -1499,7 +1592,7 @@ namespace codi {
 
 #define CREATE_EXPRESSION(size)                                                                                        \
   TapeTypes::StatementEvaluator::template createHandle<Impl, typename Impl::template JacobianStatementGenerator<size>, \
-                                                       JacobianExpression<size>>()
+                                                       AssignExpression<ActiveType<Impl>, JacobianExpression<size>>>()
 
   /// Expressions for manual statement pushes.
   template<typename TapeTypes, typename Impl>

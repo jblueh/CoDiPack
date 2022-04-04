@@ -167,6 +167,11 @@ namespace codi {
       template<typename... Data>
       CODI_INLINE void pushData(Data const&... data);
 
+      template<typename... Data>
+      CODI_INLINE void getDataPointer(Data*&... pointers);
+
+      CODI_INLINE void addDataSize(size_t size);
+
       /**
        * @brief Reserve this many items on the data stream. See pushData for details.
        *

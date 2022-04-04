@@ -113,6 +113,19 @@ namespace codi {
         curChunk->pushData(data...);
       }
 
+      /// \copydoc DataInterface::getDataPointer
+      template<typename... Data>
+      CODI_INLINE void getDataPointer(Data*&... pointers) {
+        // This method should only be called if reserveItems has been called.
+        curChunk->dataPointer(curChunk->getUsedSize(), pointers...);
+      }
+
+      /// \copydoc DataInterface::addDataSize
+      CODI_INLINE void addDataSize(size_t size) {
+        // This method should only be called if reserveItems has been called.
+        curChunk->setUsedSize(curChunk->getUsedSize() + size);
+      }
+
       /// \copydoc DataInterface::reserveItems <br><br>
       /// Implementation: Creates a new chunk if not enough space is left.
       CODI_INLINE InternalPosHandle reserveItems(size_t const& items) {
