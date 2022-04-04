@@ -42,6 +42,7 @@
 #include "../../expressions/activeType.hpp"
 #include "../../expressions/assignExpression.hpp"
 #include "../../traits/expressionTraits.hpp"
+#include "../misc/statementSizes.hpp"
 #include "directStatementEvaluator.hpp"
 #include "statementEvaluatorInterface.hpp"
 
@@ -51,23 +52,18 @@ namespace codi {
   /**
    * @brief Additional data required by an InnerStatementEvaluator.
    */
-  struct InnerPrimalTapeStatementData : public PrimalTapeStatementFunctions {
+  struct InnerPrimalTapeStatementData {
     public:
 
       using Base = PrimalTapeStatementFunctions;  ///< Base class abbreviation.
 
-      size_t maxOutputArguments;    ///< Maximum number of output arguments.
-      size_t maxActiveArguments;    ///< Maximum number of active arguments.
-      size_t maxConstantArguments;  ///< Maximum number of constant arguments.
+      PrimalTapeStatementFunctions functions;
+      StatementSizes stmtSizes;
 
       /// Constructor
-      InnerPrimalTapeStatementData(size_t maxOutputArguments, size_t maxActiveArguments, size_t maxConstantArguments,
-                                   typename Base::Handle forward, typename Base::Handle primal,
-                                   typename Base::Handle reverse)
-          : Base(forward, primal, reverse),
-            maxOutputArguments(maxOutputArguments),
-            maxActiveArguments(maxActiveArguments),
-            maxConstantArguments(maxConstantArguments) {}
+      InnerPrimalTapeStatementData(PrimalTapeStatementFunctions functions, StatementSizes stmtSizes)
+          : functions(functions),
+            stmtSizes(stmtSizes) {}
   };
 
   /// Store InnerPrimalTapeStatementData as static variables for each combination of generator (tape) and expression
@@ -83,12 +79,11 @@ namespace codi {
 
   template<typename Generator, typename Expr>
   InnerPrimalTapeStatementData const InnerStatementEvaluatorStaticStore<Generator, Expr>::staticStore(
-      ExpressionTraits::NumberOfActiveTypeArguments<typename Expr::Lhs>::value,
-      ExpressionTraits::NumberOfActiveTypeArguments<typename Expr::Rhs>::value,
-      ExpressionTraits::NumberOfConstantTypeArguments<typename Expr::Rhs>::value,
-      (typename PrimalTapeStatementFunctions::Handle)Generator::template statementEvaluateForwardInner<Expr>,
-      (typename PrimalTapeStatementFunctions::Handle)Generator::template statementEvaluatePrimalInner<Expr>,
-      (typename PrimalTapeStatementFunctions::Handle)Generator::template statementEvaluateReverseInner<Expr>);
+      PrimalTapeStatementFunctions(
+        (typename PrimalTapeStatementFunctions::Handle)Generator::template statementEvaluateForwardInner<Expr>,
+        (typename PrimalTapeStatementFunctions::Handle)Generator::template statementEvaluatePrimalInner<Expr>,
+        (typename PrimalTapeStatementFunctions::Handle)Generator::template statementEvaluateReverseInner<Expr>),
+      StatementSizes::create<Expr>());
 
   /**
    * @brief Expression evaluation in the inner function. Data loading in the compilation context of the tape.
@@ -117,24 +112,22 @@ namespace codi {
       /// \copydoc StatementEvaluatorInterface::callForward
       template<typename Tape, typename... Args>
       static void callForward(Handle const& h, Args&&... args) {
-        Tape::statementEvaluateForwardFull((FunctionForward<Tape>)h->forward, h->maxOutputArguments,
-                                                  h->maxActiveArguments, h->maxConstantArguments,
+        Tape::statementEvaluateForwardFull((FunctionForward<Tape>)h->functions.forward, h->stmtSizes,
                                                   std::forward<Args>(args)...);
       }
 
       /// \copydoc StatementEvaluatorInterface::callPrimal
       template<typename Tape, typename... Args>
       static void callPrimal(Handle const& h, Args&&... args) {
-        Tape::statementEvaluatePrimalFull((FunctionPrimal<Tape>)h->primal, h->maxOutputArguments,
-                                                 h->maxActiveArguments, h->maxConstantArguments,
+        Tape::statementEvaluatePrimalFull((FunctionPrimal<Tape>)h->functions.primal, h->stmtSizes,
                                                  std::forward<Args>(args)...);
       }
 
       /// \copydoc StatementEvaluatorInterface::callReverse
       template<typename Tape, typename... Args>
       static void callReverse(Handle const& h, Args&&... args) {
-        Tape::statementEvaluateReverseFull((FunctionReverse<Tape>)h->reverse, h->maxOutputArguments,
-                                           h->maxActiveArguments, h->maxConstantArguments, std::forward<Args>(args)...);
+        Tape::statementEvaluateReverseFull((FunctionReverse<Tape>)h->functions.reverse, h->stmtSizes,
+                                           std::forward<Args>(args)...);
       }
 
       /// \copydoc StatementEvaluatorInterface::createHandle

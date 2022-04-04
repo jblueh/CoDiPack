@@ -36,6 +36,7 @@
 
 #include "../../misc/macros.hpp"
 #include "../../misc/memberStore.hpp"
+#include "../misc/statementSizes.hpp"
 
 /** \copydoc codi::Namespace */
 namespace codi {
@@ -98,18 +99,15 @@ namespace codi {
 
       /// Load the expression data and evaluate the expression in a forward mode.
       template<typename Func, typename... Args>
-      static void statementEvaluateForwardFull(Func const& inner, size_t const& maxActiveArgs,
-                                               size_t const& maxConstantArgs, Args&&... args);
+      static void statementEvaluateForwardFull(Func const& inner, StatementSizes stmtSizes, Args&&... args);
 
       /// Load the expression data and evaluate the expression in a primal setting.
       template<typename Func, typename... Args>
-      static Real statementEvaluatePrimalFull(Func const& inner, size_t const& maxActiveArgs,
-                                              size_t const& maxConstantArgs, Args&&... args);
+      static void statementEvaluatePrimalFull(Func const& inner, StatementSizes stmtSizes, Args&&... args);
 
       /// Load the expression data and evaluate the expression in a reverse mode.
       template<typename Func, typename... Args>
-      static void statementEvaluateReverseFull(Func const& inner, size_t const& maxActiveArgs,
-                                               size_t const& maxConstantArgs, Args&&... args);
+      static void statementEvaluateReverseFull(Func const& inner, StatementSizes stmtSizes, Args&&... args);
 
       /// Evaluate expression in a forward mode.
       template<typename Expr, typename... Args>
