@@ -160,15 +160,6 @@ namespace codi {
         // Nothing to do.
       }
 
-      /// \copydoc codi::PrimalValueBaseTape::pushStmtData
-      /// Only the number of arguments is required for linear index managers.
-      CODI_INLINE void pushStmtData(Identifier const& index, Config::ArgumentSize const& numberOfPassiveArguments,
-                                    Real const& oldPrimalValue, EvalHandle evalHandle) {
-        CODI_UNUSED(index, oldPrimalValue);
-
-        Base::statementData.pushData(numberOfPassiveArguments, evalHandle);
-      }
-
     public:
       /// \copydoc codi::PrimalValueBaseTape::revertPrimals
       /// Empty implementation; primal values are not overwritten with linear index management.

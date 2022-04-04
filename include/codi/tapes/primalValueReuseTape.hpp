@@ -144,13 +144,6 @@ namespace codi {
         CODI_UNUSED(pos);
       }
 
-      /// \copydoc codi::PrimalValueBaseTape::pushStmtData
-      /// Only the number of arguments is required for linear index managers.
-      CODI_INLINE void pushStmtData(Identifier const& index, Config::ArgumentSize const& numberOfPassiveArguments,
-                                    Real const& oldPrimalValue, EvalHandle evalHandle) {
-        CODI_UNUSED(index, numberOfPassiveArguments, oldPrimalValue, evalHandle);
-      }
-
     public:
       /// \copydoc codi::PrimalEvaluationTapeInterface::revertPrimals
       void revertPrimals(Position const& pos) {

@@ -224,10 +224,6 @@ namespace codi {
       /// Reset the primal values to the given position.
       void internalResetPrimalValues(Position const& pos);
 
-      /// Add statement specific data to the data streams.
-      void pushStmtData(Identifier const& index, Config::ArgumentSize const& numberOfPassiveArguments,
-                        Real const& oldPrimalValue, EvalHandle evalHandle);
-
       /// @}
 
     public:
