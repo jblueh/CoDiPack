@@ -68,6 +68,14 @@ namespace codi {
 
       /// Throws CODI_EXCEPTION on call.
       template<typename Tape, typename... Args>
+      static void callClearAdjoint(Handle const& h, Args&&... args) {
+        CODI_UNUSED(h, args...);
+
+        CODI_EXCEPTION("ReverseStatementEvaluator does not support primal evaluation calls.");
+      }
+
+      /// Throws CODI_EXCEPTION on call.
+      template<typename Tape, typename... Args>
       static void callForward(Handle const& h, Args&&... args) {
         CODI_UNUSED(h, args...);
 
@@ -77,6 +85,14 @@ namespace codi {
       /// Throws CODI_EXCEPTION on call.
       template<typename Tape, typename... Args>
       static void callPrimal(Handle const& h, Args&&... args) {
+        CODI_UNUSED(h, args...);
+
+        CODI_EXCEPTION("ReverseStatementEvaluator does not support primal evaluation calls.");
+      }
+
+      /// Throws CODI_EXCEPTION on call.
+      template<typename Tape, typename... Args>
+      static void callResetPrimal(Handle const& h, Args&&... args) {
         CODI_UNUSED(h, args...);
 
         CODI_EXCEPTION("ReverseStatementEvaluator does not support primal evaluation calls.");

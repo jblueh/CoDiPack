@@ -80,6 +80,8 @@ namespace codi {
       using EvalHandle = typename TapeTypes::EvalHandle;                  ///< See PrimalValueTapeTypes.
       using Position = typename Base::Position;                           ///< See TapeTypesInterface.
 
+      using ReuseReverseArguments = typename Base::ReuseReverseArguments;
+
       /// Constructor
       PrimalValueReuseTape() : Base() {}
 
@@ -87,7 +89,32 @@ namespace codi {
 
       /// \copydoc codi::PositionalEvaluationTapeInterface::clearAdjoints
       void clearAdjoints(Position const& start, Position const& end) {
-        CODI_UNUSED(start, end);
+        auto clearFunc = [](
+            /* data from call */
+            ADJOINT_VECTOR_TYPE* adjointVector,
+            /* data from dynamicData */
+            size_t& curDynamicPos, size_t const& endDynamicPos, char const* const dynamicValues,
+            /* data from staticData */
+            size_t& curStaticPos, size_t const& endStaticPos, char const* const staticValues)
+        {
+          CODI_UNUSED(endDynamicPos);
+
+          typename Base::StaticStatementData data;
+
+          while (curStaticPos > endStaticPos) {
+
+            curStaticPos = data.readReverse(staticValues, curStaticPos);
+
+            StatementEvaluator::template callClearAdjoint<PrimalValueReuseTape>(
+                data.handle, ReuseReverseArguments{nullptr}, adjointVector, data.numberOfPassiveArguments, curDynamicPos, dynamicValues);
+          }
+        };
+
+        using DynamicPosition = typename Base::DynamicData::Position;
+        DynamicPosition startStmt = this->externalFunctionData.template extractPosition<DynamicPosition>(start);
+        DynamicPosition endStmt = this->externalFunctionData.template extractPosition<DynamicPosition>(end);
+
+        this->dynamicData.evaluateReverse(startStmt, endStmt, clearFunc, this->primals.data());
       }
 
     protected:
@@ -115,7 +142,7 @@ namespace codi {
       }
 
       /// \copydoc codi::PrimalValueBaseTape::internalEvaluateReverse_Step3_EvalStatements
-      CODI_INLINE static void internalEvaluateReverse_Step3_EvalStatements(
+      CODI_NO_INLINE static void internalEvaluateReverse_Step3_EvalStatements(
           /* data from call */
           Real* primalVector, ADJOINT_VECTOR_TYPE* adjointVector,
           /* data from dynamicData */
@@ -126,8 +153,6 @@ namespace codi {
 
         StackArray<Gradient> lhsAdjoints{};
         typename Base::StaticStatementData data;
-
-        using ReuseReverseArguments = typename Base::ReuseReverseArguments;
 
         while (curStaticPos > endStaticPos) {
 
@@ -141,7 +166,32 @@ namespace codi {
 
       /// \copydoc codi::PrimalValueBaseTape::internalResetPrimalValues
       CODI_INLINE void internalResetPrimalValues(Position const& pos) {
-        CODI_UNUSED(pos);
+        auto clearFunc = [](
+            /* data from call */
+            Real* primalVector,
+            /* data from dynamicData */
+            size_t& curDynamicPos, size_t const& endDynamicPos, char const* const dynamicValues,
+            /* data from staticData */
+            size_t& curStaticPos, size_t const& endStaticPos, char const* const staticValues)
+        {
+          CODI_UNUSED(endDynamicPos);
+
+          typename Base::StaticStatementData data;
+
+          while (curStaticPos > endStaticPos) {
+
+            curStaticPos = data.readReverse(staticValues, curStaticPos);
+
+            StatementEvaluator::template callResetPrimal<PrimalValueReuseTape>(
+                data.handle, ReuseReverseArguments{primalVector}, data.numberOfPassiveArguments, curDynamicPos, dynamicValues);
+          }
+        };
+
+        using DynamicPosition = typename Base::DynamicData::Position;
+        DynamicPosition startStmt = this->externalFunctionData.template extractPosition<DynamicPosition>(this->getPosition());
+        DynamicPosition endStmt = this->externalFunctionData.template extractPosition<DynamicPosition>(pos);
+
+        this->dynamicData.evaluateReverse(startStmt, endStmt, clearFunc, this->primals.data());
       }
 
     public:

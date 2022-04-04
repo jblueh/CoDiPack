@@ -53,13 +53,15 @@ namespace codi {
 
       using Handle = void*;  ///< Function pointer.
 
+      Handle clearAdjoints; ///< Clear adjoints function handle.
       Handle forward;  ///< Forward function handle.
       Handle primal;   ///< Primal function handle.
+      Handle resetPrimal; ///< Reset primals function handle.
       Handle reverse;  ///< Reverse function handle.
 
       /// Constructor
-      PrimalTapeStatementFunctions(Handle forward, Handle primal, Handle reverse)
-          : forward(forward), primal(primal), reverse(reverse) {}
+      PrimalTapeStatementFunctions(Handle clearAdjoints, Handle forward, Handle primal, Handle resetPrimal, Handle reverse)
+          : clearAdjoints(clearAdjoints), forward(forward), primal(primal), resetPrimal(resetPrimal), reverse(reverse) {}
   };
 
   /// Store PrimalTapeStatementFunctions as static variables for each combination of generator (tape) and expression
@@ -75,8 +77,10 @@ namespace codi {
 
   template<typename Generator, typename Expr>
   PrimalTapeStatementFunctions const DirectStatementEvaluatorStaticStore<Generator, Expr>::staticStore(
+      (typename PrimalTapeStatementFunctions::Handle)Generator::template statementClearAdjoint<Expr>,
       (typename PrimalTapeStatementFunctions::Handle)Generator::template statementEvaluateForward<Expr>,
       (typename PrimalTapeStatementFunctions::Handle)Generator::template statementEvaluatePrimal<Expr>,
+      (typename PrimalTapeStatementFunctions::Handle)Generator::template statementResetPrimal<Expr>,
       (typename PrimalTapeStatementFunctions::Handle)Generator::template statementEvaluateReverse<Expr>);
 
   /**
@@ -101,6 +105,12 @@ namespace codi {
 
       using Handle = PrimalTapeStatementFunctions const*;  ///< Pointer to static storage location.
 
+      /// \copydoc StatementEvaluatorInterface::callClearAdjoint
+      template<typename Tape, typename... Args>
+      static void callClearAdjoint(Handle const& h, Args&&... args) {
+        ((FunctionClearAdjoint<Tape>)h->clearAdjoints)(std::forward<Args>(args)...);
+      }
+
       /// \copydoc StatementEvaluatorInterface::callForward
       template<typename Tape, typename... Args>
       static void callForward(Handle const& h, Args&&... args) {
@@ -111,6 +121,12 @@ namespace codi {
       template<typename Tape, typename... Args>
       static void callPrimal(Handle const& h, Args&&... args) {
         ((FunctionPrimal<Tape>)h->primal)(std::forward<Args>(args)...);
+      }
+
+      /// \copydoc StatementEvaluatorInterface::callResetPrimal
+      template<typename Tape, typename... Args>
+      static void callResetPrimal(Handle const& h, Args&&... args) {
+        ((FunctionResetPrimal<Tape>)h->resetPrimal)(std::forward<Args>(args)...);
       }
 
       /// \copydoc StatementEvaluatorInterface::callReverse
@@ -129,6 +145,10 @@ namespace codi {
 
     protected:
 
+      /// Full clear adjoints function type.
+      template<typename Tape>
+      using FunctionClearAdjoint = decltype(&Tape::template statementClearAdjoint<AssignExpression<ActiveType<Tape>, ActiveType<Tape>>>);
+
       /// Full forward function type.
       template<typename Tape>
       using FunctionForward = decltype(&Tape::template statementEvaluateForward<AssignExpression<ActiveType<Tape>, ActiveType<Tape>>>);
@@ -136,6 +156,10 @@ namespace codi {
       /// Full primal function type.
       template<typename Tape>
       using FunctionPrimal = decltype(&Tape::template statementEvaluatePrimal<AssignExpression<ActiveType<Tape>, ActiveType<Tape>>>);
+
+      /// Full reset primals function type.
+      template<typename Tape>
+      using FunctionResetPrimal = decltype(&Tape::template statementResetPrimal<AssignExpression<ActiveType<Tape>, ActiveType<Tape>>>);
 
       /// Full reverse function type.
       template<typename Tape>

@@ -56,6 +56,10 @@ namespace codi {
       /*******************************************************************************/
       /// @name Interface definition
 
+      /// Clear the adjoints of the expression.
+      template<typename Expr, typename... Args>
+      static void statementClearAdjoint(Args&&... args);
+
       /// Evaluate expression in a forward mode.
       template<typename Expr, typename... Args>
       static void statementEvaluateForward(Args&&... args);
@@ -63,6 +67,10 @@ namespace codi {
       /// Evaluate primal expression.
       template<typename Expr, typename... Args>
       static void statementEvaluatePrimal(Args&&... args);
+
+      /// Reset the primal values of the expression.
+      template<typename Expr, typename... Args>
+      static void statementResetPrimal(Args&&... args);
 
       /// Evaluate expression in a reverse mode.
       template<typename Expr, typename... Args>
@@ -87,6 +95,10 @@ namespace codi {
       /*******************************************************************************/
       /// @name Interface definition
 
+      /// Load the expression data and clear the adjoints of the expression
+      template<typename Func, typename... Args>
+      static void statementClearAdjointFull(Func const& inner, StatementSizes stmtSizes, Args&&... args);
+
       /// Load the expression data and evaluate the expression in a forward mode.
       template<typename Func, typename... Args>
       static void statementEvaluateForwardFull(Func const& inner, StatementSizes stmtSizes, Args&&... args);
@@ -95,9 +107,17 @@ namespace codi {
       template<typename Func, typename... Args>
       static void statementEvaluatePrimalFull(Func const& inner, StatementSizes stmtSizes, Args&&... args);
 
+      /// Load the expression data and reset the primal values of the expression
+      template<typename Func, typename... Args>
+      static void statementResetPrimalFull(Func const& inner, StatementSizes stmtSizes, Args&&... args);
+
       /// Load the expression data and evaluate the expression in a reverse mode.
       template<typename Func, typename... Args>
       static void statementEvaluateReverseFull(Func const& inner, StatementSizes stmtSizes, Args&&... args);
+
+      /// Clear the adjoints of the expression.
+      template<typename Expr, typename... Args>
+      static void statementClearAdjointInner(Args&&... args);
 
       /// Evaluate expression in a forward mode.
       template<typename Expr, typename... Args>
@@ -106,6 +126,10 @@ namespace codi {
       /// Evaluate expression in a primal setting.
       template<typename Expr, typename... Args>
       static void statementEvaluatePrimalInner(Args&&... args);
+
+      /// Reset the primal values of the expression.
+      template<typename Expr, typename... Args>
+      static void statementResetPrimalInner(Args&&... args);
 
       /// Evaluate expression in a reverse mode.
       template<typename Expr, typename... Args>
