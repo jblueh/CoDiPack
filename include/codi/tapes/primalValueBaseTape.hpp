@@ -130,8 +130,8 @@ namespace codi {
    */
   template<typename T_TapeTypes, typename T_Impl>
   struct PrimalValueBaseTape : public CommonTapeImplementation<T_TapeTypes, T_Impl>,
-                               public StatementEvaluatorTapeInterface<typename T_TapeTypes::Real>,
-                               public StatementEvaluatorInnerTapeInterface<typename T_TapeTypes::Real> {
+                               public StatementEvaluatorTapeInterface,
+                               public StatementEvaluatorInnerTapeInterface {
     public:
 
       /// See PrimalValueBaseTape.
