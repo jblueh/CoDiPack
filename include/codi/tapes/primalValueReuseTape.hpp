@@ -105,7 +105,7 @@ namespace codi {
 
             curStaticPos = data.readReverse(staticValues, curStaticPos);
 
-            StatementEvaluator::template callClearAdjoint<PrimalValueReuseTape>(
+            StatementEvaluator::template call<Calls::ClearAdjoint, PrimalValueReuseTape>(
                 data.handle, ReuseReverseArguments{nullptr}, adjointVector, adjointVectorSize, data.numberOfPassiveArguments, curDynamicPos, dynamicValues);
           }
         };
@@ -114,7 +114,7 @@ namespace codi {
         DynamicPosition startStmt = this->externalFunctionData.template extractPosition<DynamicPosition>(start);
         DynamicPosition endStmt = this->externalFunctionData.template extractPosition<DynamicPosition>(end);
 
-        typename Base::VectorAccess<Gradient> vectorAccess(Base::adjoints.data(), Base::primals.data());
+        typename Base::template VectorAccess<Gradient> vectorAccess(Base::adjoints.data(), Base::primals.data());
 
         ADJOINT_VECTOR_TYPE* dataVector = Base::selectAdjointVector(&vectorAccess, Base::adjoints.data());
 
@@ -142,7 +142,7 @@ namespace codi {
 
           curStaticPos = data.readForward(staticValues, curStaticPos);
 
-          StatementEvaluator::template callForward<PrimalValueReuseTape>(
+          StatementEvaluator::template call<Calls::Forward, PrimalValueReuseTape>(
               data.handle, ReuseReverseArguments{primalVector}, adjointVector, lhsPrimals.data(), lhsTangents.data(),
               data.numberOfPassiveArguments, curDynamicPos, dynamicValues);
         }
@@ -165,7 +165,7 @@ namespace codi {
 
           curStaticPos = data.readForward(staticValues, curStaticPos);
 
-          StatementEvaluator::template callPrimal<PrimalValueReuseTape>(
+          StatementEvaluator::template call<Calls::Primal, PrimalValueReuseTape>(
               data.handle, ReuseReverseArguments{primalVector}, lhsPrimals.data(),
               data.numberOfPassiveArguments, curDynamicPos, dynamicValues);
         }
@@ -188,7 +188,7 @@ namespace codi {
 
           curStaticPos = data.readReverse(staticValues, curStaticPos);
 
-          StatementEvaluator::template callReverse<PrimalValueReuseTape>(
+          StatementEvaluator::template call<Calls::Reverse, PrimalValueReuseTape>(
                 data.handle, ReuseReverseArguments{primalVector}, adjointVector, lhsAdjoints.data(),
               data.numberOfPassiveArguments, curDynamicPos, dynamicValues);
         }
@@ -212,7 +212,7 @@ namespace codi {
 
             curStaticPos = data.readReverse(staticValues, curStaticPos);
 
-            StatementEvaluator::template callResetPrimal<PrimalValueReuseTape>(
+            StatementEvaluator::template call<Calls::ResetPrimal, PrimalValueReuseTape>(
                 data.handle, ReuseReverseArguments{primalVector}, data.numberOfPassiveArguments, curDynamicPos, dynamicValues);
           }
         };

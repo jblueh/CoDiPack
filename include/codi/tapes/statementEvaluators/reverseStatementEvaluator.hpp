@@ -42,7 +42,9 @@
 #include "../../misc/macros.hpp"
 #include "../../misc/memberStore.hpp"
 #include "../../expressions/activeType.hpp"
+#include "../../expressions/assignExpression.hpp"
 #include "statementEvaluatorInterface.hpp"
+#include "statementEvaluatorTapeInterface.hpp"
 
 /** \copydoc codi::Namespace */
 namespace codi {
@@ -60,50 +62,28 @@ namespace codi {
 
     public:
 
+
       /*******************************************************************************/
       /// @name StatementEvaluatorInterface implementation
       /// @{
 
       using Handle = void*;  ///< Function pointer to the reverse evaluation.
 
-      /// Throws CODI_EXCEPTION on call.
-      template<typename Tape, typename... Args>
-      static void callClearAdjoint(Handle const& h, Args&&... args) {
-        CODI_UNUSED(h, args...);
+      /// \copydoc StatementEvaluatorInterface::call
+      template<Calls type, typename Tape, typename... Args>
+      static void call(Handle const& h, Args&&... args) {
+        using Expr = AssignExpression<ActiveType<Tape>, ActiveType<Tape>>;
+        using CallGen = typename Tape::template StatementCallGen<type, Expr>;
 
-        CODI_EXCEPTION("ReverseStatementEvaluator does not support primal evaluation calls.");
-      }
+        using Function = decltype(&CallGen::evaluate);
 
-      /// Throws CODI_EXCEPTION on call.
-      template<typename Tape, typename... Args>
-      static void callForward(Handle const& h, Args&&... args) {
-        CODI_UNUSED(h, args...);
+        Function func = (Function)h;
 
-        CODI_EXCEPTION("ReverseStatementEvaluator does not support forward evaluation calls.");
-      }
-
-      /// Throws CODI_EXCEPTION on call.
-      template<typename Tape, typename... Args>
-      static void callPrimal(Handle const& h, Args&&... args) {
-        CODI_UNUSED(h, args...);
-
-        CODI_EXCEPTION("ReverseStatementEvaluator does not support primal evaluation calls.");
-      }
-
-      /// Throws CODI_EXCEPTION on call.
-      template<typename Tape, typename... Args>
-      static void callResetPrimal(Handle const& h, Args&&... args) {
-        CODI_UNUSED(h, args...);
-
-        CODI_EXCEPTION("ReverseStatementEvaluator does not support primal evaluation calls.");
-      }
-
-      /// \copydoc StatementEvaluatorInterface::callReverse
-      template<typename Tape, typename... Args>
-      static void callReverse(Handle const& h, Args&&... args) {
-        HandleTyped<Tape> func = (HandleTyped<Tape>)h;
-
-        func(std::forward<Args>(args)...);
+        if(Calls::Reverse == type) {
+          func(std::forward<Args>(args)...);
+        } else {
+          CODI_EXCEPTION("ReverseStatementEvaluator only supports reverse evaluation calls.");
+        }
       }
 
       /// \copydoc StatementEvaluatorInterface::createHandle

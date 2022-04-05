@@ -68,24 +68,29 @@ namespace codi {
 
   /// Store InnerPrimalTapeStatementData as static variables for each combination of generator (tape) and expression
   /// used in the program.
-  template<typename Tape, typename Expr>
+  template<typename Generator, typename Expr>
   struct InnerStatementEvaluatorStaticStore {
     public:
 
       /// Static storage. Static construction is done by instantiating the statementEvaluate*Inner functions of the
       /// generator with Expr. Also evaluates the number of active type arguments and constant type arguments.
       static InnerPrimalTapeStatementData const staticStore;  ///< Static storage.
+
+      template<Calls ... types>
+      static InnerPrimalTapeStatementData gen() {
+        using Handle = typename PrimalTapeStatementFunctions::Handle;
+
+        return InnerPrimalTapeStatementData(
+            PrimalTapeStatementFunctions(
+              ((Handle)Generator::template StatementCallGen<types, Expr>::evaluateInner)...
+            ),
+            StatementSizes::create<Expr>());
+      }
   };
 
   template<typename Generator, typename Expr>
-  InnerPrimalTapeStatementData const InnerStatementEvaluatorStaticStore<Generator, Expr>::staticStore(
-      PrimalTapeStatementFunctions(
-        (typename PrimalTapeStatementFunctions::Handle)Generator::template statementClearAdjointInner<Expr>,
-        (typename PrimalTapeStatementFunctions::Handle)Generator::template statementEvaluateForwardInner<Expr>,
-        (typename PrimalTapeStatementFunctions::Handle)Generator::template statementEvaluatePrimalInner<Expr>,
-        (typename PrimalTapeStatementFunctions::Handle)Generator::template statementResetPrimalInner<Expr>,
-        (typename PrimalTapeStatementFunctions::Handle)Generator::template statementEvaluateReverseInner<Expr>),
-      StatementSizes::create<Expr>());
+  InnerPrimalTapeStatementData const InnerStatementEvaluatorStaticStore<Generator, Expr>::staticStore =
+      InnerStatementEvaluatorStaticStore<Generator, Expr>::gen<CALL_GEN_ARGS>();
 
   /**
    * @brief Expression evaluation in the inner function. Data loading in the compilation context of the tape.
@@ -111,39 +116,15 @@ namespace codi {
 
       using Handle = InnerPrimalTapeStatementData const*;  ///< Pointer to static storage location.
 
-      /// \copydoc StatementEvaluatorInterface::callClearAdjoint
-      template<typename Tape, typename... Args>
-      static void callClearAdjoint(Handle const& h, Args&&... args) {
-        Tape::statementClearAdjointFull((FunctionReverse<Tape>)h->functions.clearAdjoints, h->stmtSizes,
-                                          std::forward<Args>(args)...);
-      }
+      /// \copydoc StatementEvaluatorInterface::call
+      template<Calls type, typename Tape, typename... Args>
+      static void call(Handle const& h, Args&&... args) {
+        using Expr = AssignExpression<ActiveType<Tape>, ActiveType<Tape>>;
+        using CallGen = typename Tape::template StatementCallGen<type, Expr>;
 
-      /// \copydoc StatementEvaluatorInterface::callForward
-      template<typename Tape, typename... Args>
-      static void callForward(Handle const& h, Args&&... args) {
-        Tape::statementEvaluateForwardFull((FunctionForward<Tape>)h->functions.forward, h->stmtSizes,
-                                                  std::forward<Args>(args)...);
-      }
+        using Function = decltype(&CallGen::evaluateInner);
 
-      /// \copydoc StatementEvaluatorInterface::callPrimal
-      template<typename Tape, typename... Args>
-      static void callPrimal(Handle const& h, Args&&... args) {
-        Tape::statementEvaluatePrimalFull((FunctionPrimal<Tape>)h->functions.primal, h->stmtSizes,
-                                                 std::forward<Args>(args)...);
-      }
-
-      /// \copydoc StatementEvaluatorInterface::callResetPrimal
-      template<typename Tape, typename... Args>
-      static void callResetPrimal(Handle const& h, Args&&... args) {
-        Tape::statementResetPrimalFull((FunctionReverse<Tape>)h->functions.resetPrimal, h->stmtSizes,
-                                         std::forward<Args>(args)...);
-      }
-
-      /// \copydoc StatementEvaluatorInterface::callReverse
-      template<typename Tape, typename... Args>
-      static void callReverse(Handle const& h, Args&&... args) {
-        Tape::statementEvaluateReverseFull((FunctionReverse<Tape>)h->functions.reverse, h->stmtSizes,
-                                           std::forward<Args>(args)...);
+        CallGen::evaluateFull(((Function)h->functions.funcs[(size_t)type]), h->stmtSizes, std::forward<Args>(args)...);
       }
 
       /// \copydoc StatementEvaluatorInterface::createHandle
@@ -153,27 +134,5 @@ namespace codi {
       }
 
       /// @}
-
-    protected:
-
-      /// Full clear adjoints function type.
-      template<typename Tape>
-      using FunctionClearAdjoint = decltype(&Tape::template statementClearAdjointInner<AssignExpression<ActiveType<Tape>, ActiveType<Tape>>>);
-
-      /// Full forward function type.
-      template<typename Tape>
-      using FunctionForward = decltype(&Tape::template statementEvaluateForwardInner<AssignExpression<ActiveType<Tape>, ActiveType<Tape>>>);
-
-      /// Full primal function type.
-      template<typename Tape>
-      using FunctionPrimal = decltype(&Tape::template statementEvaluatePrimalInner<AssignExpression<ActiveType<Tape>, ActiveType<Tape>>>);
-
-      /// Full reset primals function type.
-      template<typename Tape>
-      using FunctionResetPrimal = decltype(&Tape::template statementResetPrimalInner<AssignExpression<ActiveType<Tape>, ActiveType<Tape>>>);
-
-      /// Full reverse function type.
-      template<typename Tape>
-      using FunctionReverse = decltype(&Tape::template statementEvaluateReverseInner<AssignExpression<ActiveType<Tape>, ActiveType<Tape>>>);
   };
 }

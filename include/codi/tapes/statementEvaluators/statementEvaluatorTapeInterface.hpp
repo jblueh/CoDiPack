@@ -41,14 +41,27 @@
 /** \copydoc codi::Namespace */
 namespace codi {
 
+  enum class Calls {
+    ClearAdjoint, ///< Clear the adjoints of the expression.
+    Forward,      ///< Evaluate expression in a forward mode.
+    Primal,       ///< Evaluate primal expression.
+    ResetPrimal,  ///< Reset the primal values of the expression.
+    Reverse,      ///< Evaluate expression in a reverse mode.
+    N_Elements    ///< Number of elements.
+  };
+
+#define CALL_GEN_ARGS Calls::ClearAdjoint, Calls::Forward, Calls::Primal, Calls::ResetPrimal, Calls::Reverse
+
   /**
    * @brief Tape side interface for StatementEvaluatorInterface.
    *
    * See StatementEvaluatorInterface for a full description.
    *
-   * In every method the full evaluation of the statement needs to be done.
+   * In the evaluation method of StatementCallGen the full evaluation of the statement needs to be done.
    * - 1. Load expression specific data
    * - 2. Call expression specific function
+   *
+   * The structure StatementCallGen needs to be specialized for all enums in Calls.
    */
   struct StatementEvaluatorTapeInterface {
     public:
@@ -56,25 +69,11 @@ namespace codi {
       /*******************************************************************************/
       /// @name Interface definition
 
-      /// Clear the adjoints of the expression.
-      template<typename Expr, typename... Args>
-      static void statementClearAdjoint(Args&&... args);
-
-      /// Evaluate expression in a forward mode.
-      template<typename Expr, typename... Args>
-      static void statementEvaluateForward(Args&&... args);
-
-      /// Evaluate primal expression.
-      template<typename Expr, typename... Args>
-      static void statementEvaluatePrimal(Args&&... args);
-
-      /// Reset the primal values of the expression.
-      template<typename Expr, typename... Args>
-      static void statementResetPrimal(Args&&... args);
-
-      /// Evaluate expression in a reverse mode.
-      template<typename Expr, typename... Args>
-      static void statementEvaluateReverse(Args&&... args);
+      template<Calls type, typename Expr>
+      struct StatementCallGen {
+          template<typename... Args>
+          CODI_INLINE static void evaluate(Args&&... args);
+      };
   };
 
   /**
@@ -82,10 +81,10 @@ namespace codi {
    *
    * See StatementEvaluatorInterface for a full description.
    *
-   * The `statementEvaluate*Inner` methods needs to be stored by the StatementEvaluatorInterface. These methods
+   * The `evaluateInner` methods need to be stored by the StatementEvaluatorInterface. These methods
    * perform the `Call expression specific function` logic.
    *
-   * The `statementEvaluate*Full` functions are called by the StatementEvaluatorInterface on a `call*` function call.
+   * The `evaluateFull` functions are called by the StatementEvaluatorInterface on a `call` function call.
    * This performs the step `Load expression specific data` in an inline context. `inner` is the stored function pointer
    * in the handle.
    */
@@ -95,44 +94,12 @@ namespace codi {
       /*******************************************************************************/
       /// @name Interface definition
 
-      /// Load the expression data and clear the adjoints of the expression
-      template<typename Func, typename... Args>
-      static void statementClearAdjointFull(Func const& inner, StatementSizes stmtSizes, Args&&... args);
-
-      /// Load the expression data and evaluate the expression in a forward mode.
-      template<typename Func, typename... Args>
-      static void statementEvaluateForwardFull(Func const& inner, StatementSizes stmtSizes, Args&&... args);
-
-      /// Load the expression data and evaluate the expression in a primal setting.
-      template<typename Func, typename... Args>
-      static void statementEvaluatePrimalFull(Func const& inner, StatementSizes stmtSizes, Args&&... args);
-
-      /// Load the expression data and reset the primal values of the expression
-      template<typename Func, typename... Args>
-      static void statementResetPrimalFull(Func const& inner, StatementSizes stmtSizes, Args&&... args);
-
-      /// Load the expression data and evaluate the expression in a reverse mode.
-      template<typename Func, typename... Args>
-      static void statementEvaluateReverseFull(Func const& inner, StatementSizes stmtSizes, Args&&... args);
-
-      /// Clear the adjoints of the expression.
-      template<typename Expr, typename... Args>
-      static void statementClearAdjointInner(Args&&... args);
-
-      /// Evaluate expression in a forward mode.
-      template<typename Expr, typename... Args>
-      static void statementEvaluateForwardInner(Args&&... args);
-
-      /// Evaluate expression in a primal setting.
-      template<typename Expr, typename... Args>
-      static void statementEvaluatePrimalInner(Args&&... args);
-
-      /// Reset the primal values of the expression.
-      template<typename Expr, typename... Args>
-      static void statementResetPrimalInner(Args&&... args);
-
-      /// Evaluate expression in a reverse mode.
-      template<typename Expr, typename... Args>
-      static void statementEvaluateReverseInner(Args&&... args);
+      template<Calls type, typename Expr>
+      struct StatementCallGen {
+          template<typename... Args>
+          CODI_INLINE static void evaluateInner(Args&&... args);
+          template<typename InnerFunc, typename... Args>
+          CODI_INLINE static void evaluateFull(InnerFunc func, Args&&... args);
+      };
   };
 }
