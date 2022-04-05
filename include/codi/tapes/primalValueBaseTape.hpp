@@ -785,16 +785,19 @@ namespace codi {
         public:
 
           /// \copydoc codi::JacobianComputationLogic::handleJacobianOnActive()
-          template<typename Node>
-          CODI_INLINE void handleJacobianOnActive(Node const& node, Real jacobian, Gradient& lhsTangent,
+          template<typename Node, typename Jacobian>
+          CODI_INLINE void handleJacobianOnActive(Node const& node, Jacobian jacobianExpr, Gradient& lhsTangent,
                                                   ADJOINT_VECTOR_TYPE* adjointVector) {
             CODI_UNUSED(lhsTangent);
 
-            if (CODI_ENABLE_CHECK(Config::IgnoreInvalidJacobians, RealTraits::isTotalFinite(jacobian))) {
+            ExpressionTraits::ActiveResultFromExpr<Jacobian> jacobian = jacobianExpr;
+            Real jacobianReal = ComputationTraits::adjointConversion<Real>(jacobian);
+
+            if (CODI_ENABLE_CHECK(Config::IgnoreInvalidJacobians, RealTraits::isTotalFinite(jacobianReal))) {
 #if CODI_VariableAdjointInterfaceInPrimalTapes
-              adjointVector->updateTangentWithLhs(node.getIdentifier(), jacobian);
+              adjointVector->updateTangentWithLhs(node.getIdentifier(), jacobianReal);
 #else
-              lhsTangent += jacobian * adjointVector[node.getIdentifier()];
+              lhsTangent += jacobianReal * adjointVector[node.getIdentifier()];
 #endif
             }
           }
@@ -837,16 +840,19 @@ namespace codi {
         public:
 
           /// See IncrementReversalLogic.
-          template<typename Node>
-          CODI_INLINE void handleJacobianOnActive(Node const& node, Real jacobian, Gradient const& lhsAdjoint,
+          template<typename Node, typename Jacobian>
+          CODI_INLINE void handleJacobianOnActive(Node const& node, Jacobian jacobianExpr, Gradient const& lhsAdjoint,
                                                   ADJOINT_VECTOR_TYPE* adjointVector) {
             CODI_UNUSED(lhsAdjoint);
 
-            if (CODI_ENABLE_CHECK(Config::IgnoreInvalidJacobians, RealTraits::isTotalFinite(jacobian))) {
+            ExpressionTraits::ActiveResultFromExpr<Jacobian> jacobian = jacobianExpr;
+            Real jacobianReal = ComputationTraits::adjointConversion<Real>(jacobian);
+
+            if (CODI_ENABLE_CHECK(Config::IgnoreInvalidJacobians, RealTraits::isTotalFinite(jacobianReal))) {
 #if CODI_VariableAdjointInterfaceInPrimalTapes
-              adjointVector->updateAdjointWithLhs(node.getIdentifier(), jacobian);
+              adjointVector->updateAdjointWithLhs(node.getIdentifier(), jacobianReal);
 #else
-              adjointVector[node.getIdentifier()] += jacobian * lhsAdjoint;
+              adjointVector[node.getIdentifier()] += jacobianReal * lhsAdjoint;
 #endif
             }
           }

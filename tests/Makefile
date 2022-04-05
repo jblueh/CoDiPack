@@ -72,7 +72,6 @@ DEP_FILES  += $(wildcard $(BUILD_DIR)/**/**/**/**.d)
 
 # Test selection by user
 ALL_TESTS = $(patsubst test%.hpp,Test%,$(notdir $(TEST_FILES)))
-ALL_TESTS := $(filter-out TestComplex%, $(ALL_TESTS))
 ifeq ($(TESTS),)
   CONFID = $(BUILD_DIR)/allTests.conf
   SELECTED_TESTS = $(ALL_TESTS)
