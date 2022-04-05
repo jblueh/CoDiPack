@@ -1221,7 +1221,7 @@ namespace codi {
           dynamicData.pushData(primalEntry);
         }
 
-        StaticStatementData::store(staticData, (Config::ArgumentSize)0, PrimalValueBaseTape::jacobianExpressions[size]);
+        StaticStatementData::store(staticData, (Config::ArgumentSize)size, PrimalValueBaseTape::jacobianExpressions[size]);
 
         primalEntry = lhsValue;
       }
@@ -1334,7 +1334,7 @@ namespace codi {
       template<typename Func>
       CODI_INLINE static void statementClearAdjointFull(
           Func const& evalInner, StatementSizes stmtSizes, ReverseArguments revArgs,
-          ADJOINT_VECTOR_TYPE* __restrict__ adjointVector, Config::ArgumentSize numberOfPassiveArguments,
+          ADJOINT_VECTOR_TYPE* __restrict__ adjointVector, size_t adjointVectorSize, Config::ArgumentSize numberOfPassiveArguments,
           size_t& __restrict__ curDynamicPos, char* const __restrict__ dynamicValues
       ) {
         CODI_UNUSED(evalInner);
@@ -1347,7 +1347,13 @@ namespace codi {
         for (size_t iLhs = 0; iLhs < stmtSizes.maxOutputArgs; iLhs += 1) {
           Identifier lhsIdentifier = revArgs.getLhsIdentifier(iLhs, data.lhsIdentifiers);
 
-          adjointVector[lhsIdentifier] = Gradient();
+          if(lhsIdentifier < adjointVectorSize) {
+#if CODI_VariableAdjointInterfaceInPrimalTapes
+            adjointVector->resetAdjointVec(lhsIdentifier);
+#else
+            adjointVector[lhsIdentifier] = Gradient();
+#endif
+          }
         }
       }
 
@@ -1594,10 +1600,11 @@ namespace codi {
       /// \copydoc codi::StatementEvaluatorTapeInterface::statementClearAdjoint()
       template<typename Expr>
       CODI_INLINE static void statementClearAdjoint(ReverseArguments revArgs, ADJOINT_VECTOR_TYPE* __restrict__ adjointVector,
+                                                    size_t adjointVectorSize,
                                                     Config::ArgumentSize numberOfPassiveArguments,
                                                     size_t& __restrict__ curDynamicPos, char* const __restrict__ dynamicValues) {
         statementClearAdjointFull(statementClearAdjointInner<Expr>, StatementSizes::create<Expr>(), revArgs,
-                                  adjointVector, numberOfPassiveArguments, curDynamicPos, dynamicValues);
+                                  adjointVector, adjointVectorSize, numberOfPassiveArguments, curDynamicPos, dynamicValues);
       }
 
       /// \copydoc codi::StatementEvaluatorTapeInterface::statementEvaluateForward()

@@ -91,7 +91,7 @@ namespace codi {
       void clearAdjoints(Position const& start, Position const& end) {
         auto clearFunc = [](
             /* data from call */
-            ADJOINT_VECTOR_TYPE* adjointVector,
+            ADJOINT_VECTOR_TYPE* adjointVector, size_t adjointVectorSize,
             /* data from dynamicData */
             size_t& curDynamicPos, size_t const& endDynamicPos, char* const dynamicValues,
             /* data from staticData */
@@ -106,7 +106,7 @@ namespace codi {
             curStaticPos = data.readReverse(staticValues, curStaticPos);
 
             StatementEvaluator::template callClearAdjoint<PrimalValueReuseTape>(
-                data.handle, ReuseReverseArguments{nullptr}, adjointVector, data.numberOfPassiveArguments, curDynamicPos, dynamicValues);
+                data.handle, ReuseReverseArguments{nullptr}, adjointVector, adjointVectorSize, data.numberOfPassiveArguments, curDynamicPos, dynamicValues);
           }
         };
 
@@ -114,7 +114,11 @@ namespace codi {
         DynamicPosition startStmt = this->externalFunctionData.template extractPosition<DynamicPosition>(start);
         DynamicPosition endStmt = this->externalFunctionData.template extractPosition<DynamicPosition>(end);
 
-        this->dynamicData.evaluateReverse(startStmt, endStmt, clearFunc, this->primals.data());
+        typename Base::VectorAccess<Gradient> vectorAccess(Base::adjoints.data(), Base::primals.data());
+
+        ADJOINT_VECTOR_TYPE* dataVector = Base::selectAdjointVector(&vectorAccess, Base::adjoints.data());
+
+        this->dynamicData.evaluateReverse(startStmt, endStmt, clearFunc, dataVector, Base::adjoints.size());
       }
 
     protected:
