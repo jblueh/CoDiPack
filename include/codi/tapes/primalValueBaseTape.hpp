@@ -43,6 +43,7 @@
 #include "../misc/macros.hpp"
 #include "../misc/memberStore.hpp"
 #include "../config.h"
+#include "../expressions/aggregatedExpressionType.hpp"
 #include "../expressions/assignExpression.hpp"
 #include "../expressions/lhsExpressionInterface.hpp"
 #include "../expressions/logic/compileTimeTraversalLogic.hpp"
@@ -390,10 +391,15 @@ namespace codi {
 
           /// \copydoc codi::ForEachLeafLogic::handleConstant
           template<typename Node>
-          CODI_INLINE void handleConstant(Node const& node, DynamicData& staticData) {
+          CODI_INLINE void handleConstant(Node const& node, DynamicData& dynamicData) {
+            using AggregatedTraits = codi::RealTraits::AggregatedTypeTraits<typename Node::Real>;
             using ConversionOperator = typename Node::template ConversionOperator<PassiveReal>;
 
-            staticData.pushData(ConversionOperator::toDataStore(node.getValue()));
+            typename Node::Real v = node.getValue();
+
+            static_for<AggregatedTraits::Elements>([&](auto i) CODI_LAMBDA_INLINE {
+              dynamicData.pushData(ConversionOperator::toDataStore(AggregatedTraits::template arrayAccess<i.value>(v)));
+            });
           }
       };
 
@@ -479,6 +485,94 @@ namespace codi {
     public:
 
       /// @{
+
+      template<typename Aggregated, typename Type, typename Lhs, typename Rhs>
+      CODI_INLINE void store(AggregatedExpressionType<Aggregated, Type, Lhs>& lhs,
+                             ExpressionInterface<Aggregated, Rhs> const& rhs) {
+
+        using AggregatedTraits = RealTraits::AggregatedTypeTraits<Aggregated>;
+        int constexpr Elements = AggregatedTraits::Elements;
+
+        bool primalsStored = false;
+        if (CODI_ENABLE_CHECK(Config::CheckTapeActivity, cast().isActive())) {
+          CountActiveArguments countActiveArguments;
+          PushIdentfier pushIdentifier;
+          PushPassive pushPassive;
+          PushConstant pushConstant;
+
+          size_t constexpr MaxActiveArgs = ExpressionTraits::NumberOfActiveTypeArguments<Rhs>::value;
+          size_t constexpr MaxConstantArgs = ExpressionTraits::NumberOfConstantTypeArguments<Rhs>::value;
+
+          size_t constexpr MaxOutputArgs = ExpressionTraits::NumberOfActiveTypeArguments<Lhs>::value;
+
+          codiAssert(MaxActiveArgs < Config::MaxArgumentSize);
+          codiAssert(MaxConstantArgs < Config::MaxArgumentSize);
+          codiAssert(MaxOutputArgs < Config::MaxArgumentSize);
+
+          size_t activeArguments = 0;
+          countActiveArguments.eval(rhs.cast(), activeArguments);
+
+          if (CODI_ENABLE_CHECK(Config::CheckEmptyStatements, 0 != activeArguments)) {
+            size_t dynamicSize = (MaxActiveArgs - activeArguments) * sizeof(Real)
+                                  + (MaxActiveArgs) * sizeof(Identifier)
+                                  + MaxConstantArgs * sizeof(PassiveReal);
+            if(!LinearIndexHandling) {
+              dynamicSize += MaxOutputArgs * sizeof(Identifier) + MaxOutputArgs * sizeof(Real);
+            }
+            StaticStatementData::reserve(staticData);
+            dynamicData.reserveItems(dynamicSize);
+
+            size_t passiveArguments = 0;
+            pushPassive.eval(rhs.cast(), dynamicData);
+            pushIdentifier.eval(rhs.cast(), dynamicData, passiveArguments);
+            pushConstant.eval(rhs.cast(), dynamicData);
+
+            bool generatedNewIndex = false;
+            static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
+              generatedNewIndex |= indexManager.get().assignIndex(lhs.arrayValue[i.value].getIdentifier());
+            });
+            checkPrimalSize(generatedNewIndex);
+
+            Identifier* lhsIdentifierData = nullptr;
+            Real* oldPrimalData = nullptr;
+            if(!LinearIndexHandling) {
+              char* dynamicPointer;
+              dynamicData.getDataPointer(dynamicPointer);
+              dynamicData.addDataSize(MaxOutputArgs * sizeof(Identifier) + MaxOutputArgs * sizeof(Real));
+
+              lhsIdentifierData = (Identifier*)dynamicPointer;
+              oldPrimalData = (Real*)(&dynamicPointer[MaxOutputArgs * sizeof(Identifier)]);
+            }
+
+            Aggregated real = rhs.cast().getValue();
+            static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
+              Identifier lhsIdentifier = lhs.arrayValue[i.value].getIdentifier();
+              Real& primalEntry = primals[lhsIdentifier];
+
+              if(!LinearIndexHandling) {
+                lhsIdentifierData[i.value] = lhsIdentifier;
+                oldPrimalData[i.value] = primalEntry;
+              }
+
+              lhs.arrayValue[i.value].value() = AggregatedTraits::template arrayAccess<i.value>(real);
+              primalEntry = lhs.arrayValue[i.value].getValue();
+            });
+
+            StaticStatementData::store(staticData, (Config::ArgumentSize)passiveArguments, StatementEvaluator::template createHandle<Impl, Impl, AssignExpression<Lhs, Rhs>>());
+
+            primalsStored = true;
+          }
+        }
+
+        if(!primalsStored) {
+          Aggregated real = rhs.cast().getValue();
+
+          static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
+            lhs.arrayValue[i.value].value() = AggregatedTraits::template arrayAccess<i.value>(real);
+            indexManager.get().freeIndex(lhs.arrayValue[i.value].getIdentifier());
+          });
+        }
+      }
 
       /// \copydoc codi::InternalStatementRecordingTapeInterface::store()
       template<typename Lhs, typename Rhs>
@@ -952,10 +1046,10 @@ namespace codi {
           /// \copydoc codi::StatementEvaluatorTapeInterface::statementClearAdjoint()
           template<typename Expr>
           CODI_INLINE static void statementClearAdjoint(ReverseArguments revArgs, ADJOINT_VECTOR_TYPE* __restrict__ adjointVector,
-                                                        Config::ArgumentSize numberOfPassiveArguments,
+                                                        size_t adjointVectorSize, Config::ArgumentSize numberOfPassiveArguments,
                                                         size_t& __restrict__ curDynamicPos, char* const __restrict__ dynamicValues) {
             PrimalValueBaseTape::statementClearAdjointFull(PrimalValueBaseTape::statementClearAdjointInner<Expr>, StatementSizes::create<Expr>(), revArgs,
-                                      adjointVector, numberOfPassiveArguments, curDynamicPos, dynamicValues);
+                                      adjointVector, adjointVectorSize, numberOfPassiveArguments, curDynamicPos, dynamicValues);
           }
 
           /// Throws exception.
