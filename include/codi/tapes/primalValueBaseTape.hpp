@@ -75,10 +75,10 @@ namespace codi {
    * @tparam T_Gradient            See TapeTypesInterface.
    * @tparam T_IndexManager        Index manager for the tape. Needs to implement IndexManagerInterface.
    * @tparam T_StatementEvaluator  Statement handle generator. Needs to implement StatementEvaluatorInterface and
-   *                              StatementEvaluatorInnerTapeInterface.
+   *                               StatementEvaluatorInnerTapeInterface.
    * @tparam T_Data                See TapeTypesInterface.
    */
-  template<typename T_Real, typename T_Gradient, typename T_IndexManager, template<typename> class T_StatementEvaluator,
+  template<typename T_Real, typename T_Gradient, typename T_IndexManager, typename T_StatementEvaluator,
            template<typename, typename> class T_Data>
   struct PrimalValueTapeTypes : public TapeTypesInterface {
     public:
@@ -86,8 +86,8 @@ namespace codi {
       using Real = CODI_DD(T_Real, double);                                              ///< See PrimalValueTapeTypes.
       using Gradient = CODI_DD(T_Gradient, double);                                      ///< See PrimalValueTapeTypes.
       using IndexManager = CODI_DD(T_IndexManager, CODI_T(IndexManagerInterface<int>));  ///< See PrimalValueTapeTypes.
-      using StatementEvaluator = CODI_DD(CODI_T(T_StatementEvaluator<Real>),
-                                         CODI_T(StatementEvaluatorInterface<double>));  ///< See PrimalValueTapeTypes.
+      using StatementEvaluator = CODI_DD(T_StatementEvaluator,
+                                         StatementEvaluatorInterface);  ///< See PrimalValueTapeTypes.
       template<typename Chunk, typename Nested>
       using Data = CODI_DD(CODI_T(T_Data<Chunk, Nested>),
                            CODI_T(DataInterface<Nested>));  ///< See PrimalValueTapeTypes.
