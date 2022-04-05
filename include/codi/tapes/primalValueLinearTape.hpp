@@ -81,6 +81,9 @@ namespace codi {
       using EvalHandle = typename TapeTypes::EvalHandle;                  ///< See PrimalValueTapeTypes.
       using Position = typename Base::Position;                           ///< See TapeTypesInterface.
 
+      using StaticStatementData = typename Base::StaticStatementData;
+      using LinearReverseArguments = typename Base::LinearReverseArguments;
+
       /// Constructor
       PrimalValueLinearTape() : Base() {}
 
@@ -88,7 +91,16 @@ namespace codi {
 
       /// \copydoc codi::PositionalEvaluationTapeInterface::clearAdjoints
       void clearAdjoints(Position const& start, Position const& end) {
-        CODI_UNUSED(start, end);
+        using IndexPosition = typename IndexManager::Position;
+        IndexPosition startIndex = this->externalFunctionData.template extractPosition<IndexPosition>(start);
+        IndexPosition endIndex = this->externalFunctionData.template extractPosition<IndexPosition>(end);
+
+        startIndex = std::min(startIndex, (IndexPosition)this->adjoints.size() - 1);
+        endIndex = std::min(endIndex, (IndexPosition)this->adjoints.size() - 1);
+
+        for (IndexPosition curPos = endIndex + 1; curPos <= startIndex; curPos += 1) {
+          this->adjoints[curPos] = Gradient();
+        }
       }
 
     protected:
@@ -98,11 +110,33 @@ namespace codi {
           /* data from call */
           Real* primalVector, ADJOINT_VECTOR_TYPE* adjointVector,
           /* data from dynamicData */
-          size_t& curDynamicPos, size_t const& endDynamicPos, char const* const dynamicValues,
+          size_t& curDynamicPos, size_t const& endDynamicPos, char* const dynamicValues,
           /* data from staticData */
           size_t& curStaticPos, size_t const& endStaticPos, char const* const staticValues,
           /* data from index handler */
           size_t const& startAdjointPos, size_t const& endAdjointPos) {
+        CODI_UNUSED(endDynamicPos, endStaticPos);
+
+        StackArray<Real> lhsPrimals{};
+        StackArray<Gradient> lhsTangents{};
+        StaticStatementData data;
+
+        size_t curAdjointPos = startAdjointPos;
+
+        while (curAdjointPos < endAdjointPos) {
+
+          curStaticPos = data.readForward(staticValues, curStaticPos);
+
+          if (Config::StatementInputTag != data.numberOfPassiveArguments) {
+
+            StatementEvaluator::template callForward<PrimalValueLinearTape>(
+                data.handle, LinearReverseArguments{primalVector, curAdjointPos}, adjointVector, lhsPrimals.data(),
+                lhsTangents.data(),
+                data.numberOfPassiveArguments, curDynamicPos, dynamicValues);
+          } else {
+            curAdjointPos += 1;
+          }
+        }
       }
 
       /// \copydoc codi::PrimalValueBaseTape::internalEvaluatePrimal_Step3_EvalStatements
@@ -110,12 +144,31 @@ namespace codi {
           /* data from call */
           Real* primalVector,
           /* data from dynamicData */
-          size_t& curDynamicPos, size_t const& endDynamicPos, char const* const dynamicValues,
+          size_t& curDynamicPos, size_t const& endDynamicPos, char* const dynamicValues,
           /* data from staticData */
           size_t& curStaticPos, size_t const& endStaticPos, char const* const staticValues,
           /* data from index handler */
           size_t const& startAdjointPos, size_t const& endAdjointPos) {
+        CODI_UNUSED(endDynamicPos, endStaticPos);
 
+        StackArray<Real> lhsPrimals{};
+        StaticStatementData data;
+
+        size_t curAdjointPos = startAdjointPos;
+
+        while (curAdjointPos < endAdjointPos) {
+
+          curStaticPos = data.readForward(staticValues, curStaticPos);
+
+          if (Config::StatementInputTag != data.numberOfPassiveArguments) {
+
+            StatementEvaluator::template callPrimal<PrimalValueLinearTape>(
+                data.handle, LinearReverseArguments{primalVector, curAdjointPos}, lhsPrimals.data(),
+                data.numberOfPassiveArguments, curDynamicPos, dynamicValues);
+          } else {
+            curAdjointPos += 1;
+          }
+        }
       }
 
       /// \copydoc codi::PrimalValueBaseTape::internalEvaluateReverse_Step3_EvalStatements
@@ -123,7 +176,7 @@ namespace codi {
           /* data from call */
           Real* primalVector, ADJOINT_VECTOR_TYPE* adjointVector,
           /* data from dynamicData */
-          size_t& curDynamicPos, size_t const& endDynamicPos, char const* const dynamicValues,
+          size_t& curDynamicPos, size_t const& endDynamicPos, char* const dynamicValues,
           /* data from staticData */
           size_t& curStaticPos, size_t const& endStaticPos, char const* const staticValues,
           /* data from index handler */
@@ -131,9 +184,7 @@ namespace codi {
         CODI_UNUSED(endDynamicPos, endStaticPos);
 
         StackArray<Gradient> lhsAdjoints{};
-        typename Base::StaticStatementData data;
-
-        using LinearReverseArguments = typename Base::LinearReverseArguments;
+        StaticStatementData data;
 
         size_t curAdjointPos = startAdjointPos;
 
