@@ -76,7 +76,8 @@ namespace codi {
       /// generator with Expr. Also evaluates the number of active type arguments and constant type arguments.
       static InnerPrimalTapeStatementData const staticStore;  ///< Static storage.
 
-      template<Calls ... types>
+      /// Generates the data for the static store.
+      template<StatementCall ... types>
       static InnerPrimalTapeStatementData gen() {
         using Handle = typename PrimalTapeStatementFunctions::Handle;
 
@@ -90,7 +91,7 @@ namespace codi {
 
   template<typename Generator, typename Expr>
   InnerPrimalTapeStatementData const InnerStatementEvaluatorStaticStore<Generator, Expr>::staticStore =
-      InnerStatementEvaluatorStaticStore<Generator, Expr>::gen<CALL_GEN_ARGS>();
+      InnerStatementEvaluatorStaticStore<Generator, Expr>::gen<CODI_STMT_CALL_GEN_ARGS>();
 
   /**
    * @brief Expression evaluation in the inner function. Data loading in the compilation context of the tape.
@@ -112,7 +113,7 @@ namespace codi {
       using Handle = InnerPrimalTapeStatementData const*;  ///< Pointer to static storage location.
 
       /// \copydoc StatementEvaluatorInterface::call
-      template<Calls type, typename Tape, typename... Args>
+      template<StatementCall type, typename Tape, typename... Args>
       static void call(Handle const& h, Args&&... args) {
         using Expr = AssignExpression<ActiveType<Tape>, ActiveType<Tape>>;
         using CallGen = typename Tape::template StatementCallGen<type, Expr>;

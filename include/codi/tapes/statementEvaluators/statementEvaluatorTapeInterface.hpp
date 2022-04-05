@@ -41,7 +41,8 @@
 /** \copydoc codi::Namespace */
 namespace codi {
 
-  enum class Calls {
+  /// Defines all the operations which can be evaluated on a statement by a tape.
+  enum class StatementCall {
     ClearAdjoint, ///< Clear the adjoints of the expression.
     Forward,      ///< Evaluate expression in a forward mode.
     Primal,       ///< Evaluate primal expression.
@@ -50,7 +51,8 @@ namespace codi {
     N_Elements    ///< Number of elements.
   };
 
-#define CALL_GEN_ARGS Calls::ClearAdjoint, Calls::Forward, Calls::Primal, Calls::ResetPrimal, Calls::Reverse
+#define CODI_STMT_CALL_GEN_ARGS StatementCall::ClearAdjoint, StatementCall::Forward, StatementCall::Primal,\
+                                StatementCall::ResetPrimal, StatementCall::Reverse
 
   /**
    * @brief Tape side interface for StatementEvaluatorInterface.
@@ -61,7 +63,7 @@ namespace codi {
    * - 1. Load expression specific data
    * - 2. Call expression specific function
    *
-   * The structure StatementCallGen needs to be specialized for all enums in Calls.
+   * The structure StatementCallGen needs to be specialized for all enums in StatementCall.
    */
   struct StatementEvaluatorTapeInterface {
     public:
@@ -69,8 +71,11 @@ namespace codi {
       /*******************************************************************************/
       /// @name Interface definition
 
-      template<Calls type, typename Expr>
+      /// This structure is accessed by the StatementEvaluatorInterface.
+      template<StatementCall type, typename Expr>
       struct StatementCallGen {
+
+          /// Evaluate the full expression.
           template<typename... Args>
           CODI_INLINE static void evaluate(Args&&... args);
       };
@@ -94,10 +99,15 @@ namespace codi {
       /*******************************************************************************/
       /// @name Interface definition
 
-      template<Calls type, typename Expr>
+      /// This structure is accessed by the StatementEvaluatorInterface.
+      template<StatementCall type, typename Expr>
       struct StatementCallGen {
+
+          /// Evaluate expression in a forward mode.
           template<typename... Args>
           CODI_INLINE static void evaluateInner(Args&&... args);
+
+          /// Load the expression data and evaluate the expression.
           template<typename InnerFunc, typename... Args>
           CODI_INLINE static void evaluateFull(InnerFunc func, Args&&... args);
       };

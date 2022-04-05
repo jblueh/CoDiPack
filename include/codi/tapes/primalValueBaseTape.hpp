@@ -1182,17 +1182,19 @@ namespace codi {
       /// @{
 
       /// \copydoc StatementEvaluatorTapeInterface::StatementCallGen
-      template<Calls type, typename Expr>
+      template<StatementCall type, typename Expr>
       struct StatementCallGen;
 
+      /*******************************************************************************/
+      /// ClearAdjoint implementation
       template<typename Expr>
-      struct StatementCallGen<Calls::ClearAdjoint, Expr> {
-          /// \copydoc codi::StatementEvaluatorInnerTapeInterface::statementClearAdjointInner()
+      struct StatementCallGen<StatementCall::ClearAdjoint, Expr> {
+          /// \copydoc codi::StatementEvaluatorInnerTapeInterface::StatementCallGen::evaluateInner()
           CODI_INLINE static void evaluateInner() {
             // Empty
           }
 
-          /// \copydoc codi::StatementEvaluatorInnerTapeInterface::statementClearAdjointFull()
+          /// \copydoc codi::StatementEvaluatorInnerTapeInterface::StatementCallGen::evaluateFull()
           template<typename Func>
           CODI_INLINE static void evaluateFull(
               Func const& evalInner, StatementSizes stmtSizes, ReverseArguments revArgs,
@@ -1219,7 +1221,7 @@ namespace codi {
             }
           }
 
-          /// \copydoc codi::StatementEvaluatorTapeInterface::statementClearAdjoint()
+          /// \copydoc codi::StatementEvaluatorTapeInterface::StatementCallGen::evaluate()
           CODI_INLINE static void evaluate(ReverseArguments revArgs, ADJOINT_VECTOR_TYPE* __restrict__ adjointVector,
                                                         size_t adjointVectorSize,
                                                         Config::ArgumentSize numberOfPassiveArguments,
@@ -1229,9 +1231,11 @@ namespace codi {
           }
       };
 
+      /*******************************************************************************/
+      /// Forward implementation
       template<typename Expr>
-      struct StatementCallGen<Calls::Forward, Expr> {
-          /// \copydoc codi::StatementEvaluatorInnerTapeInterface::statementEvaluateForwardInner()
+      struct StatementCallGen<StatementCall::Forward, Expr> {
+          /// \copydoc codi::StatementEvaluatorInnerTapeInterface::StatementCallGen::evaluateInner()
           static void evaluateInner(Real* __restrict__ primalVector, ADJOINT_VECTOR_TYPE* adjointVector,
                                                     Real* __restrict__ lhsPrimals,
                                                     Gradient* __restrict__ lhsTangents,
@@ -1261,7 +1265,7 @@ namespace codi {
             });
           }
 
-          /// \copydoc codi::StatementEvaluatorInnerTapeInterface::statementEvaluateForwardFull()
+          /// \copydoc codi::StatementEvaluatorInnerTapeInterface::StatementCallGen::evaluateFull()
           template<typename Func>
           static void evaluateFull(Func const& evalInner, StatementSizes stmtSizes, ReverseArguments revArgs,
                                                    ADJOINT_VECTOR_TYPE* __restrict__ adjointVector,
@@ -1305,7 +1309,7 @@ namespace codi {
             revArgs.updateAdjointPosForward(stmtSizes.maxOutputArgs);
           }
 
-          /// \copydoc codi::StatementEvaluatorTapeInterface::statementEvaluateForward()
+          /// \copydoc codi::StatementEvaluatorTapeInterface::StatementCallGen::evaluate()
           static void evaluate(ReverseArguments revArgs, ADJOINT_VECTOR_TYPE* __restrict__ adjointVector,
                                                Real* __restrict__ lhsPrimals,
                                                Gradient* __restrict__ lhsTangents,
@@ -1316,9 +1320,11 @@ namespace codi {
           }
       };
 
+      /*******************************************************************************/
+      /// Primal implementation
       template<typename Expr>
-      struct StatementCallGen<Calls::Primal, Expr> {
-          /// \copydoc codi::StatementEvaluatorInnerTapeInterface::statementEvaluatePrimalInner()
+      struct StatementCallGen<StatementCall::Primal, Expr> {
+          /// \copydoc codi::StatementEvaluatorInnerTapeInterface::StatementCallGen::evaluateInner()
           static void evaluateInner(Real* __restrict__ primalVector,
                                                    Real* __restrict__ lhsPrimals,
                                                    PassiveReal const* const __restrict__ constantValues,
@@ -1341,7 +1347,7 @@ namespace codi {
             });
           }
 
-          /// \copydoc codi::StatementEvaluatorInnerTapeInterface::statementEvaluatePrimalFull()
+          /// \copydoc codi::StatementEvaluatorInnerTapeInterface::StatementCallGen::evaluateFull()
           template<typename Func>
           static void evaluateFull(Func const& evalInner, StatementSizes stmtSizes, ReverseArguments revArgs,
                                                   Real* __restrict__ lhsPrimals,
@@ -1372,7 +1378,7 @@ namespace codi {
             revArgs.updateAdjointPosForward(stmtSizes.maxOutputArgs);
           }
 
-          /// \copydoc codi::StatementEvaluatorTapeInterface::statementEvaluatePrimal()
+          /// \copydoc codi::StatementEvaluatorTapeInterface::StatementCallGen::evaluate()
           CODI_INLINE static void evaluate(ReverseArguments revArgs,
                                                           Real* __restrict__ lhsPrimals,
                                                           Config::ArgumentSize numberOfPassiveArguments,
@@ -1382,15 +1388,16 @@ namespace codi {
           }
       };
 
-
+      /*******************************************************************************/
+      /// ResetPrimal implementation
       template<typename Expr>
-      struct StatementCallGen<Calls::ResetPrimal, Expr> {
-          /// \copydoc codi::StatementEvaluatorInnerTapeInterface::statementResetPrimalInner()
+      struct StatementCallGen<StatementCall::ResetPrimal, Expr> {
+          /// \copydoc codi::StatementEvaluatorInnerTapeInterface::StatementCallGen::evaluateInner()
           CODI_INLINE static void evaluateInner() {
             // Empty
           }
 
-          /// \copydoc codi::StatementEvaluatorInnerTapeInterface::statementResetPrimalFull()
+          /// \copydoc codi::StatementEvaluatorInnerTapeInterface::StatementCallGen::evaluateFull()
           template<typename Func>
           CODI_INLINE static void evaluateFull(
               Func const& evalInner, StatementSizes stmtSizes, ReverseArguments revArgs,
@@ -1414,7 +1421,7 @@ namespace codi {
             }
           }
 
-          /// \copydoc codi::StatementEvaluatorTapeInterface::statementResetPrimal()
+          /// \copydoc codi::StatementEvaluatorTapeInterface::StatementCallGen::evaluate()
           CODI_INLINE static void evaluate(ReverseArguments revArgs, Config::ArgumentSize numberOfPassiveArguments,
                                                        size_t& __restrict__ curDynamicPos, char* const __restrict__ dynamicValues) {
             evaluateFull(evaluateInner, StatementSizes::create<Expr>(), revArgs,
@@ -1422,9 +1429,11 @@ namespace codi {
           }
       };
 
+      /*******************************************************************************/
+      /// Reverse implementation
       template<typename Expr>
-      struct StatementCallGen<Calls::Reverse, Expr> {
-          /// \copydoc codi::StatementEvaluatorInnerTapeInterface::statementEvaluateReverseInner()
+      struct StatementCallGen<StatementCall::Reverse, Expr> {
+          /// \copydoc codi::StatementEvaluatorInnerTapeInterface::StatementCallGen::evaluateInner()
           CODI_INLINE static void evaluateInner(Real* __restrict__ primalVector, ADJOINT_VECTOR_TYPE* __restrict__ adjointVector,
                                                 Gradient* __restrict__ lhsAdjoints,
                                                 PassiveReal const* const __restrict__ constantValues,
@@ -1452,7 +1461,7 @@ namespace codi {
             });
           }
 
-          /// \copydoc codi::StatementEvaluatorInnerTapeInterface::statementEvaluateReverseFull()
+          /// \copydoc codi::StatementEvaluatorInnerTapeInterface::StatementCallGen::evaluateFull()
           template<typename Func>
           CODI_INLINE static void evaluateFull(
               Func const& evalInner, StatementSizes stmtSizes, ReverseArguments revArgs,
@@ -1497,7 +1506,7 @@ namespace codi {
             }
           }
 
-          /// \copydoc codi::StatementEvaluatorTapeInterface::statementEvaluateReverse()
+          /// \copydoc codi::StatementEvaluatorTapeInterface::StatementCallGen::evaluate()
           CODI_INLINE static void evaluate(ReverseArguments revArgs, ADJOINT_VECTOR_TYPE* __restrict__ adjointVector,
                                                            Gradient* __restrict__ lhsAdjoints,
                                                            Config::ArgumentSize numberOfPassiveArguments,
@@ -1581,15 +1590,15 @@ namespace codi {
       /// @{
 
       /// \copydoc StatementEvaluatorTapeInterface::StatementCallGen
-      template<Calls type, typename Expr>
+      template<StatementCall type, typename Expr>
       struct StatementCallGen;
 
       template<typename Expr>
-      struct StatementCallGen<Calls::ClearAdjoint, Expr> :
-          public Impl::template StatementCallGen<Calls::ClearAdjoint, Expr> {};
+      struct StatementCallGen<StatementCall::ClearAdjoint, Expr> :
+          public Impl::template StatementCallGen<StatementCall::ClearAdjoint, Expr> {};
 
       template<typename Expr>
-      struct StatementCallGen<Calls::Forward, Expr> {
+      struct StatementCallGen<StatementCall::Forward, Expr> {
           /// Throws exception.
           static void evaluateInner() {
             CODI_EXCEPTION("Forward evaluation of jacobian statement not possible.");
@@ -1602,7 +1611,7 @@ namespace codi {
       };
 
       template<typename Expr>
-      struct StatementCallGen<Calls::Primal, Expr> {
+      struct StatementCallGen<StatementCall::Primal, Expr> {
           /// Throws exception.
           static void evaluateInner() {
             CODI_EXCEPTION("Primal evaluation of jacobian statement not possible.");
@@ -1615,12 +1624,12 @@ namespace codi {
       };
 
       template<typename Expr>
-      struct StatementCallGen<Calls::ResetPrimal, Expr> :
-          public Impl::template StatementCallGen<Calls::ResetPrimal, Expr> {};
+      struct StatementCallGen<StatementCall::ResetPrimal, Expr> :
+          public Impl::template StatementCallGen<StatementCall::ResetPrimal, Expr> {};
 
       template<typename Expr>
-      struct StatementCallGen<Calls::Reverse, Expr> {
-          /// \copydoc codi::StatementEvaluatorInnerTapeInterface::statementEvaluateReverseInner
+      struct StatementCallGen<StatementCall::Reverse, Expr> {
+          /// \copydoc codi::StatementEvaluatorInnerTapeInterface::StatementCallGen::evaluateInner
           static void evaluateInner(
               Real* __restrict__ primalVector, ADJOINT_VECTOR_TYPE* __restrict__ adjointVector,
               Gradient* __restrict__ lhsAdjoints,
@@ -1632,7 +1641,7 @@ namespace codi {
             evalJacobianReverse(adjointVector, lhsAdjoints[0], primalVector, rhsIdentifiers);
           }
 
-          /// \copydoc codi::StatementEvaluatorTapeInterface::statementEvaluateReverse
+          /// \copydoc codi::StatementEvaluatorTapeInterface::StatementCallGen::evaluate
           static void evaluate(ReverseArguments revArgs, ADJOINT_VECTOR_TYPE* __restrict__ adjointVector,
                                                Gradient* __restrict__ lhsAdjoints,
                                                Config::ArgumentSize numberOfPassiveArguments,

@@ -64,7 +64,7 @@ namespace codi {
       using Handle = void*;  ///< Function pointer to the reverse evaluation.
 
       /// \copydoc StatementEvaluatorInterface::call
-      template<Calls type, typename Tape, typename... Args>
+      template<StatementCall type, typename Tape, typename... Args>
       static void call(Handle const& h, Args&&... args) {
         using Expr = AssignExpression<ActiveType<Tape>, ActiveType<Tape>>;
         using CallGen = typename Tape::template StatementCallGen<type, Expr>;
@@ -73,7 +73,7 @@ namespace codi {
 
         Function func = (Function)h;
 
-        if(Calls::Reverse == type) {
+        if(StatementCall::Reverse == type) {
           func(std::forward<Args>(args)...);
         } else {
           CODI_EXCEPTION("ReverseStatementEvaluator only supports reverse evaluation calls.");
@@ -87,11 +87,5 @@ namespace codi {
       }
 
       /// @}
-
-    protected:
-
-      /// Full reverse function type.
-      template<typename Tape>
-      using HandleTyped = decltype(&Tape::template statementEvaluateReverse<AssignExpression<ActiveType<Tape>, ActiveType<Tape>>>);
   };
 }

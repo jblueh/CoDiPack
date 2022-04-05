@@ -54,7 +54,7 @@ namespace codi {
 
       using Handle = void*;  ///< Function pointer.
 
-      std::array<Handle, (size_t)Calls::N_Elements> funcs; ///< Array for the function handles.
+      std::array<Handle, (size_t)StatementCall::N_Elements> funcs; ///< Array for the function handles.
 
       /// Constructor
       template<typename ... Args>
@@ -72,7 +72,8 @@ namespace codi {
       /// with Expr.
       static PrimalTapeStatementFunctions const staticStore;
 
-      template<Calls ... types>
+      /// Generates the data for the static store.
+      template<StatementCall ... types>
       static PrimalTapeStatementFunctions gen() {
         using Handle = typename PrimalTapeStatementFunctions::Handle;
 
@@ -84,7 +85,7 @@ namespace codi {
 
   template<typename Generator, typename Expr>
   PrimalTapeStatementFunctions const DirectStatementEvaluatorStaticStore<Generator, Expr>::staticStore =
-      DirectStatementEvaluatorStaticStore<Generator, Expr>::gen<CALL_GEN_ARGS>();
+      DirectStatementEvaluatorStaticStore<Generator, Expr>::gen<CODI_STMT_CALL_GEN_ARGS>();
 
   /**
    * @brief Full evaluation of the expression in the function handle. Storing in static context.
@@ -104,7 +105,7 @@ namespace codi {
       using Handle = PrimalTapeStatementFunctions const*;  ///< Pointer to static storage location.
 
       /// \copydoc StatementEvaluatorInterface::call
-      template<Calls type, typename Tape, typename... Args>
+      template<StatementCall type, typename Tape, typename... Args>
       static void call(Handle const& h, Args&&... args) {
         using Expr = AssignExpression<ActiveType<Tape>, ActiveType<Tape>>;
         using CallGen = typename Tape::template StatementCallGen<type, Expr>;

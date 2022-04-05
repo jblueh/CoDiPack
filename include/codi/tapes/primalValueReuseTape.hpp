@@ -105,7 +105,7 @@ namespace codi {
 
             curStaticPos = data.readReverse(staticValues, curStaticPos);
 
-            StatementEvaluator::template call<Calls::ClearAdjoint, PrimalValueReuseTape>(
+            StatementEvaluator::template call<StatementCall::ClearAdjoint, PrimalValueReuseTape>(
                 data.handle, ReuseReverseArguments{nullptr}, adjointVector, adjointVectorSize, data.numberOfPassiveArguments, curDynamicPos, dynamicValues);
           }
         };
@@ -142,7 +142,7 @@ namespace codi {
 
           curStaticPos = data.readForward(staticValues, curStaticPos);
 
-          StatementEvaluator::template call<Calls::Forward, PrimalValueReuseTape>(
+          StatementEvaluator::template call<StatementCall::Forward, PrimalValueReuseTape>(
               data.handle, ReuseReverseArguments{primalVector}, adjointVector, lhsPrimals.data(), lhsTangents.data(),
               data.numberOfPassiveArguments, curDynamicPos, dynamicValues);
         }
@@ -165,7 +165,7 @@ namespace codi {
 
           curStaticPos = data.readForward(staticValues, curStaticPos);
 
-          StatementEvaluator::template call<Calls::Primal, PrimalValueReuseTape>(
+          StatementEvaluator::template call<StatementCall::Primal, PrimalValueReuseTape>(
               data.handle, ReuseReverseArguments{primalVector}, lhsPrimals.data(),
               data.numberOfPassiveArguments, curDynamicPos, dynamicValues);
         }
@@ -188,7 +188,7 @@ namespace codi {
 
           curStaticPos = data.readReverse(staticValues, curStaticPos);
 
-          StatementEvaluator::template call<Calls::Reverse, PrimalValueReuseTape>(
+          StatementEvaluator::template call<StatementCall::Reverse, PrimalValueReuseTape>(
                 data.handle, ReuseReverseArguments{primalVector}, adjointVector, lhsAdjoints.data(),
               data.numberOfPassiveArguments, curDynamicPos, dynamicValues);
         }
@@ -212,7 +212,7 @@ namespace codi {
 
             curStaticPos = data.readReverse(staticValues, curStaticPos);
 
-            StatementEvaluator::template call<Calls::ResetPrimal, PrimalValueReuseTape>(
+            StatementEvaluator::template call<StatementCall::ResetPrimal, PrimalValueReuseTape>(
                 data.handle, ReuseReverseArguments{primalVector}, data.numberOfPassiveArguments, curDynamicPos, dynamicValues);
           }
         };

@@ -129,7 +129,7 @@ namespace codi {
 
           if (Config::StatementInputTag != data.numberOfPassiveArguments) {
 
-            StatementEvaluator::template call<Calls::Forward, PrimalValueLinearTape>(
+            StatementEvaluator::template call<StatementCall::Forward, PrimalValueLinearTape>(
                 data.handle, LinearReverseArguments{primalVector, curAdjointPos}, adjointVector, lhsPrimals.data(),
                 lhsTangents.data(),
                 data.numberOfPassiveArguments, curDynamicPos, dynamicValues);
@@ -162,7 +162,7 @@ namespace codi {
 
           if (Config::StatementInputTag != data.numberOfPassiveArguments) {
 
-            StatementEvaluator::template call<Calls::Primal, PrimalValueLinearTape>(
+            StatementEvaluator::template call<StatementCall::Primal, PrimalValueLinearTape>(
                 data.handle, LinearReverseArguments{primalVector, curAdjointPos}, lhsPrimals.data(),
                 data.numberOfPassiveArguments, curDynamicPos, dynamicValues);
           } else {
@@ -194,7 +194,7 @@ namespace codi {
 
           if (Config::StatementInputTag != data.numberOfPassiveArguments) {
 
-            StatementEvaluator::template call<Calls::Reverse, PrimalValueLinearTape>(
+            StatementEvaluator::template call<StatementCall::Reverse, PrimalValueLinearTape>(
                 data.handle, LinearReverseArguments{primalVector, curAdjointPos}, adjointVector, lhsAdjoints.data(),
                 data.numberOfPassiveArguments, curDynamicPos, dynamicValues);
           } else {
