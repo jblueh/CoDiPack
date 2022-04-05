@@ -284,12 +284,11 @@ namespace codi {
         Base::init(&dynamicData);
 
         Base::options.insert(TapeParameters::AdjointSize);
-        Base::options.insert(TapeParameters::ConstantValuesSize);
+        Base::options.insert(TapeParameters::DynamicDataSize);
         Base::options.insert(TapeParameters::LargestIdentifier);
-        Base::options.insert(TapeParameters::PassiveValuesSize);
-        Base::options.insert(TapeParameters::RhsIdentifiersSize);
         Base::options.insert(TapeParameters::PrimalSize);
-        Base::options.insert(TapeParameters::StatementSize);
+        Base::options.insert(TapeParameters::StaticDataSize);
+
       }
 
       /*******************************************************************************/
@@ -934,23 +933,19 @@ namespace codi {
           case TapeParameters::AdjointSize:
             return adjoints.size();
             break;
-          case TapeParameters::ConstantValuesSize:
-            return 0;
+          case TapeParameters::DynamicDataSize:
+            return dynamicData.getDataSize();
             break;
           case TapeParameters::LargestIdentifier:
             return indexManager.get().getLargestCreatedIndex();
             break;
-          case TapeParameters::PassiveValuesSize:
-            return 0;
-            break;
-          case TapeParameters::RhsIdentifiersSize:
-            return 0;
             break;
           case TapeParameters::PrimalSize:
             return primals.size();
             break;
-          case TapeParameters::StatementSize:
-            return 0;
+          case TapeParameters::StaticDataSize:
+            return staticData.getDataSize();
+            break;
           default:
             return Base::getParameter(parameter);
             break;
@@ -963,19 +958,17 @@ namespace codi {
           case TapeParameters::AdjointSize:
             adjoints.resize(value);
             break;
-          case TapeParameters::ConstantValuesSize:
+          case TapeParameters::DynamicDataSize:
+            dynamicData.resize(value);
             break;
           case TapeParameters::LargestIdentifier:
             CODI_EXCEPTION("Tried to set a get only option.");
             break;
-          case TapeParameters::PassiveValuesSize:
-            break;
-          case TapeParameters::RhsIdentifiersSize:
-            break;
           case TapeParameters::PrimalSize:
             primals.resize(value);
             break;
-          case TapeParameters::StatementSize:
+          case TapeParameters::StaticDataSize:
+            staticData.resize(value);
             break;
           default:
             Base::setParameter(parameter, value);
