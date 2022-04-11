@@ -204,201 +204,6 @@ namespace codi {
         return static_cast<Impl&>(*this);
       }
 
-    public:
-
-      struct LinearReverseArguments {
-          Real* __restrict__ primalVector;
-          size_t&  __restrict__ linearAdjointPos;
-
-          void updateAdjointPosForward(size_t nOutputArgs) {
-            linearAdjointPos += nOutputArgs;
-          }
-
-          void updateAdjointPosReverse(size_t nOutputArgs) {
-            linearAdjointPos -= nOutputArgs;
-          }
-
-          Identifier getLhsIdentifier(size_t pos, Identifier const* __restrict__ identifiers) {
-            CODI_UNUSED(identifiers);
-
-            return linearAdjointPos + 1 + pos;
-          }
-      };
-
-      struct ReuseReverseArguments {
-          Real* __restrict__ primalVector;
-
-          void updateAdjointPosForward(size_t nOutputArgs) {
-            CODI_UNUSED(nOutputArgs);
-          }
-
-          void updateAdjointPosReverse(size_t nOutputArgs) {
-            CODI_UNUSED(nOutputArgs);
-          }
-
-          Identifier getLhsIdentifier(size_t pos, Identifier const* __restrict__ identifiers) {
-            return identifiers[pos];
-          }
-      };
-
-      using ReverseArguments = typename std::conditional<LinearIndexHandling, LinearReverseArguments, ReuseReverseArguments>::type;
-
-      struct LinearStatementEvalArguments {
-
-          size_t&  __restrict__ linearAdjointPos;
-          Config::ArgumentSize numberOfPassiveArguments;
-          size_t& __restrict__ curDynamicPos;
-          char* const __restrict__ dynamicValues;
-
-          void updateAdjointPosForward(size_t nOutputArgs) {
-            linearAdjointPos += nOutputArgs;
-          }
-
-          void updateAdjointPosReverse(size_t nOutputArgs) {
-            linearAdjointPos -= nOutputArgs;
-          }
-
-          Identifier getLhsIdentifier(size_t pos, Identifier const* __restrict__ identifiers) {
-            CODI_UNUSED(identifiers);
-
-            return linearAdjointPos + 1 + pos;
-          }
-      };
-
-      struct ReuseStatementEvalArguments {
-
-          Config::ArgumentSize numberOfPassiveArguments;
-          size_t& __restrict__ curDynamicPos;
-          char* const __restrict__ dynamicValues;
-
-          void updateAdjointPosForward(size_t nOutputArgs) {
-            CODI_UNUSED(nOutputArgs);
-          }
-
-          void updateAdjointPosReverse(size_t nOutputArgs) {
-            CODI_UNUSED(nOutputArgs);
-          }
-
-          Identifier getLhsIdentifier(size_t pos, Identifier const* __restrict__ identifiers) {
-            return identifiers[pos];
-          }
-      };
-
-      using StatementEvalArguments = typename std::conditional<LinearIndexHandling, LinearStatementEvalArguments, ReuseStatementEvalArguments>::type;
-      //using StatementEvalArguments = LinearStatementEvalArguments;
-
-      struct StaticStatementData {
-        public:
-          EvalHandle handle;
-          Config::ArgumentSize numberOfPassiveArguments;
-
-          CODI_INLINE size_t readForward(char const* const values, size_t pos) {
-            numberOfPassiveArguments = *((Config::ArgumentSize const*)(&values[pos]));
-            pos += sizeof(Config::ArgumentSize);
-            handle = *((EvalHandle const*)(&values[pos]));
-            pos += sizeof(EvalHandle);
-
-            return pos;
-          }
-
-          CODI_INLINE size_t readReverse(char const* const values, size_t pos) {
-            pos -= sizeof(EvalHandle);
-            handle = *((EvalHandle const*)(&values[pos]));
-            pos -= sizeof(Config::ArgumentSize);
-            numberOfPassiveArguments = *((Config::ArgumentSize const*)(&values[pos]));
-
-            return pos;
-          }
-
-          CODI_INLINE static void reserve(StaticData& data) {
-            data.reserveItems(sizeof(Config::ArgumentSize) + sizeof(EvalHandle));
-          }
-
-          CODI_INLINE static void store(StaticData& data, Config::ArgumentSize numberOfPassiveArguments, EvalHandle handle) {
-            data.pushData(numberOfPassiveArguments);
-            data.pushData(handle);
-          }
-      };
-
-      struct DynamicStatementData {
-        public:
-          Real* __restrict__ oldPrimalValues;
-          Identifier const* __restrict__ lhsIdentifiers;
-
-          PassiveReal const* __restrict__ constantValues;
-          Identifier const* __restrict__ rhsIdentifiers;
-          Real const* __restrict__ passiveValues;
-
-          CODI_INLINE static DynamicStatementData readForward(StatementSizes const& stmtSizes, StatementEvalArguments& revArgs) {
-            DynamicStatementData data;
-            revArgs.curDynamicPos = data.readDynamicForward(revArgs.dynamicValues, revArgs.curDynamicPos, stmtSizes,
-                                                            revArgs.numberOfPassiveArguments);
-
-            return data;
-          }
-
-          CODI_INLINE static DynamicStatementData readReverse(StatementSizes const& stmtSizes, StatementEvalArguments& revArgs) {
-            DynamicStatementData data;
-            revArgs.curDynamicPos = data.readDynamicReverse(revArgs.dynamicValues, revArgs.curDynamicPos, stmtSizes,
-                                                            revArgs.numberOfPassiveArguments);
-
-            return data;
-          }
-
-          CODI_INLINE size_t readDynamicForward(char* const values, size_t pos, StatementSizes const& stmtSizes,
-                                                Config::ArgumentSize numberOfPassiveArguments) {
-            passiveValues = (Real*)(&values[pos]);
-            pos += numberOfPassiveArguments * sizeof(Real);
-            rhsIdentifiers = (Identifier const*)(&values[pos]);
-            pos += stmtSizes.maxActiveArgs * sizeof(Identifier);
-            constantValues = (PassiveReal const*)(&values[pos]);
-            pos += stmtSizes.maxConstantArgs * sizeof(PassiveReal);
-
-            if(!LinearIndexHandling) {
-              lhsIdentifiers = ((Identifier const*)(&values[pos]));
-              pos += stmtSizes.maxOutputArgs * sizeof(Identifier);
-              oldPrimalValues = ((Real*)(&values[pos]));
-              pos += stmtSizes.maxOutputArgs * sizeof(Real);
-            }
-            return pos;
-          }
-
-          CODI_INLINE size_t readDynamicReverse(char* const values, size_t pos, StatementSizes const& stmtSizes,
-                                                Config::ArgumentSize numberOfPassiveArguments) {
-            if(!LinearIndexHandling) {
-              pos -= stmtSizes.maxOutputArgs * sizeof(Real);
-              oldPrimalValues = ((Real*)(&values[pos]));
-              pos -= stmtSizes.maxOutputArgs * sizeof(Identifier);
-              lhsIdentifiers = ((Identifier const*)(&values[pos]));
-            }
-
-            pos -= stmtSizes.maxConstantArgs * sizeof(PassiveReal);
-            constantValues = (PassiveReal const*)(&values[pos]);
-            pos -= stmtSizes.maxActiveArgs * sizeof(Identifier);
-            rhsIdentifiers = (Identifier const*)(&values[pos]);
-            pos -= numberOfPassiveArguments * sizeof(Real);
-            passiveValues = (Real*)(&values[pos]);
-
-            return pos;
-          }
-
-          CODI_INLINE void updateOldPrimalValues(StatementSizes const& stmtSizes, StatementEvalArguments& revArgs,
-                                     Real* __restrict__ primalVector) {
-            for(size_t iLhs = 0; iLhs < stmtSizes.maxOutputArgs; iLhs += 1) {
-              Identifier const lhsIdentifier = revArgs.getLhsIdentifier(iLhs, lhsIdentifiers);
-              oldPrimalValues[iLhs] = primalVector[lhsIdentifier];
-            }
-          }
-
-          CODI_INLINE void copyPassiveValuesIntoPrimalVector(StatementEvalArguments& revArgs,
-                                                             Real* __restrict__ primalVector) {
-            for (Config::ArgumentSize curPos = 0; curPos < revArgs.numberOfPassiveArguments; curPos += 1) {
-              primalVector[curPos] = passiveValues[curPos];
-            }
-          }
-      };
-
-
     protected:
 
       /*******************************************************************************/
@@ -1210,20 +1015,198 @@ namespace codi {
       /// @name Function from StatementEvaluatorTapeInterface and StatementEvaluatorInnerTapeInterface
       /// @{
 
+      /// Statement evaluation arguments for linear index handlers.
+      struct LinearStatementEvalArguments {
+        public:
+          size_t&  __restrict__ linearAdjointPos;  ///< Position of the lhs adjoint.
+          Config::ArgumentSize numberOfPassiveArguments;  ///< Number of passive arguments.
+          size_t& __restrict__ curDynamicPos;  ///< Position for the dynamic statement data.
+          char* const __restrict__ dynamicValues;  ///< Pointer to the dynamic statement data.
+
+          /// Moves the linear adjoint position by the number of output arguments.
+          void updateAdjointPosForward(size_t nOutputArgs) {
+            linearAdjointPos += nOutputArgs;
+          }
+
+          /// Moves the linear adjoint position by the number of output arguments.
+          void updateAdjointPosReverse(size_t nOutputArgs) {
+            linearAdjointPos -= nOutputArgs;
+          }
+
+          /// Computes the lhs identifier based on the linear adjoint position.
+          Identifier getLhsIdentifier(size_t pos, Identifier const* __restrict__ identifiers) {
+            CODI_UNUSED(identifiers);
+
+            return linearAdjointPos + 1 + pos;
+          }
+      };
+
+      /// Statement evaluation arguments for reuse index handlers.
+      struct ReuseStatementEvalArguments {
+        public:
+          Config::ArgumentSize numberOfPassiveArguments;  ///< Number of passive arguments.
+          size_t& __restrict__ curDynamicPos;  ///< Position for the dynamic statement data.
+          char* const __restrict__ dynamicValues;  ///< Pointer to the dynamic statement data.
+
+          /// Does nothing.
+          void updateAdjointPosForward(size_t nOutputArgs) {
+            CODI_UNUSED(nOutputArgs);
+          }
+
+          /// Does nothing.
+          void updateAdjointPosReverse(size_t nOutputArgs) {
+            CODI_UNUSED(nOutputArgs);
+          }
+
+          /// Return the lhs identifier from the identifier vector.
+          Identifier getLhsIdentifier(size_t pos, Identifier const* __restrict__ identifiers) {
+            return identifiers[pos];
+          }
+      };
+
+      /// Proper statement evaluation arguments based on the index handler.
+      using StatementEvalArguments = typename std::conditional<LinearIndexHandling, LinearStatementEvalArguments, ReuseStatementEvalArguments>::type;
+
+      /// Helper structure for reading and writing the static statement data.
+      ///
+      /// A call to readForward or readReverse will populate the member data.
+      struct StaticStatementData {
+        public:
+          EvalHandle handle;  ///< The currently read handle.
+          Config::ArgumentSize numberOfPassiveArguments;  ///< The currently read number of passive arguments.
+
+          /// See StaticStatementData.
+          ///
+          /// @return The new position of in values.
+          CODI_INLINE size_t readForward(char const* const values, size_t pos) {
+            numberOfPassiveArguments = *((Config::ArgumentSize const*)(&values[pos]));
+            pos += sizeof(Config::ArgumentSize);
+            handle = *((EvalHandle const*)(&values[pos]));
+            pos += sizeof(EvalHandle);
+
+            return pos;
+          }
+
+          /// See StaticStatementData.
+          ///
+          /// @return The new position of in values.
+          CODI_INLINE size_t readReverse(char const* const values, size_t pos) {
+            pos -= sizeof(EvalHandle);
+            handle = *((EvalHandle const*)(&values[pos]));
+            pos -= sizeof(Config::ArgumentSize);
+            numberOfPassiveArguments = *((Config::ArgumentSize const*)(&values[pos]));
+
+            return pos;
+          }
+
+          /// Reserve the data for the static data stream.
+          CODI_INLINE static void reserve(StaticData& data) {
+            data.reserveItems(sizeof(Config::ArgumentSize) + sizeof(EvalHandle));
+          }
+
+          /// Store the data for the static data stream.
+          CODI_INLINE static void store(StaticData& data, Config::ArgumentSize numberOfPassiveArguments, EvalHandle handle) {
+            data.pushData(numberOfPassiveArguments);
+            data.pushData(handle);
+          }
+      };
+
+      /// Helper structure for reading the dynamic statement data.
+      ///
+      /// A call to readForward or readReverse will create a data structure.
+      struct DynamicStatementData {
+        public:
+          Real* __restrict__ oldPrimalValues;  ///< Overwritten primal values. Only used for reuse index handling.
+          Identifier const* __restrict__ lhsIdentifiers;  ///< Lhs identifiers. Only used for reuse index handling.
+
+          PassiveReal const* __restrict__ constantValues;  ///< Constant values in the statement.
+          Identifier const* __restrict__ rhsIdentifiers;   ///< Rhs identifiers.
+          Real const* __restrict__ passiveValues;          ///< Passive values from active arguments of the statement.
+
+          /// The dynamic data position in stmtArgs is updated.
+          CODI_INLINE static DynamicStatementData readForward(StatementSizes const& stmtSizes, StatementEvalArguments& stmtArgs) {
+            DynamicStatementData data;
+
+            size_t pos = stmtArgs.curDynamicPos;
+
+            data.passiveValues = (Real*)(&stmtArgs.dynamicValues[pos]);
+            pos += stmtArgs.numberOfPassiveArguments * sizeof(Real);
+            data.rhsIdentifiers = (Identifier const*)(&stmtArgs.dynamicValues[pos]);
+            pos += stmtSizes.maxActiveArgs * sizeof(Identifier);
+            data.constantValues = (PassiveReal const*)(&stmtArgs.dynamicValues[pos]);
+            pos += stmtSizes.maxConstantArgs * sizeof(PassiveReal);
+
+            if(!LinearIndexHandling) {
+              data.lhsIdentifiers = ((Identifier const*)(&stmtArgs.dynamicValues[pos]));
+              pos += stmtSizes.maxOutputArgs * sizeof(Identifier);
+              data.oldPrimalValues = ((Real*)(&stmtArgs.dynamicValues[pos]));
+              pos += stmtSizes.maxOutputArgs * sizeof(Real);
+            }
+
+            stmtArgs.curDynamicPos = pos;
+
+            return data;
+          }
+
+          /// The dynamic data position in stmtArgs is updated.
+          CODI_INLINE static DynamicStatementData readReverse(StatementSizes const& stmtSizes, StatementEvalArguments& stmtArgs) {
+            DynamicStatementData data;
+
+            size_t pos = stmtArgs.curDynamicPos;
+
+            if(!LinearIndexHandling) {
+              pos -= stmtSizes.maxOutputArgs * sizeof(Real);
+              data.oldPrimalValues = ((Real*)(&stmtArgs.dynamicValues[pos]));
+              pos -= stmtSizes.maxOutputArgs * sizeof(Identifier);
+              data.lhsIdentifiers = ((Identifier const*)(&stmtArgs.dynamicValues[pos]));
+            }
+
+            pos -= stmtSizes.maxConstantArgs * sizeof(PassiveReal);
+            data.constantValues = (PassiveReal const*)(&stmtArgs.dynamicValues[pos]);
+            pos -= stmtSizes.maxActiveArgs * sizeof(Identifier);
+            data.rhsIdentifiers = (Identifier const*)(&stmtArgs.dynamicValues[pos]);
+            pos -= stmtArgs.numberOfPassiveArguments * sizeof(Real);
+            data.passiveValues = (Real*)(&stmtArgs.dynamicValues[pos]);
+
+            stmtArgs.curDynamicPos = pos;
+
+            return data;
+          }
+
+          /// Overwrite the old primal values with new ones. Usually called in a forward tape evaluation.
+          CODI_INLINE void updateOldPrimalValues(StatementSizes const& stmtSizes, StatementEvalArguments& revArgs,
+                                     Real* __restrict__ primalVector) {
+            for(size_t iLhs = 0; iLhs < stmtSizes.maxOutputArgs; iLhs += 1) {
+              Identifier const lhsIdentifier = revArgs.getLhsIdentifier(iLhs, lhsIdentifiers);
+              oldPrimalValues[iLhs] = primalVector[lhsIdentifier];
+            }
+          }
+
+          /// Copies the passive values into the first entries of the primal value vector.
+          CODI_INLINE void copyPassiveValuesIntoPrimalVector(StatementEvalArguments& revArgs,
+                                                             Real* __restrict__ primalVector) {
+            for (Config::ArgumentSize curPos = 0; curPos < revArgs.numberOfPassiveArguments; curPos += 1) {
+              primalVector[curPos] = passiveValues[curPos];
+            }
+          }
+      };
+
+      /// Base class for statement call generators. Prepares the static construction context.
       template<typename Expr>
       struct StatementCallGenBase {
         public:
-          using Lhs = typename Expr::Lhs;
-          using Rhs = typename Expr::Rhs;
-          using LhsReal = typename Lhs::Real;
-          using AggregateTraits = RealTraits::AggregatedTypeTraits<LhsReal>;
+          using Lhs = typename Expr::Lhs;  ///< \copydoc codi::AssignExpression::Lhs
+          using Rhs = typename Expr::Rhs;  ///< \copydoc codi::AssignExpression::Rhs
+          using LhsReal = typename Lhs::Real;  ///< Primal value of lhs.
+          using AggregateTraits = RealTraits::AggregatedTypeTraits<LhsReal>;  ///< Traits for aggregated type.
 
-          using Constructor = ConstructStaticContextLogic<Rhs, Impl, 0, 0>;
-          using StaticRhs = typename Constructor::ResultType;
+          using Constructor = ConstructStaticContextLogic<Rhs, Impl, 0, 0>;  ///< Static construction context.
+          using StaticRhs = typename Constructor::ResultType;                ///< Static right hand side.
 
           template<size_t pos>
-          using ExtractExpr = ExtractExpression<LhsReal, pos, StaticRhs>;
+          using ExtractExpr = ExtractExpression<LhsReal, pos, StaticRhs>; ///< Extract expressions for aggregated types.
 
+          /// Construct the statement in the static context.
           static StaticRhs constructStatic(Real* __restrict__ primalVector,
                                            PassiveReal const* const __restrict__ constantValues,
                                            Identifier const* const __restrict__ identifiers) {

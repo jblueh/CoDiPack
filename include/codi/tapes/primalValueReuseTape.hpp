@@ -80,7 +80,7 @@ namespace codi {
       using EvalHandle = typename TapeTypes::EvalHandle;                  ///< See PrimalValueTapeTypes.
       using Position = typename Base::Position;                           ///< See TapeTypesInterface.
 
-      using ReuseReverseArguments = typename Base::ReuseReverseArguments;
+      using StaticStatementData = typename Base::StaticStatementData;
       using StatementEvalArguments = typename Base::StatementEvalArguments;
 
       /// Constructor
@@ -100,7 +100,7 @@ namespace codi {
         {
           CODI_UNUSED(endDynamicPos);
 
-          typename Base::StaticStatementData data;
+          StaticStatementData data;
 
           while (curStaticPos > endStaticPos) {
 
@@ -139,7 +139,7 @@ namespace codi {
 
         StackArray<Real> lhsPrimals{};
         StackArray<Gradient> lhsTangents{};
-        typename Base::StaticStatementData data;
+        StaticStatementData data;
 
         while (curStaticPos < endStaticPos) {
 
@@ -163,7 +163,7 @@ namespace codi {
         CODI_UNUSED(endDynamicPos);
 
         StackArray<Real> lhsPrimals{};
-        typename Base::StaticStatementData data;
+        StaticStatementData data;
 
         while (curStaticPos < endStaticPos) {
 
@@ -187,7 +187,7 @@ namespace codi {
         CODI_UNUSED(endDynamicPos);
 
         StackArray<Gradient> lhsAdjoints{};
-        typename Base::StaticStatementData data;
+        StaticStatementData data;
 
         while (curStaticPos > endStaticPos) {
 
@@ -212,7 +212,7 @@ namespace codi {
         {
           CODI_UNUSED(endDynamicPos);
 
-          typename Base::StaticStatementData data;
+          StaticStatementData data;
 
           while (curStaticPos > endStaticPos) {
 

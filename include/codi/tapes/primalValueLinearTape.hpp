@@ -82,7 +82,6 @@ namespace codi {
       using Position = typename Base::Position;                           ///< See TapeTypesInterface.
 
       using StaticStatementData = typename Base::StaticStatementData;
-      using LinearReverseArguments = typename Base::LinearReverseArguments;
       using StatementEvalArguments = typename Base::StatementEvalArguments;
 
       /// Constructor
