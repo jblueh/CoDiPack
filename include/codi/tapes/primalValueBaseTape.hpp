@@ -101,13 +101,16 @@ namespace codi {
 
       using EvalHandle = typename StatementEvaluator::Handle;  ///< Handle type returned by the statement generator.
 
-      using StaticChunk = Chunk1<char>;
-      using DynamicChunk = Chunk1<char>;
+      using FixedSizeDataChunk = Chunk1<char>;  ///< Chunk for byte values.
+      using DynamicSizeDataChunk = Chunk1<char>;  ///< Chunk for byte values.
 
-      using StaticData = Data<StaticChunk, IndexManager>;
-      using DynamicData = Data<DynamicChunk, StaticData>;
+      /// Per statement data that is always read. E.g. the handle for the statement.
+      using FixedSizeData = Data<FixedSizeDataChunk, IndexManager>;
 
-      using NestedData = DynamicData;  ///< See TapeTypesInterface.
+      ///< Per statement data that depends on the statement itself. E.g. rhs identifiers.
+      using DynamicSizeData = Data<DynamicSizeDataChunk, FixedSizeData>;
+
+      using NestedData = DynamicSizeData;  ///< See TapeTypesInterface.
   };
 
   /**
@@ -153,12 +156,12 @@ namespace codi {
 
       using EvalHandle = typename TapeTypes::EvalHandle;  ///< See PrimalValueTapeTypes.
 
-      using StaticData = typename TapeTypes::StaticData;
-      using DynamicData = typename TapeTypes::DynamicData;
+      using FixedSizeData = typename TapeTypes::FixedSizeData;
+      using DynamicSizeData = typename TapeTypes::DynamicSizeData;
 
       using PassiveReal = RealTraits::PassiveReal<Real>;  ///< Basic computation type.
 
-      using NestedPosition = typename DynamicData::Position;  ///< See PrimalValueTapeTypes.
+      using NestedPosition = typename DynamicSizeData::Position;  ///< See PrimalValueTapeTypes.
       using Position = typename Base::Position;                     ///< See TapeTypesInterface.
 
       template<typename Adjoint>
@@ -177,8 +180,8 @@ namespace codi {
       static EvalHandle const jacobianExpressions[Config::MaxArgumentSize];
 
       MemberStore<IndexManager, Impl, TapeTypes::IsStaticIndexHandler> indexManager;  ///< Index manager.
-      StaticData staticData;
-      DynamicData dynamicData;
+      FixedSizeData fixedSizeData;
+      DynamicSizeData dynamicSizeData;
 
       struct ManualStatementData {
         public:
@@ -233,24 +236,24 @@ namespace codi {
       PrimalValueBaseTape()
           : Base(),
             indexManager(Config::MaxArgumentSize),  // Reserve first items for passive values.
-            staticData(Config::ChunkSize * 8),
-            dynamicData(Config::ChunkSize * 8),
+            fixedSizeData(Config::ChunkSize * 8),
+            dynamicSizeData(Config::ChunkSize * 8),
             manualStatementData(),
             adjoints(1),  // Ensure that adjoint[0] exists, see its use in gradient() const.
             primals(0),
             primalsCopy(0) {
         checkPrimalSize(true);
 
-        staticData.setNested(&indexManager.get());
-        dynamicData.setNested(&staticData);
+        fixedSizeData.setNested(&indexManager.get());
+        dynamicSizeData.setNested(&fixedSizeData);
 
-        Base::init(&dynamicData);
+        Base::init(&dynamicSizeData);
 
         Base::options.insert(TapeParameters::AdjointSize);
-        Base::options.insert(TapeParameters::DynamicDataSize);
+        Base::options.insert(TapeParameters::DynamicSizeDataSize);
         Base::options.insert(TapeParameters::LargestIdentifier);
         Base::options.insert(TapeParameters::PrimalSize);
-        Base::options.insert(TapeParameters::StaticDataSize);
+        Base::options.insert(TapeParameters::FixedSizeDataSize);
 
       }
 
@@ -319,7 +322,7 @@ namespace codi {
           /// \copydoc codi::ForEachLeafLogic::handleActive
           template<typename Node>
           CODI_INLINE void handleActive(Node const& node,
-                                        DynamicData& dynamicData,
+                                        DynamicSizeData& dynamicSizeData,
                                         size_t& curPassiveArgument) {
             Identifier rhsIndex = node.getIdentifier();
             if (CODI_ENABLE_CHECK(Config::CheckZeroIndex, IndexManager::InactiveIndex == rhsIndex)) {
@@ -328,7 +331,7 @@ namespace codi {
               curPassiveArgument += 1;
             }
 
-            dynamicData.pushData(rhsIndex);
+            dynamicSizeData.pushData(rhsIndex);
           }
       };
 
@@ -339,10 +342,10 @@ namespace codi {
           /// \copydoc codi::ForEachLeafLogic::handleActive
           template<typename Node>
           CODI_INLINE void handleActive(Node const& node,
-                                        DynamicData& dynamicData) {
+                                        DynamicSizeData& dynamicSizeData) {
             Identifier rhsIndex = node.getIdentifier();
             if (CODI_ENABLE_CHECK(Config::CheckZeroIndex, IndexManager::InactiveIndex == rhsIndex)) {
-              dynamicData.pushData(node.getValue());
+              dynamicSizeData.pushData(node.getValue());
             }
           }
       };
@@ -353,14 +356,14 @@ namespace codi {
 
           /// \copydoc codi::ForEachLeafLogic::handleConstant
           template<typename Node>
-          CODI_INLINE void handleConstant(Node const& node, DynamicData& dynamicData) {
+          CODI_INLINE void handleConstant(Node const& node, DynamicSizeData& dynamicSizeData) {
             using AggregatedTraits = codi::RealTraits::AggregatedTypeTraits<typename Node::Real>;
             using ConversionOperator = typename Node::template ConversionOperator<PassiveReal>;
 
             typename Node::Real v = node.getValue();
 
             static_for<AggregatedTraits::Elements>([&](auto i) CODI_LAMBDA_INLINE {
-              dynamicData.pushData(ConversionOperator::toDataStore(AggregatedTraits::template arrayAccess<i.value>(v)));
+              dynamicSizeData.pushData(ConversionOperator::toDataStore(AggregatedTraits::template arrayAccess<i.value>(v)));
             });
           }
       };
@@ -402,13 +405,13 @@ namespace codi {
             if(!LinearIndexHandling) {
               dynamicSize += MaxOutputArgs * sizeof(Identifier) + MaxOutputArgs * sizeof(Real);
             }
-            StaticStatementData::reserve(staticData);
-            dynamicData.reserveItems(dynamicSize);
+            FixedSizeStatementData::reserve(fixedSizeData);
+            dynamicSizeData.reserveItems(dynamicSize);
 
             size_t passiveArguments = 0;
-            pushPassive.eval(rhs.cast(), dynamicData);
-            pushIdentifier.eval(rhs.cast(), dynamicData, passiveArguments);
-            pushConstant.eval(rhs.cast(), dynamicData);
+            pushPassive.eval(rhs.cast(), dynamicSizeData);
+            pushIdentifier.eval(rhs.cast(), dynamicSizeData, passiveArguments);
+            pushConstant.eval(rhs.cast(), dynamicSizeData);
 
             bool generatedNewIndex = false;
             static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
@@ -420,8 +423,8 @@ namespace codi {
             Real* oldPrimalData = nullptr;
             if(!LinearIndexHandling) {
               char* dynamicPointer;
-              dynamicData.getDataPointer(dynamicPointer);
-              dynamicData.addDataSize(MaxOutputArgs * sizeof(Identifier) + MaxOutputArgs * sizeof(Real));
+              dynamicSizeData.getDataPointer(dynamicPointer);
+              dynamicSizeData.addDataSize(MaxOutputArgs * sizeof(Identifier) + MaxOutputArgs * sizeof(Real));
 
               lhsIdentifierData = (Identifier*)dynamicPointer;
               oldPrimalData = (Real*)(&dynamicPointer[MaxOutputArgs * sizeof(Identifier)]);
@@ -441,7 +444,7 @@ namespace codi {
               primalEntry = lhs.arrayValue[i.value].getValue();
             });
 
-            StaticStatementData::store(staticData, (Config::ArgumentSize)passiveArguments, StatementEvaluator::template createHandle<Impl, Impl, AssignExpression<Lhs, Rhs>>());
+            FixedSizeStatementData::store(fixedSizeData, (Config::ArgumentSize)passiveArguments, StatementEvaluator::template createHandle<Impl, Impl, AssignExpression<Lhs, Rhs>>());
 
             primalsStored = true;
           }
@@ -483,24 +486,24 @@ namespace codi {
               dynamicSize += sizeof(Identifier) + sizeof(Real);
             }
 
-            StaticStatementData::reserve(staticData);
-            dynamicData.reserveItems(dynamicSize);
+            FixedSizeStatementData::reserve(fixedSizeData);
+            dynamicSizeData.reserveItems(dynamicSize);
 
             size_t passiveArguments = 0;
-            pushPassive.eval(rhs.cast(), dynamicData);
-            pushIdentifier.eval(rhs.cast(), dynamicData, passiveArguments);
-            pushConstant.eval(rhs.cast(), dynamicData);
+            pushPassive.eval(rhs.cast(), dynamicSizeData);
+            pushIdentifier.eval(rhs.cast(), dynamicSizeData, passiveArguments);
+            pushConstant.eval(rhs.cast(), dynamicSizeData);
 
             bool generatedNewIndex = indexManager.get().assignIndex(lhs.cast().getIdentifier());
             checkPrimalSize(generatedNewIndex);
 
             Real& primalEntry = primals[lhs.cast().getIdentifier()];
             if(!LinearIndexHandling) {
-              dynamicData.pushData(lhs.cast().getIdentifier());
-              dynamicData.pushData(primalEntry);
+              dynamicSizeData.pushData(lhs.cast().getIdentifier());
+              dynamicSizeData.pushData(primalEntry);
             }
 
-            StaticStatementData::store(staticData, (Config::ArgumentSize)passiveArguments, StatementEvaluator::template createHandle<Impl, Impl, AssignExpression<Lhs, Rhs>>());
+            FixedSizeStatementData::store(fixedSizeData, (Config::ArgumentSize)passiveArguments, StatementEvaluator::template createHandle<Impl, Impl, AssignExpression<Lhs, Rhs>>());
 
             primalEntry = rhs.cast().getValue();
           } else {
@@ -554,7 +557,7 @@ namespace codi {
 
 
         if (TapeTypes::IsLinearIndexHandler) {
-          StaticStatementData::reserve(staticData);
+          FixedSizeStatementData::reserve(fixedSizeData);
         }
 
         bool generatedNewIndex;
@@ -568,7 +571,7 @@ namespace codi {
         Real& primalEntry = primals[value.cast().getIdentifier()];
 
         if (TapeTypes::IsLinearIndexHandler) {
-          StaticStatementData::store(staticData, Config::StatementInputTag, StatementEvaluator::template createHandle<Impl, Impl, AssignExpression<Lhs, Lhs>>());
+          FixedSizeStatementData::store(fixedSizeData, Config::StatementInputTag, StatementEvaluator::template createHandle<Impl, Impl, AssignExpression<Lhs, Lhs>>());
         }
 
         Real oldValue = primalEntry;
@@ -636,10 +639,10 @@ namespace codi {
         values.addSection("Index manager");
         indexManager.get().addToTapeValues(values);
 
-        values.addSection("Static entries");
-        staticData.addToTapeValues(values);
-        values.addSection("Dynamic entries");
-        dynamicData.addToTapeValues(values);
+        values.addSection("Fixed size entries");
+        fixedSizeData.addToTapeValues(values);
+        values.addSection("Dynamic size entries");
+        dynamicSizeData.addToTapeValues(values);
 
         return values;
       }
@@ -672,9 +675,9 @@ namespace codi {
       CODI_INLINE static void internalEvaluateForward_Step2_DataExtraction(NestedPosition const& start,
                                                                            NestedPosition const& end, Real* primalData,
                                                                            ADJOINT_VECTOR_TYPE* data,
-                                                                           DynamicData& dynamicData) {
+                                                                           DynamicSizeData& dynamicSizeData) {
         Wrap_internalEvaluateForward_Step3_EvalStatements evalFunc{};
-        dynamicData.evaluateForward(start, end, evalFunc, primalData, data);
+        dynamicSizeData.evaluateForward(start, end, evalFunc, primalData, data);
       }
 
       /// Internal method for the forward evaluation of the whole tape.
@@ -693,7 +696,7 @@ namespace codi {
         ADJOINT_VECTOR_TYPE* dataVector = selectAdjointVector(&vectorAccess, data);
 
         Base::internalEvaluateForward_Step1_ExtFunc(start, end, internalEvaluateForward_Step2_DataExtraction,
-                                                    &vectorAccess, primalData, dataVector, dynamicData);
+                                                    &vectorAccess, primalData, dataVector, dynamicSizeData);
       }
 
       /// Additional wrapper that triggers compiler optimizations.
@@ -704,9 +707,9 @@ namespace codi {
       CODI_INLINE static void internalEvaluateReverse_Step2_DataExtraction(NestedPosition const& start,
                                                                            NestedPosition const& end, Real* primalData,
                                                                            ADJOINT_VECTOR_TYPE* data,
-                                                                           DynamicData& dynamicData) {
+                                                                           DynamicSizeData& dynamicSizeData) {
         Wrap_internalEvaluateReverse_Step3_EvalStatements evalFunc;
-        dynamicData.evaluateReverse(start, end, evalFunc, primalData, data);
+        dynamicSizeData.evaluateReverse(start, end, evalFunc, primalData, data);
       }
 
       /// Internal method for the reverse evaluation of the whole tape.
@@ -724,7 +727,7 @@ namespace codi {
         ADJOINT_VECTOR_TYPE* dataVector = selectAdjointVector(&vectorAccess, data);
 
         Base::internalEvaluateReverse_Step1_ExtFunc(start, end, internalEvaluateReverse_Step2_DataExtraction,
-                                                    &vectorAccess, primalData, dataVector, dynamicData);
+                                                    &vectorAccess, primalData, dataVector, dynamicSizeData);
       }
 
     public:
@@ -777,8 +780,8 @@ namespace codi {
           case TapeParameters::AdjointSize:
             return adjoints.size();
             break;
-          case TapeParameters::DynamicDataSize:
-            return dynamicData.getDataSize();
+          case TapeParameters::DynamicSizeDataSize:
+            return dynamicSizeData.getDataSize();
             break;
           case TapeParameters::LargestIdentifier:
             return indexManager.get().getLargestCreatedIndex();
@@ -787,8 +790,8 @@ namespace codi {
           case TapeParameters::PrimalSize:
             return primals.size();
             break;
-          case TapeParameters::StaticDataSize:
-            return staticData.getDataSize();
+          case TapeParameters::FixedSizeDataSize:
+            return fixedSizeData.getDataSize();
             break;
           default:
             return Base::getParameter(parameter);
@@ -802,8 +805,8 @@ namespace codi {
           case TapeParameters::AdjointSize:
             adjoints.resize(value);
             break;
-          case TapeParameters::DynamicDataSize:
-            dynamicData.resize(value);
+          case TapeParameters::DynamicSizeDataSize:
+            dynamicSizeData.resize(value);
             break;
           case TapeParameters::LargestIdentifier:
             CODI_EXCEPTION("Tried to set a get only option.");
@@ -811,8 +814,8 @@ namespace codi {
           case TapeParameters::PrimalSize:
             primals.resize(value);
             break;
-          case TapeParameters::StaticDataSize:
-            staticData.resize(value);
+          case TapeParameters::FixedSizeDataSize:
+            fixedSizeData.resize(value);
             break;
           default:
             Base::setParameter(parameter, value);
@@ -892,12 +895,12 @@ namespace codi {
           dynamicSize += sizeof(Identifier) + sizeof(Real);
         }
 
-        StaticStatementData::reserve(staticData);
-        dynamicData.reserveItems(dynamicSize);
+        FixedSizeStatementData::reserve(fixedSizeData);
+        dynamicSizeData.reserveItems(dynamicSize);
 
         char* dynamicPointer;
-        dynamicData.getDataPointer(dynamicPointer);
-        dynamicData.addDataSize(preAccSize);
+        dynamicSizeData.getDataPointer(dynamicPointer);
+        dynamicSizeData.addDataSize(preAccSize);
 
         manualStatementData.pos = 0;
         manualStatementData.jacobians = (Real*)dynamicPointer;
@@ -908,11 +911,11 @@ namespace codi {
 
         Real& primalEntry = primals[lhsIndex];
         if(!LinearIndexHandling) {
-          dynamicData.pushData(lhsIndex);
-          dynamicData.pushData(primalEntry);
+          dynamicSizeData.pushData(lhsIndex);
+          dynamicSizeData.pushData(primalEntry);
         }
 
-        StaticStatementData::store(staticData, (Config::ArgumentSize)size, PrimalValueBaseTape::jacobianExpressions[size]);
+        FixedSizeStatementData::store(fixedSizeData, (Config::ArgumentSize)size, PrimalValueBaseTape::jacobianExpressions[size]);
 
         primalEntry = lhsValue;
       }
@@ -976,9 +979,9 @@ namespace codi {
       /// Start for primal evaluation between external function.
       CODI_INLINE static void internalEvaluatePrimal_Step2_DataExtraction(NestedPosition const& start,
                                                                           NestedPosition const& end, Real* primalData,
-                                                                          DynamicData& dynamicData) {
+                                                                          DynamicSizeData& dynamicSizeData) {
         Wrap_internalEvaluatePrimal_Step3_EvalStatements evalFunc{};
-        dynamicData.evaluateForward(start, end, evalFunc, primalData);
+        dynamicSizeData.evaluateForward(start, end, evalFunc, primalData);
       }
 
     public:
@@ -997,7 +1000,7 @@ namespace codi {
 
         Base::internalEvaluatePrimal_Step1_ExtFunc(start, end,
                                                    PrimalValueBaseTape::internalEvaluatePrimal_Step2_DataExtraction,
-                                                   &primalAdjointAccess, primals.data(), dynamicData);
+                                                   &primalAdjointAccess, primals.data(), dynamicSizeData);
       }
 
       /// \copydoc codi::PrimalEvaluationTapeInterface::primal(Identifier const&)
@@ -1020,8 +1023,8 @@ namespace codi {
         public:
           size_t&  __restrict__ linearAdjointPos;  ///< Position of the lhs adjoint.
           Config::ArgumentSize numberOfPassiveArguments;  ///< Number of passive arguments.
-          size_t& __restrict__ curDynamicPos;  ///< Position for the dynamic statement data.
-          char* const __restrict__ dynamicValues;  ///< Pointer to the dynamic statement data.
+          size_t& __restrict__ curDynamicSizePos;  ///< Position for the dynamic size statement data.
+          char* const __restrict__ dynamicSizeValues;  ///< Pointer to the dynamic size statement data.
 
           /// Moves the linear adjoint position by the number of output arguments.
           void updateAdjointPosForward(size_t nOutputArgs) {
@@ -1045,8 +1048,8 @@ namespace codi {
       struct ReuseStatementEvalArguments {
         public:
           Config::ArgumentSize numberOfPassiveArguments;  ///< Number of passive arguments.
-          size_t& __restrict__ curDynamicPos;  ///< Position for the dynamic statement data.
-          char* const __restrict__ dynamicValues;  ///< Pointer to the dynamic statement data.
+          size_t& __restrict__ curDynamicSizePos;  ///< Position for the dynamic size statement data.
+          char* const __restrict__ dynamicSizeValues;  ///< Pointer to the dynamic size statement data.
 
           /// Does nothing.
           void updateAdjointPosForward(size_t nOutputArgs) {
@@ -1067,15 +1070,15 @@ namespace codi {
       /// Proper statement evaluation arguments based on the index handler.
       using StatementEvalArguments = typename std::conditional<LinearIndexHandling, LinearStatementEvalArguments, ReuseStatementEvalArguments>::type;
 
-      /// Helper structure for reading and writing the static statement data.
+      /// Helper structure for reading and writing the fixed size statement data.
       ///
       /// A call to readForward or readReverse will populate the member data.
-      struct StaticStatementData {
+      struct FixedSizeStatementData {
         public:
           EvalHandle handle;  ///< The currently read handle.
           Config::ArgumentSize numberOfPassiveArguments;  ///< The currently read number of passive arguments.
 
-          /// See StaticStatementData.
+          /// See FixedSizeStatementData.
           ///
           /// @return The new position of in values.
           CODI_INLINE size_t readForward(char const* const values, size_t pos) {
@@ -1087,7 +1090,7 @@ namespace codi {
             return pos;
           }
 
-          /// See StaticStatementData.
+          /// See FixedSizeStatementData.
           ///
           /// @return The new position of in values.
           CODI_INLINE size_t readReverse(char const* const values, size_t pos) {
@@ -1099,13 +1102,13 @@ namespace codi {
             return pos;
           }
 
-          /// Reserve the data for the static data stream.
-          CODI_INLINE static void reserve(StaticData& data) {
+          /// Reserve the data for the fixed size data stream.
+          CODI_INLINE static void reserve(FixedSizeData& data) {
             data.reserveItems(sizeof(Config::ArgumentSize) + sizeof(EvalHandle));
           }
 
-          /// Store the data for the static data stream.
-          CODI_INLINE static void store(StaticData& data, Config::ArgumentSize numberOfPassiveArguments, EvalHandle handle) {
+          /// Store the data for the fixed data stream.
+          CODI_INLINE static void store(FixedSizeData& data, Config::ArgumentSize numberOfPassiveArguments, EvalHandle handle) {
             data.pushData(numberOfPassiveArguments);
             data.pushData(handle);
           }
@@ -1127,23 +1130,23 @@ namespace codi {
           CODI_INLINE static DynamicStatementData readForward(StatementSizes const& stmtSizes, StatementEvalArguments& stmtArgs) {
             DynamicStatementData data;
 
-            size_t pos = stmtArgs.curDynamicPos;
+            size_t pos = stmtArgs.curDynamicSizePos;
 
-            data.passiveValues = (Real*)(&stmtArgs.dynamicValues[pos]);
+            data.passiveValues = (Real*)(&stmtArgs.dynamicSizeValues[pos]);
             pos += stmtArgs.numberOfPassiveArguments * sizeof(Real);
-            data.rhsIdentifiers = (Identifier const*)(&stmtArgs.dynamicValues[pos]);
+            data.rhsIdentifiers = (Identifier const*)(&stmtArgs.dynamicSizeValues[pos]);
             pos += stmtSizes.maxActiveArgs * sizeof(Identifier);
-            data.constantValues = (PassiveReal const*)(&stmtArgs.dynamicValues[pos]);
+            data.constantValues = (PassiveReal const*)(&stmtArgs.dynamicSizeValues[pos]);
             pos += stmtSizes.maxConstantArgs * sizeof(PassiveReal);
 
             if(!LinearIndexHandling) {
-              data.lhsIdentifiers = ((Identifier const*)(&stmtArgs.dynamicValues[pos]));
+              data.lhsIdentifiers = ((Identifier const*)(&stmtArgs.dynamicSizeValues[pos]));
               pos += stmtSizes.maxOutputArgs * sizeof(Identifier);
-              data.oldPrimalValues = ((Real*)(&stmtArgs.dynamicValues[pos]));
+              data.oldPrimalValues = ((Real*)(&stmtArgs.dynamicSizeValues[pos]));
               pos += stmtSizes.maxOutputArgs * sizeof(Real);
             }
 
-            stmtArgs.curDynamicPos = pos;
+            stmtArgs.curDynamicSizePos = pos;
 
             return data;
           }
@@ -1152,23 +1155,23 @@ namespace codi {
           CODI_INLINE static DynamicStatementData readReverse(StatementSizes const& stmtSizes, StatementEvalArguments& stmtArgs) {
             DynamicStatementData data;
 
-            size_t pos = stmtArgs.curDynamicPos;
+            size_t pos = stmtArgs.curDynamicSizePos;
 
             if(!LinearIndexHandling) {
               pos -= stmtSizes.maxOutputArgs * sizeof(Real);
-              data.oldPrimalValues = ((Real*)(&stmtArgs.dynamicValues[pos]));
+              data.oldPrimalValues = ((Real*)(&stmtArgs.dynamicSizeValues[pos]));
               pos -= stmtSizes.maxOutputArgs * sizeof(Identifier);
-              data.lhsIdentifiers = ((Identifier const*)(&stmtArgs.dynamicValues[pos]));
+              data.lhsIdentifiers = ((Identifier const*)(&stmtArgs.dynamicSizeValues[pos]));
             }
 
             pos -= stmtSizes.maxConstantArgs * sizeof(PassiveReal);
-            data.constantValues = (PassiveReal const*)(&stmtArgs.dynamicValues[pos]);
+            data.constantValues = (PassiveReal const*)(&stmtArgs.dynamicSizeValues[pos]);
             pos -= stmtSizes.maxActiveArgs * sizeof(Identifier);
-            data.rhsIdentifiers = (Identifier const*)(&stmtArgs.dynamicValues[pos]);
+            data.rhsIdentifiers = (Identifier const*)(&stmtArgs.dynamicSizeValues[pos]);
             pos -= stmtArgs.numberOfPassiveArguments * sizeof(Real);
-            data.passiveValues = (Real*)(&stmtArgs.dynamicValues[pos]);
+            data.passiveValues = (Real*)(&stmtArgs.dynamicSizeValues[pos]);
 
-            stmtArgs.curDynamicPos = pos;
+            stmtArgs.curDynamicSizePos = pos;
 
             return data;
           }

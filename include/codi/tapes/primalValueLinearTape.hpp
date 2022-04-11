@@ -81,7 +81,7 @@ namespace codi {
       using EvalHandle = typename TapeTypes::EvalHandle;                  ///< See PrimalValueTapeTypes.
       using Position = typename Base::Position;                           ///< See TapeTypesInterface.
 
-      using StaticStatementData = typename Base::StaticStatementData;
+      using FixedSizeStatementData = typename Base::FixedSizeStatementData;
       using StatementEvalArguments = typename Base::StatementEvalArguments;
 
       /// Constructor
@@ -109,29 +109,29 @@ namespace codi {
       CODI_INLINE static void internalEvaluateForward_Step3_EvalStatements(
           /* data from call */
           Real* primalVector, ADJOINT_VECTOR_TYPE* adjointVector,
-          /* data from dynamicData */
-          size_t& curDynamicPos, size_t const& endDynamicPos, char* const dynamicValues,
-          /* data from staticData */
-          size_t& curStaticPos, size_t const& endStaticPos, char const* const staticValues,
+          /* data from dynamicSizeData */
+          size_t& curDynamicSizePos, size_t const& endDynamicPos, char* const dynamicSizeValues,
+          /* data from fixedSizeData */
+          size_t& curFixedSizePos, size_t const& endFixedSizePos, char const* const fixedSizeValues,
           /* data from index handler */
           size_t const& startAdjointPos, size_t const& endAdjointPos) {
-        CODI_UNUSED(endDynamicPos, endStaticPos);
+        CODI_UNUSED(endDynamicPos, endFixedSizePos);
 
         StackArray<Real> lhsPrimals{};
         StackArray<Gradient> lhsTangents{};
-        StaticStatementData data;
+        FixedSizeStatementData data;
 
         size_t curAdjointPos = startAdjointPos;
 
         while (curAdjointPos < endAdjointPos) {
 
-          curStaticPos = data.readForward(staticValues, curStaticPos);
+          curFixedSizePos = data.readForward(fixedSizeValues, curFixedSizePos);
 
           if (Config::StatementInputTag != data.numberOfPassiveArguments) {
 
             StatementEvaluator::template call<StatementCall::Forward, PrimalValueLinearTape>(
                 data.handle,
-                StatementEvalArguments{curAdjointPos, data.numberOfPassiveArguments, curDynamicPos, dynamicValues},
+                StatementEvalArguments{curAdjointPos, data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues},
                 primalVector, adjointVector, lhsPrimals.data(), lhsTangents.data());
           } else {
             curAdjointPos += 1;
@@ -143,28 +143,28 @@ namespace codi {
       CODI_INLINE static void internalEvaluatePrimal_Step3_EvalStatements(
           /* data from call */
           Real* primalVector,
-          /* data from dynamicData */
-          size_t& curDynamicPos, size_t const& endDynamicPos, char* const dynamicValues,
-          /* data from staticData */
-          size_t& curStaticPos, size_t const& endStaticPos, char const* const staticValues,
+          /* data from dynamicSizeData */
+          size_t& curDynamicSizePos, size_t const& endDynamicPos, char* const dynamicSizeValues,
+          /* data from fixedSizeData */
+          size_t& curFixedSizePos, size_t const& endFixedSizePos, char const* const fixedSizeValues,
           /* data from index handler */
           size_t const& startAdjointPos, size_t const& endAdjointPos) {
-        CODI_UNUSED(endDynamicPos, endStaticPos);
+        CODI_UNUSED(endDynamicPos, endFixedSizePos);
 
         StackArray<Real> lhsPrimals{};
-        StaticStatementData data;
+        FixedSizeStatementData data;
 
         size_t curAdjointPos = startAdjointPos;
 
         while (curAdjointPos < endAdjointPos) {
 
-          curStaticPos = data.readForward(staticValues, curStaticPos);
+          curFixedSizePos = data.readForward(fixedSizeValues, curFixedSizePos);
 
           if (Config::StatementInputTag != data.numberOfPassiveArguments) {
 
             StatementEvaluator::template call<StatementCall::Primal, PrimalValueLinearTape>(
                 data.handle,
-                StatementEvalArguments{curAdjointPos, data.numberOfPassiveArguments, curDynamicPos, dynamicValues},
+                StatementEvalArguments{curAdjointPos, data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues},
                 primalVector, lhsPrimals.data());
           } else {
             curAdjointPos += 1;
@@ -176,28 +176,28 @@ namespace codi {
       CODI_INLINE static void internalEvaluateReverse_Step3_EvalStatements(
           /* data from call */
           Real* primalVector, ADJOINT_VECTOR_TYPE* adjointVector,
-          /* data from dynamicData */
-          size_t& curDynamicPos, size_t const& endDynamicPos, char* const dynamicValues,
-          /* data from staticData */
-          size_t& curStaticPos, size_t const& endStaticPos, char const* const staticValues,
+          /* data from dynamicSizeData */
+          size_t& curDynamicSizePos, size_t const& endDynamicPos, char* const dynamicSizeValues,
+          /* data from fixedSizeData */
+          size_t& curFixedSizePos, size_t const& endFixedSizePos, char const* const fixedSizeValues,
           /* data from index handler */
           size_t const& startAdjointPos, size_t const& endAdjointPos) {
-        CODI_UNUSED(endDynamicPos, endStaticPos);
+        CODI_UNUSED(endDynamicPos, endFixedSizePos);
 
         StackArray<Gradient> lhsAdjoints{};
-        StaticStatementData data;
+        FixedSizeStatementData data;
 
         size_t curAdjointPos = startAdjointPos;
 
         while (curAdjointPos > endAdjointPos) {
 
-          curStaticPos = data.readReverse(staticValues, curStaticPos);
+          curFixedSizePos = data.readReverse(fixedSizeValues, curFixedSizePos);
 
           if (Config::StatementInputTag != data.numberOfPassiveArguments) {
 
             StatementEvaluator::template call<StatementCall::Reverse, PrimalValueLinearTape>(
                 data.handle,
-                StatementEvalArguments{curAdjointPos, data.numberOfPassiveArguments, curDynamicPos, dynamicValues},
+                StatementEvalArguments{curAdjointPos, data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues},
                 primalVector, adjointVector, lhsAdjoints.data());
           } else {
             curAdjointPos -= 1;
