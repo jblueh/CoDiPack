@@ -81,6 +81,7 @@ namespace codi {
       using Position = typename Base::Position;                           ///< See TapeTypesInterface.
 
       using ReuseReverseArguments = typename Base::ReuseReverseArguments;
+      using StatementEvalArguments = typename Base::StatementEvalArguments;
 
       /// Constructor
       PrimalValueReuseTape() : Base() {}
@@ -143,8 +144,9 @@ namespace codi {
           curStaticPos = data.readForward(staticValues, curStaticPos);
 
           StatementEvaluator::template call<StatementCall::Forward, PrimalValueReuseTape>(
-              data.handle, ReuseReverseArguments{primalVector}, adjointVector, lhsPrimals.data(), lhsTangents.data(),
-              data.numberOfPassiveArguments, curDynamicPos, dynamicValues);
+              data.handle,
+              StatementEvalArguments{data.numberOfPassiveArguments, curDynamicPos, dynamicValues},
+              primalVector, adjointVector, lhsPrimals.data(), lhsTangents.data());
         }
       }
 

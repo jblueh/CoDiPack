@@ -83,6 +83,7 @@ namespace codi {
 
       using StaticStatementData = typename Base::StaticStatementData;
       using LinearReverseArguments = typename Base::LinearReverseArguments;
+      using StatementEvalArguments = typename Base::StatementEvalArguments;
 
       /// Constructor
       PrimalValueLinearTape() : Base() {}
@@ -130,9 +131,9 @@ namespace codi {
           if (Config::StatementInputTag != data.numberOfPassiveArguments) {
 
             StatementEvaluator::template call<StatementCall::Forward, PrimalValueLinearTape>(
-                data.handle, LinearReverseArguments{primalVector, curAdjointPos}, adjointVector, lhsPrimals.data(),
-                lhsTangents.data(),
-                data.numberOfPassiveArguments, curDynamicPos, dynamicValues);
+                data.handle,
+                StatementEvalArguments{curAdjointPos, data.numberOfPassiveArguments, curDynamicPos, dynamicValues},
+                primalVector, adjointVector, lhsPrimals.data(), lhsTangents.data());
           } else {
             curAdjointPos += 1;
           }
