@@ -164,8 +164,9 @@ namespace codi {
           if (Config::StatementInputTag != data.numberOfPassiveArguments) {
 
             StatementEvaluator::template call<StatementCall::Primal, PrimalValueLinearTape>(
-                data.handle, LinearReverseArguments{primalVector, curAdjointPos}, lhsPrimals.data(),
-                data.numberOfPassiveArguments, curDynamicPos, dynamicValues);
+                data.handle,
+                StatementEvalArguments{curAdjointPos, data.numberOfPassiveArguments, curDynamicPos, dynamicValues},
+                primalVector, lhsPrimals.data());
           } else {
             curAdjointPos += 1;
           }

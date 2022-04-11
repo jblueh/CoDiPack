@@ -1225,6 +1225,27 @@ namespace codi {
       /// @name Function from StatementEvaluatorTapeInterface and StatementEvaluatorInnerTapeInterface
       /// @{
 
+      template<typename Expr>
+      struct StatementCallGenBase {
+        public:
+          using Lhs = typename Expr::Lhs;
+          using Rhs = typename Expr::Rhs;
+          using LhsReal = typename Lhs::Real;
+          using AggregateTraits = RealTraits::AggregatedTypeTraits<LhsReal>;
+
+          using Constructor = ConstructStaticContextLogic<Rhs, Impl, 0, 0>;
+          using StaticRhs = typename Constructor::ResultType;
+
+          template<size_t pos>
+          using ExtractExpr = ExtractExpression<LhsReal, pos, StaticRhs>;
+
+          static StaticRhs constructStatic(Real* __restrict__ primalVector,
+                                           PassiveReal const* const __restrict__ constantValues,
+                                           Identifier const* const __restrict__ identifiers) {
+            return Constructor::construct(primalVector, identifiers, constantValues);
+          }
+      };
+
       /// \copydoc StatementEvaluatorTapeInterface::StatementCallGen
       template<StatementCall type, typename Expr>
       struct StatementCallGen;
@@ -1272,27 +1293,6 @@ namespace codi {
                                                         size_t& __restrict__ curDynamicPos, char* const __restrict__ dynamicValues) {
             evaluateFull(evaluateInner, StatementSizes::create<Expr>(), revArgs,
                                       adjointVector, adjointVectorSize, numberOfPassiveArguments, curDynamicPos, dynamicValues);
-          }
-      };
-
-      template<typename Expr>
-      struct StatementCallGenBase {
-        public:
-          using Lhs = typename Expr::Lhs;
-          using Rhs = typename Expr::Rhs;
-          using LhsReal = typename Lhs::Real;
-          using AggregateTraits = RealTraits::AggregatedTypeTraits<LhsReal>;
-
-          using Constructor = ConstructStaticContextLogic<Rhs, Impl, 0, 0>;
-          using StaticRhs = typename Constructor::ResultType;
-
-          template<size_t pos>
-          using ExtractExpr = ExtractExpression<LhsReal, pos, StaticRhs>;
-
-          static StaticRhs constructStatic(Real* __restrict__ primalVector,
-                                           PassiveReal const* const __restrict__ constantValues,
-                                           Identifier const* const __restrict__ identifiers) {
-            return Constructor::construct(primalVector, identifiers, constantValues);
           }
       };
 
@@ -1352,17 +1352,17 @@ namespace codi {
 
           /// \copydoc codi::StatementEvaluatorInnerTapeInterface::StatementCallGen::evaluateFull()
           template<typename Func>
-          CODI_INLINE static void evaluateFull(Func const& evalInner, StatementSizes stmtSizes, StatementEvalArguments revArgs,
+          CODI_INLINE static void evaluateFull(Func const& evalInner, StatementSizes stmtSizes, StatementEvalArguments stmtArgs,
                                    Real* __restrict__ primalVector,
                                    ADJOINT_VECTOR_TYPE* __restrict__ adjointVector,
                                    Real* __restrict__ lhsPrimals,
                                    Gradient* __restrict__ lhsTangents) {
-            DynamicStatementData data = DynamicStatementData::readForward(stmtSizes, revArgs);
+            DynamicStatementData data = DynamicStatementData::readForward(stmtSizes, stmtArgs);
 
             if(!TapeTypes::IsLinearIndexHandler) {
-              data.updateOldPrimalValues(stmtSizes, revArgs, primalVector);
+              data.updateOldPrimalValues(stmtSizes, stmtArgs, primalVector);
             }
-            data.copyPassiveValuesIntoPrimalVector(revArgs, primalVector);
+            data.copyPassiveValuesIntoPrimalVector(stmtArgs, primalVector);
 
     #if CODI_VariableAdjointInterfaceInPrimalTapes
             adjointVector->setSizeForIndirectAccess(stmtSizes.maxOutputArgs);
@@ -1371,7 +1371,7 @@ namespace codi {
             evalInner(primalVector, adjointVector, lhsPrimals, lhsTangents, data.constantValues, data.rhsIdentifiers);
 
             for(size_t iLhs = 0; iLhs < stmtSizes.maxOutputArgs; iLhs += 1) {
-              Identifier const lhsIdentifier = revArgs.getLhsIdentifier(iLhs, data.lhsIdentifiers);
+              Identifier const lhsIdentifier = stmtArgs.getLhsIdentifier(iLhs, data.lhsIdentifiers);
 
               primalVector[lhsIdentifier] = lhsPrimals[iLhs];
     #if CODI_VariableAdjointInterfaceInPrimalTapes
@@ -1383,7 +1383,7 @@ namespace codi {
     #endif
             }
 
-            revArgs.updateAdjointPosForward(stmtSizes.maxOutputArgs);
+            stmtArgs.updateAdjointPosForward(stmtSizes.maxOutputArgs);
           }
 
           /// \copydoc codi::StatementEvaluatorTapeInterface::StatementCallGen::evaluate()
@@ -1398,68 +1398,54 @@ namespace codi {
       /*******************************************************************************/
       /// Primal implementation
       template<typename Expr>
-      struct StatementCallGen<StatementCall::Primal, Expr> {
+      struct StatementCallGen<StatementCall::Primal, Expr> : public StatementCallGenBase<Expr> {
+        public:
+          using Base = StatementCallGenBase<Expr>;
+          using StaticRhs = typename Base::StaticRhs;
+          template<size_t pos>
+          using ExtractExpr = typename Base::template ExtractExpr<pos>;
+
           /// \copydoc codi::StatementEvaluatorInnerTapeInterface::StatementCallGen::evaluateInner()
           static void evaluateInner(Real* __restrict__ primalVector,
                                                    Real* __restrict__ lhsPrimals,
                                                    PassiveReal const* const __restrict__ constantValues,
                                                    Identifier const* const __restrict__ identifiers) {
-            using Lhs = typename Expr::Lhs;
-            using Rhs = typename Expr::Rhs;
-            using LhsReal = typename Lhs::Real;
-            using AggregateTraits = RealTraits::AggregatedTypeTraits<LhsReal>;
+            StaticRhs staticsRhs = Base::constructStatic(primalVector, constantValues, identifiers);
 
-            using Constructor = ConstructStaticContextLogic<Rhs, Impl, 0, 0>;
-            using StaticRhs = typename Constructor::ResultType;
-
-            StaticRhs staticsRhs = Constructor::construct(primalVector, identifiers, constantValues);
-
-            static_for<AggregateTraits::Elements>([&](auto i) CODI_LAMBDA_INLINE {
-              using ExtractExpr = ExtractExpression<LhsReal, i.value, StaticRhs>;
-              ExtractExpr expr(staticsRhs);
-
+            static_for<Base::AggregateTraits::Elements>([&](auto i) CODI_LAMBDA_INLINE {
+              ExtractExpr<i.value> expr(staticsRhs);
               lhsPrimals[i.value] = expr.getValue();
             });
           }
 
           /// \copydoc codi::StatementEvaluatorInnerTapeInterface::StatementCallGen::evaluateFull()
           template<typename Func>
-          static void evaluateFull(Func const& evalInner, StatementSizes stmtSizes, ReverseArguments revArgs,
-                                                  Real* __restrict__ lhsPrimals,
-                                                  Config::ArgumentSize numberOfPassiveArguments,
-                                                  size_t& __restrict__ curDynamicPos, char* const __restrict__ dynamicValues) {
-            DynamicStatementData data;
-            curDynamicPos = data.readDynamicForward(dynamicValues, curDynamicPos, stmtSizes, numberOfPassiveArguments);
+          static void evaluateFull(Func const& evalInner, StatementSizes stmtSizes, StatementEvalArguments stmtArgs,
+                                   Real* __restrict__ primalVector,
+                                   Real* __restrict__ lhsPrimals) {
+            DynamicStatementData data = DynamicStatementData::readForward(stmtSizes, stmtArgs);
 
             if(!TapeTypes::IsLinearIndexHandler) {
-              for(size_t iLhs = 0; iLhs < stmtSizes.maxOutputArgs; iLhs += 1) {
-                Identifier const lhsIdentifier = revArgs.getLhsIdentifier(iLhs, data.lhsIdentifiers);
-                data.oldPrimalValues[iLhs] = revArgs.primalVector[lhsIdentifier];
-              }
+              data.updateOldPrimalValues(stmtSizes, stmtArgs, primalVector);
             }
+            data.copyPassiveValuesIntoPrimalVector(stmtArgs, primalVector);
 
-            for (Config::ArgumentSize curPos = 0; curPos < numberOfPassiveArguments; curPos += 1) {
-              revArgs.primalVector[curPos] = data.passiveValues[curPos];
-            }
-
-            evalInner(revArgs.primalVector, lhsPrimals, data.constantValues, data.rhsIdentifiers);
+            evalInner(primalVector, lhsPrimals, data.constantValues, data.rhsIdentifiers);
 
             for(size_t iLhs = 0; iLhs < stmtSizes.maxOutputArgs; iLhs += 1) {
-              Identifier const lhsIdentifier = revArgs.getLhsIdentifier(iLhs, data.lhsIdentifiers);
+              Identifier const lhsIdentifier = stmtArgs.getLhsIdentifier(iLhs, data.lhsIdentifiers);
 
-              revArgs.primalVector[lhsIdentifier] = lhsPrimals[iLhs];
+              primalVector[lhsIdentifier] = lhsPrimals[iLhs];
             }
 
-            revArgs.updateAdjointPosForward(stmtSizes.maxOutputArgs);
+            stmtArgs.updateAdjointPosForward(stmtSizes.maxOutputArgs);
           }
 
           /// \copydoc codi::StatementEvaluatorTapeInterface::StatementCallGen::evaluate()
-          CODI_INLINE static void evaluate(ReverseArguments revArgs,
-                                                          Real* __restrict__ lhsPrimals,
-                                                          Config::ArgumentSize numberOfPassiveArguments,
-                                                          size_t& __restrict__ curDynamicPos, char* const __restrict__ dynamicValues) {
-            evaluateFull(evaluateInner, StatementSizes::create<Expr>(), revArgs, lhsPrimals,
-                                        numberOfPassiveArguments, curDynamicPos, dynamicValues);
+          CODI_INLINE static void evaluate(StatementEvalArguments stmtArgs,
+                                           Real* __restrict__ primalVector,
+                                           Real* __restrict__ lhsPrimals) {
+            evaluateFull(evaluateInner, StatementSizes::create<Expr>(), stmtArgs, primalVector, lhsPrimals);
           }
       };
 
