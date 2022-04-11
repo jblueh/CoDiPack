@@ -192,8 +192,9 @@ namespace codi {
           curStaticPos = data.readReverse(staticValues, curStaticPos);
 
           StatementEvaluator::template call<StatementCall::Reverse, PrimalValueReuseTape>(
-                data.handle, ReuseReverseArguments{primalVector}, adjointVector, lhsAdjoints.data(),
-              data.numberOfPassiveArguments, curDynamicPos, dynamicValues);
+              data.handle,
+              StatementEvalArguments{data.numberOfPassiveArguments, curDynamicPos, dynamicValues},
+              primalVector, adjointVector, lhsAdjoints.data());
         }
       }
 
