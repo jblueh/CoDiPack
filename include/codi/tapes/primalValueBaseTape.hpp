@@ -1247,37 +1247,33 @@ namespace codi {
           /// \copydoc codi::StatementEvaluatorInnerTapeInterface::StatementCallGen::evaluateFull()
           template<typename Func>
           CODI_INLINE static void evaluateFull(
-              Func const& evalInner, StatementSizes stmtSizes, ReverseArguments revArgs,
-              ADJOINT_VECTOR_TYPE* __restrict__ adjointVector, size_t adjointVectorSize, Config::ArgumentSize numberOfPassiveArguments,
-              size_t& __restrict__ curDynamicPos, char* const __restrict__ dynamicValues
+              Func const& evalInner, StatementSizes stmtSizes, StatementEvalArguments stmtArgs,
+              ADJOINT_VECTOR_TYPE* __restrict__ adjointVector, size_t adjointVectorSize
           ) {
             CODI_UNUSED(evalInner);
 
-            DynamicStatementData data;
-            curDynamicPos = data.readDynamicReverse(dynamicValues, curDynamicPos, stmtSizes, numberOfPassiveArguments);
+            DynamicStatementData data = DynamicStatementData::readReverse(stmtSizes, stmtArgs);
 
-            revArgs.updateAdjointPosReverse(stmtSizes.maxOutputArgs);
+            stmtArgs.updateAdjointPosReverse(stmtSizes.maxOutputArgs);
 
             for (size_t iLhs = 0; iLhs < stmtSizes.maxOutputArgs; iLhs += 1) {
-              Identifier lhsIdentifier = revArgs.getLhsIdentifier(iLhs, data.lhsIdentifiers);
+              Identifier lhsIdentifier = stmtArgs.getLhsIdentifier(iLhs, data.lhsIdentifiers);
 
               if(lhsIdentifier < (Identifier)adjointVectorSize) {
-    #if CODI_VariableAdjointInterfaceInPrimalTapes
+#if CODI_VariableAdjointInterfaceInPrimalTapes
                 adjointVector->resetAdjointVec(lhsIdentifier);
-    #else
+#else
                 adjointVector[lhsIdentifier] = Gradient();
-    #endif
+#endif
               }
             }
           }
 
           /// \copydoc codi::StatementEvaluatorTapeInterface::StatementCallGen::evaluate()
-          CODI_INLINE static void evaluate(ReverseArguments revArgs, ADJOINT_VECTOR_TYPE* __restrict__ adjointVector,
-                                                        size_t adjointVectorSize,
-                                                        Config::ArgumentSize numberOfPassiveArguments,
-                                                        size_t& __restrict__ curDynamicPos, char* const __restrict__ dynamicValues) {
-            evaluateFull(evaluateInner, StatementSizes::create<Expr>(), revArgs,
-                                      adjointVector, adjointVectorSize, numberOfPassiveArguments, curDynamicPos, dynamicValues);
+          CODI_INLINE static void evaluate(StatementEvalArguments stmtArgs,
+                                           ADJOINT_VECTOR_TYPE* __restrict__ adjointVector, size_t adjointVectorSize) {
+            evaluateFull(evaluateInner, StatementSizes::create<Expr>(), stmtArgs,
+                                      adjointVector, adjointVectorSize);
           }
       };
 
@@ -1446,32 +1442,26 @@ namespace codi {
           /// \copydoc codi::StatementEvaluatorInnerTapeInterface::StatementCallGen::evaluateFull()
           template<typename Func>
           CODI_INLINE static void evaluateFull(
-              Func const& evalInner, StatementSizes stmtSizes, ReverseArguments revArgs,
-              Config::ArgumentSize numberOfPassiveArguments,
-              size_t& __restrict__ curDynamicPos, char* const __restrict__ dynamicValues
+              Func const& evalInner, StatementSizes stmtSizes, StatementEvalArguments stmtArgs,
+              Real* __restrict__ primalVector
           ) {
-
             CODI_UNUSED(evalInner);
 
-            DynamicStatementData data;
-            curDynamicPos = data.readDynamicReverse(dynamicValues, curDynamicPos, stmtSizes, numberOfPassiveArguments);
-
-            revArgs.updateAdjointPosReverse(stmtSizes.maxOutputArgs);
+            DynamicStatementData data = DynamicStatementData::readReverse(stmtSizes, stmtArgs);
+            stmtArgs.updateAdjointPosReverse(stmtSizes.maxOutputArgs);
 
             for (size_t iLhs = 0; iLhs < stmtSizes.maxOutputArgs; iLhs += 1) {
-              Identifier lhsIdentifier = revArgs.getLhsIdentifier(iLhs, data.lhsIdentifiers);
+              Identifier lhsIdentifier = stmtArgs.getLhsIdentifier(iLhs, data.lhsIdentifiers);
 
               if(!LinearIndexHandling) {
-                revArgs.primalVector[lhsIdentifier] = data.oldPrimalValues[iLhs];
+                primalVector[lhsIdentifier] = data.oldPrimalValues[iLhs];
               }
             }
           }
 
           /// \copydoc codi::StatementEvaluatorTapeInterface::StatementCallGen::evaluate()
-          CODI_INLINE static void evaluate(ReverseArguments revArgs, Config::ArgumentSize numberOfPassiveArguments,
-                                                       size_t& __restrict__ curDynamicPos, char* const __restrict__ dynamicValues) {
-            evaluateFull(evaluateInner, StatementSizes::create<Expr>(), revArgs,
-                         numberOfPassiveArguments, curDynamicPos, dynamicValues);
+          CODI_INLINE static void evaluate(StatementEvalArguments stmtArgs, Real* __restrict__ primalVector) {
+            evaluateFull(evaluateInner, StatementSizes::create<Expr>(), stmtArgs, primalVector);
           }
       };
 

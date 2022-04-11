@@ -107,7 +107,9 @@ namespace codi {
             curStaticPos = data.readReverse(staticValues, curStaticPos);
 
             StatementEvaluator::template call<StatementCall::ClearAdjoint, PrimalValueReuseTape>(
-                data.handle, ReuseReverseArguments{nullptr}, adjointVector, adjointVectorSize, data.numberOfPassiveArguments, curDynamicPos, dynamicValues);
+                data.handle,
+                StatementEvalArguments{data.numberOfPassiveArguments, curDynamicPos, dynamicValues},
+                  adjointVector, adjointVectorSize);
           }
         };
 
@@ -217,7 +219,9 @@ namespace codi {
             curStaticPos = data.readReverse(staticValues, curStaticPos);
 
             StatementEvaluator::template call<StatementCall::ResetPrimal, PrimalValueReuseTape>(
-                data.handle, ReuseReverseArguments{primalVector}, data.numberOfPassiveArguments, curDynamicPos, dynamicValues);
+                data.handle,
+                StatementEvalArguments{data.numberOfPassiveArguments, curDynamicPos, dynamicValues},
+                primalVector);
           }
         };
 
