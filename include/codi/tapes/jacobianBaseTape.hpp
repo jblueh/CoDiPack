@@ -270,13 +270,12 @@ namespace codi {
           /// General implementation. Checks for invalid and passive values/Jacobians.
           template<typename Node, typename Jacobian, typename DataVector>
           CODI_INLINE void handleJacobianOnActive(Node const& node, Jacobian jacobianExpr, DataVector& dataVector) {
-            ExpressionTraits::ActiveResultFromExpr<Jacobian> jacobian = jacobianExpr;
-            Real jacobianReal = jacobian;//ComputationTraits::adjointConversion<Real>(jacobian);
+            Real jacobia = jacobianExpr;
 
             if (CODI_ENABLE_CHECK(Config::CheckZeroIndex, 0 != node.getIdentifier())) {
-              if (CODI_ENABLE_CHECK(Config::IgnoreInvalidJacobians, RealTraits::isTotalFinite(jacobianReal))) {
-                if (CODI_ENABLE_CHECK(Config::CheckJacobianIsZero, !RealTraits::isTotalZero(jacobianReal))) {
-                  dataVector.pushData(jacobianReal, node.getIdentifier());
+              if (CODI_ENABLE_CHECK(Config::IgnoreInvalidJacobians, RealTraits::isTotalFinite(jacobia))) {
+                if (CODI_ENABLE_CHECK(Config::CheckJacobianIsZero, !RealTraits::isTotalZero(jacobia))) {
+                  dataVector.pushData(jacobia, node.getIdentifier());
                 }
               }
             }
@@ -288,12 +287,11 @@ namespace codi {
                                                   DataVector& dataVector) {
             CODI_UNUSED(dataVector);
 
-            ExpressionTraits::ActiveResultFromExpr<Jacobian> jacobian = jacobianExpr;
-            Real jacobianReal = jacobian;//ComputationTraits::adjointConversion<Real>(jacobian);
+            Real jacobian = jacobianExpr;
 
-            if (CODI_ENABLE_CHECK(Config::IgnoreInvalidJacobians, RealTraits::isTotalFinite(jacobianReal))) {
+            if (CODI_ENABLE_CHECK(Config::IgnoreInvalidJacobians, RealTraits::isTotalFinite(jacobian))) {
               // Do a delayed push for these leaf nodes, accumulate the jacobian in the local member.
-              node.jacobian += jacobianReal;
+              node.jacobian += jacobian;
             }
           }
       };

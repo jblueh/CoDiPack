@@ -106,11 +106,10 @@ namespace codi {
           template<typename Node, typename Jacobian>
           CODI_INLINE void handleJacobianOnActive(Node const& node, Jacobian jacobianExpr, Gradient& lhsGradient) {
 
-            ExpressionTraits::ActiveResultFromExpr<Jacobian> jacobian = jacobianExpr;
-            Real jacobianReal = ComputationTraits::adjointConversion<Real>(jacobian);
+            Real jacobian = jacobianExpr;
 
-            if (CODI_ENABLE_CHECK(Config::IgnoreInvalidJacobians, RealTraits::isTotalFinite(jacobianReal))) {
-              lhsGradient += node.gradient() * jacobianReal;
+            if (CODI_ENABLE_CHECK(Config::IgnoreInvalidJacobians, RealTraits::isTotalFinite(jacobian))) {
+              lhsGradient += node.gradient() * jacobian;
             }
           }
       };

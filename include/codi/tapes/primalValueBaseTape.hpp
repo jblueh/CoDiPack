@@ -1302,14 +1302,13 @@ namespace codi {
                                                       ADJOINT_VECTOR_TYPE* adjointVector) {
                 CODI_UNUSED(lhsTangent);
 
-                ExpressionTraits::ActiveResultFromExpr<Jacobian> jacobian = jacobianExpr;
-                Real jacobianReal = ComputationTraits::adjointConversion<Real>(jacobian);
+                Real jacobian = jacobianExpr;
 
-                if (CODI_ENABLE_CHECK(Config::IgnoreInvalidJacobians, RealTraits::isTotalFinite(jacobianReal))) {
+                if (CODI_ENABLE_CHECK(Config::IgnoreInvalidJacobians, RealTraits::isTotalFinite(jacobian))) {
 #if CODI_VariableAdjointInterfaceInPrimalTapes
-                  adjointVector->updateTangentWithLhs(node.getIdentifier(), jacobianReal);
+                  adjointVector->updateTangentWithLhs(node.getIdentifier(), jacobian);
 #else
-                  lhsTangent += jacobianReal * adjointVector[node.getIdentifier()];
+                  lhsTangent += jacobian * adjointVector[node.getIdentifier()];
 #endif
                 }
               }
@@ -1490,14 +1489,13 @@ namespace codi {
                                                       ADJOINT_VECTOR_TYPE* adjointVector) {
                 CODI_UNUSED(lhsAdjoint);
 
-                ExpressionTraits::ActiveResultFromExpr<Jacobian> jacobian = jacobianExpr;
-                Real jacobianReal = ComputationTraits::adjointConversion<Real>(jacobian);
+                Real jacobian = jacobianExpr;
 
-                if (CODI_ENABLE_CHECK(Config::IgnoreInvalidJacobians, RealTraits::isTotalFinite(jacobianReal))) {
+                if (CODI_ENABLE_CHECK(Config::IgnoreInvalidJacobians, RealTraits::isTotalFinite(jacobian))) {
 #if CODI_VariableAdjointInterfaceInPrimalTapes
-                  adjointVector->updateAdjointWithLhs(node.getIdentifier(), jacobianReal);
+                  adjointVector->updateAdjointWithLhs(node.getIdentifier(), jacobian);
 #else
-                  adjointVector[node.getIdentifier()] += jacobianReal * lhsAdjoint;
+                  adjointVector[node.getIdentifier()] += jacobian * lhsAdjoint;
 #endif
                 }
               }

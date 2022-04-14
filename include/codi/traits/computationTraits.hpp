@@ -47,42 +47,6 @@ namespace codi {
   namespace ComputationTraits {
 
     /**
-     * @brief Perform the conversion of Outer(Inner) in the adjoint context. Default implementation for Outer == Inner.
-     *
-     * E.g. for double(std::complex<double>) the conversion returns the real part of the complex number. This is the
-     * adjoint of std::complex<double>(double).
-     *
-     * Simple specialization can be create with the macro CODI_CREATE_ADJOINT_CONVERSION.
-     *
-     * @tparam T_Outer  Type into which was converted.
-     * @tparam T_Inner  Type from which was converted.
-     */
-    template<typename T_Outer, typename T_Inner, typename = void>
-    struct AdjointConversionImpl {
-      public:
-        //static_assert(false && std::is_void<T_Outer>::value, "Instantiation of unspecialized adjoint conversion.");
-        using Outer = CODI_DD(T_Outer, CODI_ANY);  ///< See ReduceImpl.
-        using Inner = CODI_DD(T_Inner, CODI_ANY);  ///< See ReduceImpl.
-
-        using Return = Outer;
-
-        /// @brief Perform the adjoint of Outer(Inner).
-        static Return adjointConversion(Inner const& jacobian) {
-          return jacobian;
-        }
-    };
-
-    /// Perform the conversion of Outer(Inner) in the adjoint context. Logic can be specialized via
-    /// AdjointConversionImpl.
-    ///
-    /// E.g. for double(std::complex<double>) the conversion returns the real part of the complex number. This is the
-    /// adjoint of std::complex<double>(double).
-    template<typename Outer, typename Inner>
-    CODI_INLINE typename AdjointConversionImpl<Outer, Inner>::Return adjointConversion(Inner const& jacobian) {
-      return AdjointConversionImpl<Outer, Inner>::adjointConversion(jacobian);
-    }
-
-    /**
      * @brief Perform \f$ a^T \f$ or \f$ a^H \f$ if entries are complex. No default implementation available.
      *
      * Simple specializations can be created with the macro CODI_CREATE_TRANSPOSE.
@@ -137,21 +101,6 @@ namespace codi {
     }
   }
 
-/// Create a specialization of ComputationTraits::AdjointConversionImpl
-///
-/// Has to be used in the codi namespace.
-#define CODI_CREATE_ADJOINT_CONVERSION(OuterType, InnerType, RType, conversion) \
-  template<>                                                                    \
-  struct ComputationTraits::AdjointConversionImpl<OuterType, InnerType> {       \
-    public:                                                                     \
-      using Outer = OuteType;                                                   \
-      using Inner = InnerType;                                                  \
-      using Return = RType;                                                     \
-      static Return adjointConversion(Inner const& jacobian) {                  \
-        return conversion;                                                      \
-      }                                                                         \
-  }
-
 /// Create a specialization of ComputationTraits::TransposeImpl
 ///
 /// Has to be used in the codi namespace.
@@ -182,20 +131,6 @@ namespace codi {
   }
 
 #ifndef DOXYGEN_DISABLE
-
-  /// Adjoint conversion specialization for Outer == std::complex<Inner>
-  template<typename Type>
-  struct ComputationTraits::AdjointConversionImpl<Type, std::complex<Type>> {
-    public:
-      using Outer = Type;
-      using Inner = std::complex<Type>;
-
-      using Return = Type;
-
-      static Return adjointConversion(Inner const& jacobian) {
-        return std::real(jacobian);
-      }
-  };
 
   /// Transpose specialization for floating point numbers.
   template<typename T>
