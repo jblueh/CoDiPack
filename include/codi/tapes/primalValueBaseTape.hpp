@@ -549,6 +549,7 @@ namespace codi {
             }
 
             dynamicPointers.rhsIdentifiers[idPos] = rhsIndex;
+            idPos += 1;
           }
 
           /// \copydoc codi::ForEachLeafLogic::handleConstant
@@ -567,6 +568,7 @@ namespace codi {
 
             static_for<AggregatedTraits::Elements>([&](auto i) CODI_LAMBDA_INLINE {
               dynamicPointers.constantValues[constantPos] = ConversionOperator::toDataStore(AggregatedTraits::template arrayAccess<i.value>(v));
+              constantPos += 1;
             });
           }
       };
