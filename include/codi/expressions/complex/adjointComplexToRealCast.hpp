@@ -33,7 +33,7 @@ namespace codi {
   };
 
   template<typename T_Real, typename T_Arg>
-  using AdjointComplexToRealCast = UnaryExpression<std::complex<T_Real>, T_Arg, OperationCastRealToComplex>;
+  using AdjointComplexToRealCast = UnaryExpression<T_Real, T_Arg, OperationCastRealToComplex>;
 
   template<typename Real>
   CODI_INLINE Real operator *(ReduceToReal, std::complex<Real> const& adjoint) {
@@ -41,7 +41,7 @@ namespace codi {
   }
 
   template<typename Real, typename Arg>
-  CODI_INLINE ExpressionTraits::ActiveResultFromExpr<Arg> operator *(ReduceToReal, ExpressionInterface<std::complex<Real>, Arg> const& adjoint) {
+  CODI_INLINE ExpressionTraits::ActiveResult<Real, typename Arg::ADLogic> operator *(ReduceToReal, ExpressionInterface<std::complex<Real>, Arg> const& adjoint) {
     return adjoint.cast().real();
   }
 }

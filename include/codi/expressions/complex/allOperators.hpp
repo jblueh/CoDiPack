@@ -117,7 +117,8 @@ namespace codi {
       static CODI_INLINE Real gradientB(ArgA const& argA, ArgB const& argB, Real const& result) {
         CODI_UNUSED(argB);
 
-        return log(argA) * result;
+        // Complex cast for argA, since the real log for negative numbers is not defined.
+        return log(Real(argA)) * result;
       }
   };
 

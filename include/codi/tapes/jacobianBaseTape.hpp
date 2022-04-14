@@ -271,7 +271,7 @@ namespace codi {
           template<typename Node, typename Jacobian, typename DataVector>
           CODI_INLINE void handleJacobianOnActive(Node const& node, Jacobian jacobianExpr, DataVector& dataVector) {
             ExpressionTraits::ActiveResultFromExpr<Jacobian> jacobian = jacobianExpr;
-            Real jacobianReal = ComputationTraits::adjointConversion<Real>(jacobian);
+            Real jacobianReal = jacobian;//ComputationTraits::adjointConversion<Real>(jacobian);
 
             if (CODI_ENABLE_CHECK(Config::CheckZeroIndex, 0 != node.getIdentifier())) {
               if (CODI_ENABLE_CHECK(Config::IgnoreInvalidJacobians, RealTraits::isTotalFinite(jacobianReal))) {
@@ -289,7 +289,7 @@ namespace codi {
             CODI_UNUSED(dataVector);
 
             ExpressionTraits::ActiveResultFromExpr<Jacobian> jacobian = jacobianExpr;
-            Real jacobianReal = ComputationTraits::adjointConversion<Real>(jacobian);
+            Real jacobianReal = jacobian;//ComputationTraits::adjointConversion<Real>(jacobian);
 
             if (CODI_ENABLE_CHECK(Config::IgnoreInvalidJacobians, RealTraits::isTotalFinite(jacobianReal))) {
               // Do a delayed push for these leaf nodes, accumulate the jacobian in the local member.

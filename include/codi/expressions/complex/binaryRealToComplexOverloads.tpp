@@ -62,6 +62,7 @@
   #include "../binaryExpression.hpp"
   #include "../constantExpression.hpp"
   #include "../expressionInterface.hpp"
+  #include "adjointComplexToRealCast.hpp"
   #define OPERATION_LOGIC BinaryOperation
   #define FUNCTION func
 
@@ -70,39 +71,40 @@ namespace codi {
 
   /// Function overload for FUNCTION.
   template<typename Real, typename ArgA, typename ArgB>
-  CODI_INLINE BinaryExpression<std::complex<Real>, ArgA, ArgB, OPERATION_LOGIC> FUNCTION(
+  CODI_INLINE BinaryExpression<std::complex<Real>, AdjointComplexToRealCast<Real, ArgA>, AdjointComplexToRealCast<Real, ArgB>, OPERATION_LOGIC> FUNCTION(
       ExpressionInterface<Real, ArgA> const& argA, ExpressionInterface<Real, ArgB> const& argB) {
-    return BinaryExpression<std::complex<Real>, ArgA, ArgB, OPERATION_LOGIC>(argA, argB);
+    return BinaryExpression<std::complex<Real>, AdjointComplexToRealCast<Real, ArgA>, AdjointComplexToRealCast<Real, ArgB>, OPERATION_LOGIC>(AdjointComplexToRealCast<Real, ArgA>(argA), AdjointComplexToRealCast<Real, ArgB>(argB));
   }
 
   /// Function overload for FUNCTION.
   template<typename Real, typename ArgA>
-  CODI_INLINE BinaryExpression<std::complex<Real>, ArgA, ConstantExpression<RealTraits::PassiveReal<Real>>, OPERATION_LOGIC> FUNCTION(
+  CODI_INLINE BinaryExpression<std::complex<Real>, AdjointComplexToRealCast<Real, ArgA>, ConstantExpression<RealTraits::PassiveReal<Real>>, OPERATION_LOGIC> FUNCTION(
       ExpressionInterface<Real, ArgA> const& argA, RealTraits::PassiveReal<Real> const& argB) {
-    return BinaryExpression<std::complex<Real>, ArgA, ConstantExpression<RealTraits::PassiveReal<Real>>, OPERATION_LOGIC>(
-        argA, ConstantExpression<RealTraits::PassiveReal<Real>>(argB));
+    return BinaryExpression<std::complex<Real>, AdjointComplexToRealCast<Real, ArgA>, ConstantExpression<RealTraits::PassiveReal<Real>>, OPERATION_LOGIC>(
+        AdjointComplexToRealCast<Real, ArgA>(argA), ConstantExpression<RealTraits::PassiveReal<Real>>(argB));
   }
 
   /// Function overload for FUNCTION.
   template<typename Real, typename ArgB>
-  CODI_INLINE BinaryExpression<std::complex<Real>, ConstantExpression<RealTraits::PassiveReal<Real>>, ArgB, OPERATION_LOGIC> FUNCTION(
+  CODI_INLINE BinaryExpression<std::complex<Real>, ConstantExpression<RealTraits::PassiveReal<Real>>, AdjointComplexToRealCast<Real, ArgB>, OPERATION_LOGIC> FUNCTION(
       RealTraits::PassiveReal<Real> const& argA, ExpressionInterface<Real, ArgB> const& argB) {
-    return BinaryExpression<std::complex<Real>, ConstantExpression<RealTraits::PassiveReal<Real>>, ArgB, OPERATION_LOGIC>(
-        ConstantExpression<RealTraits::PassiveReal<Real>>(argA), argB);
+    return BinaryExpression<std::complex<Real>, ConstantExpression<RealTraits::PassiveReal<Real>>, AdjointComplexToRealCast<Real, ArgB>, OPERATION_LOGIC>(
+        ConstantExpression<RealTraits::PassiveReal<Real>>(argA), AdjointComplexToRealCast<Real, ArgB>(argB));
   }
 
 #if CODI_SpecializeStdComplex
   template<typename Tape>
   CODI_INLINE BinaryExpression<std::complex<typename Tape::Real>,
-    ActiveType<Tape>,
-    ActiveType<Tape>,
+    AdjointComplexToRealCast<typename Tape::Real, ActiveType<Tape>>,
+    AdjointComplexToRealCast<typename Tape::Real, ActiveType<Tape>>,
     OPERATION_LOGIC>
   FUNCTION(ActiveType<Tape> const& argA, ActiveType<Tape> const& argB) {
     return BinaryExpression<
         std::complex<typename Tape::Real>,
-        ActiveType<Tape>,
-        ActiveType<Tape>,
-        OPERATION_LOGIC>(argA, argB);
+        AdjointComplexToRealCast<typename Tape::Real, ActiveType<Tape>>,
+        AdjointComplexToRealCast<typename Tape::Real, ActiveType<Tape>>,
+        OPERATION_LOGIC>(AdjointComplexToRealCast<typename Tape::Real, ActiveType<Tape>>(argA),
+                         AdjointComplexToRealCast<typename Tape::Real, ActiveType<Tape>>(argB));
   }
 #endif
 
