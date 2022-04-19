@@ -81,6 +81,7 @@ namespace codi {
       using Position = typename Base::Position;                           ///< See TapeTypesInterface.
 
       using FixedSizeStatementData = typename Base::FixedSizeStatementData;
+      using StmtPackHelper = typename Base::StmtPackHelper;
       using StatementEvalArguments = typename Base::StatementEvalArguments;
 
       /// Constructor
@@ -106,10 +107,9 @@ namespace codi {
 
             curFixedSizePos = data.readReverse(fixedSizeValues, curFixedSizePos);
 
+            StatementEvalArguments stmtArgs{data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues};
             StatementEvaluator::template call<StatementCall::ClearAdjoint, PrimalValueReuseTape>(
-                data.handle,
-                StatementEvalArguments{data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues},
-                  adjointVector, adjointVectorSize);
+                data.handle, STMT_ARGS_UNPACK(stmtArgs), adjointVector, adjointVectorSize);
           }
         };
 
@@ -145,10 +145,9 @@ namespace codi {
 
           curFixedSizePos = data.readForward(fixedSizeValues, curFixedSizePos);
 
+          StatementEvalArguments stmtArgs{data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues};
           StatementEvaluator::template call<StatementCall::Forward, PrimalValueReuseTape>(
-              data.handle,
-              StatementEvalArguments{data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues},
-              primalVector, adjointVector, lhsPrimals.data(), lhsTangents.data());
+              data.handle, STMT_ARGS_UNPACK(stmtArgs), primalVector, adjointVector, lhsPrimals.data(), lhsTangents.data());
         }
       }
 
@@ -169,10 +168,9 @@ namespace codi {
 
           curFixedSizePos = data.readForward(fixedSizeValues, curFixedSizePos);
 
+          StatementEvalArguments stmtArgs{data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues};
           StatementEvaluator::template call<StatementCall::Primal, PrimalValueReuseTape>(
-              data.handle,
-              StatementEvalArguments{data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues},
-              primalVector, lhsPrimals.data());
+              data.handle, STMT_ARGS_UNPACK(stmtArgs), primalVector, lhsPrimals.data());
         }
       }
 
@@ -189,18 +187,13 @@ namespace codi {
         StackArray<Gradient> lhsAdjoints{};
         FixedSizeStatementData data;
 
-        using TempStatementEvalArguments = typename Base::TempStatementEvalArguments;
-
         while (curFixedSizePos > endFixedSizePos) {
 
           curFixedSizePos = data.readReverse(fixedSizeValues, curFixedSizePos);
 
-          size_t tempPos;
-          TempStatementEvalArguments stmtArgs{tempPos, data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues};
+          StatementEvalArguments stmtArgs{data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues};
           StatementEvaluator::template call<StatementCall::Reverse, PrimalValueReuseTape>(
-              data.handle,
-              STMT_ARGS_UNPACK(stmtArgs),
-              primalVector, adjointVector, lhsAdjoints.data());
+              data.handle, STMT_ARGS_UNPACK(stmtArgs), primalVector, adjointVector, lhsAdjoints.data());
         }
       }
 
@@ -222,10 +215,9 @@ namespace codi {
 
             curFixedSizePos = data.readReverse(fixedSizeValues, curFixedSizePos);
 
+            StatementEvalArguments stmtArgs{data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues};
             StatementEvaluator::template call<StatementCall::ResetPrimal, PrimalValueReuseTape>(
-                data.handle,
-                StatementEvalArguments{data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues},
-                primalVector);
+                data.handle, STMT_ARGS_UNPACK(stmtArgs), primalVector);
           }
         };
 

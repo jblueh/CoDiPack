@@ -82,6 +82,7 @@ namespace codi {
       using Position = typename Base::Position;                           ///< See TapeTypesInterface.
 
       using FixedSizeStatementData = typename Base::FixedSizeStatementData;
+      using StmtPackHelper = typename Base::StmtPackHelper;
       using StatementEvalArguments = typename Base::StatementEvalArguments;
 
       /// Constructor
@@ -129,10 +130,9 @@ namespace codi {
 
           if (Config::StatementInputTag != data.numberOfPassiveArguments) {
 
+            StatementEvalArguments stmtArgs{curAdjointPos, data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues};
             StatementEvaluator::template call<StatementCall::Forward, PrimalValueLinearTape>(
-                data.handle,
-                StatementEvalArguments{curAdjointPos, data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues},
-                primalVector, adjointVector, lhsPrimals.data(), lhsTangents.data());
+                data.handle, STMT_ARGS_UNPACK(stmtArgs), primalVector, adjointVector, lhsPrimals.data(), lhsTangents.data());
           } else {
             curAdjointPos += 1;
           }
@@ -162,10 +162,9 @@ namespace codi {
 
           if (Config::StatementInputTag != data.numberOfPassiveArguments) {
 
+            StatementEvalArguments stmtArgs{curAdjointPos, data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues};
             StatementEvaluator::template call<StatementCall::Primal, PrimalValueLinearTape>(
-                data.handle,
-                StatementEvalArguments{curAdjointPos, data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues},
-                primalVector, lhsPrimals.data());
+                data.handle, STMT_ARGS_UNPACK(stmtArgs), primalVector, lhsPrimals.data());
           } else {
             curAdjointPos += 1;
           }
@@ -189,19 +188,15 @@ namespace codi {
 
         size_t curAdjointPos = startAdjointPos;
 
-        using TempStatementEvalArguments = typename Base::TempStatementEvalArguments;
-
         while (curAdjointPos > endAdjointPos) {
 
           curFixedSizePos = data.readReverse(fixedSizeValues, curFixedSizePos);
 
           if (Config::StatementInputTag != data.numberOfPassiveArguments) {
 
-            TempStatementEvalArguments stmtArgs{curAdjointPos, data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues};
+            StatementEvalArguments stmtArgs{curAdjointPos, data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues};
             StatementEvaluator::template call<StatementCall::Reverse, PrimalValueLinearTape>(
-                data.handle,
-                STMT_ARGS_UNPACK(stmtArgs),
-                primalVector, adjointVector, lhsAdjoints.data());
+                data.handle, STMT_ARGS_UNPACK(stmtArgs), primalVector, adjointVector, lhsAdjoints.data());
           } else {
             curAdjointPos -= 1;
           }
