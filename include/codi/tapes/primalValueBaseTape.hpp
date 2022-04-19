@@ -626,6 +626,38 @@ namespace codi {
           }
       };
 
+      template< typename Lhs, typename RhsType, typename Rhs>
+      CODI_INLINE bool storeArgumentData(ExpressionInterface<RhsType, Rhs> const& rhs, DynamicStatementData& dynamicPointers) {
+        using Expr = AssignExpression<Lhs, Rhs>;
+
+        CountActiveArguments countActiveArguments;
+        PushStatementData pushStatement;
+
+        codiAssert(ExpressionTraits::NumberOfActiveTypeArguments<Rhs>::value < Config::MaxArgumentSize);
+        codiAssert(ExpressionTraits::NumberOfConstantTypeArguments<Rhs>::value < Config::MaxArgumentSize);
+        codiAssert(ExpressionTraits::NumberOfActiveTypeArguments<Lhs>::value < Config::MaxArgumentSize);
+
+        size_t activeArguments = 0;
+        countActiveArguments.eval(rhs.cast(), activeArguments);
+
+        if (CODI_ENABLE_CHECK(Config::CheckEmptyStatements, 0 != activeArguments)) {
+          FixedSizeStatementData::reserve(fixedSizeData);
+          DynamicStatementData::reserve(dynamicSizeData, StatementSizes::create<Expr>(), activeArguments);
+
+          size_t passiveArguments = 0;
+          size_t idPos = 0;
+          size_t constantPos = 0;
+          dynamicPointers = DynamicStatementData::store(dynamicSizeData, StatementSizes::create<Expr>(), activeArguments);
+          pushStatement.eval(rhs.cast(), dynamicPointers, passiveArguments, idPos, constantPos);
+
+          FixedSizeStatementData::store(fixedSizeData, (Config::ArgumentSize)passiveArguments, StatementEvaluator::template createHandle<Impl, Impl, Expr>());
+
+          return true;
+        } else {
+          return false;
+        }
+      }
+
     public:
 
       /// @{
@@ -634,31 +666,14 @@ namespace codi {
       CODI_INLINE void store(AggregatedExpressionType<Aggregated, Type, Lhs>& lhs,
                              ExpressionInterface<Aggregated, Rhs> const& rhs) {
 
-        using Expr = AssignExpression<Lhs, Rhs>;
         using AggregatedTraits = RealTraits::AggregatedTypeTraits<Aggregated>;
         int constexpr Elements = AggregatedTraits::Elements;
 
         bool primalsStored = false;
         if (CODI_ENABLE_CHECK(Config::CheckTapeActivity, cast().isActive())) {
-          CountActiveArguments countActiveArguments;
-          PushStatementData pushStatement;
 
-          codiAssert(ExpressionTraits::NumberOfActiveTypeArguments<Rhs>::value < Config::MaxArgumentSize);
-          codiAssert(ExpressionTraits::NumberOfConstantTypeArguments<Rhs>::value < Config::MaxArgumentSize);
-          codiAssert(ExpressionTraits::NumberOfActiveTypeArguments<Lhs>::value < Config::MaxArgumentSize);
-
-          size_t activeArguments = 0;
-          countActiveArguments.eval(rhs.cast(), activeArguments);
-
-          if (CODI_ENABLE_CHECK(Config::CheckEmptyStatements, 0 != activeArguments)) {
-            FixedSizeStatementData::reserve(fixedSizeData);
-            DynamicStatementData::reserve(dynamicSizeData, StatementSizes::create<Expr>(), activeArguments);
-
-            size_t passiveArguments = 0;
-            size_t idPos = 0;
-            size_t constantPos = 0;
-            DynamicStatementData dynamicPointers = DynamicStatementData::store(dynamicSizeData, StatementSizes::create<Expr>(), activeArguments);
-            pushStatement.eval(rhs.cast(), dynamicPointers, passiveArguments, idPos, constantPos);
+          DynamicStatementData dynamicPointers;
+          if(storeArgumentData<Lhs>(rhs, dynamicPointers)) {
 
             bool generatedNewIndex = false;
             static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
@@ -680,8 +695,6 @@ namespace codi {
               primalEntry = lhs.arrayValue[i.value].getValue();
             });
 
-            FixedSizeStatementData::store(fixedSizeData, (Config::ArgumentSize)passiveArguments, StatementEvaluator::template createHandle<Impl, Impl, Expr>());
-
             primalsStored = true;
           }
         }
@@ -700,28 +713,11 @@ namespace codi {
       template<typename Lhs, typename Rhs>
       CODI_INLINE void store(LhsExpressionInterface<Real, Gradient, Impl, Lhs>& lhs,
                              ExpressionInterface<Real, Rhs> const& rhs) {
-        using Expr = AssignExpression<Lhs, Rhs>;
-
+        bool primalsStored = false;
         if (CODI_ENABLE_CHECK(Config::CheckTapeActivity, cast().isActive())) {
-          CountActiveArguments countActiveArguments;
-          PushStatementData pushStatement;
 
-          codiAssert(ExpressionTraits::NumberOfActiveTypeArguments<Rhs>::value < Config::MaxArgumentSize);
-          codiAssert(ExpressionTraits::NumberOfConstantTypeArguments<Rhs>::value < Config::MaxArgumentSize);
-
-          size_t activeArguments = 0;
-          countActiveArguments.eval(rhs.cast(), activeArguments);
-
-          if (CODI_ENABLE_CHECK(Config::CheckEmptyStatements, 0 != activeArguments)) {
-            FixedSizeStatementData::reserve(fixedSizeData);
-            DynamicStatementData::reserve(dynamicSizeData, StatementSizes::create<Expr>(), activeArguments);
-
-            size_t passiveArguments = 0;
-            size_t idPos = 0;
-            size_t constantPos = 0;
-            DynamicStatementData dynamicPointers = DynamicStatementData::store(dynamicSizeData, StatementSizes::create<Expr>(), activeArguments);
-            pushStatement.eval(rhs.cast(), dynamicPointers, passiveArguments, idPos, constantPos);
-
+          DynamicStatementData dynamicPointers;
+          if(storeArgumentData<Lhs>(rhs, dynamicPointers)) {
             bool generatedNewIndex = indexManager.get().assignIndex(lhs.cast().getIdentifier());
             checkPrimalSize(generatedNewIndex);
 
@@ -731,13 +727,13 @@ namespace codi {
               dynamicPointers.oldPrimalValues[0] = primalEntry;
             }
 
-            FixedSizeStatementData::store(fixedSizeData, (Config::ArgumentSize)passiveArguments, StatementEvaluator::template createHandle<Impl, Impl, Expr>());
-
             primalEntry = rhs.cast().getValue();
-          } else {
-            indexManager.get().freeIndex(lhs.cast().getIdentifier());
+
+            primalsStored = true;
           }
-        } else {
+        }
+
+        if(!primalsStored) {
           indexManager.get().freeIndex(lhs.cast().getIdentifier());
         }
 
