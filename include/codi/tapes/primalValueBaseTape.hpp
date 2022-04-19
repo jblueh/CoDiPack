@@ -630,91 +630,71 @@ namespace codi {
 
       /// @{
 
-//      template<typename Aggregated, typename Type, typename Lhs, typename Rhs>
-//      CODI_INLINE void store(AggregatedExpressionType<Aggregated, Type, Lhs>& lhs,
-//                             ExpressionInterface<Aggregated, Rhs> const& rhs) {
+      template<typename Aggregated, typename Type, typename Lhs, typename Rhs>
+      CODI_INLINE void store(AggregatedExpressionType<Aggregated, Type, Lhs>& lhs,
+                             ExpressionInterface<Aggregated, Rhs> const& rhs) {
 
-//        using AggregatedTraits = RealTraits::AggregatedTypeTraits<Aggregated>;
-//        int constexpr Elements = AggregatedTraits::Elements;
+        using Expr = AssignExpression<Lhs, Rhs>;
+        using AggregatedTraits = RealTraits::AggregatedTypeTraits<Aggregated>;
+        int constexpr Elements = AggregatedTraits::Elements;
 
-//        bool primalsStored = false;
-//        if (CODI_ENABLE_CHECK(Config::CheckTapeActivity, cast().isActive())) {
-//          CountActiveArguments countActiveArguments;
-//          PushStatementData pushStatement;
+        bool primalsStored = false;
+        if (CODI_ENABLE_CHECK(Config::CheckTapeActivity, cast().isActive())) {
+          CountActiveArguments countActiveArguments;
+          PushStatementData pushStatement;
 
-//          size_t constexpr MaxActiveArgs = ExpressionTraits::NumberOfActiveTypeArguments<Rhs>::value;
-//          size_t constexpr MaxConstantArgs = ExpressionTraits::NumberOfConstantTypeArguments<Rhs>::value;
+          codiAssert(ExpressionTraits::NumberOfActiveTypeArguments<Rhs>::value < Config::MaxArgumentSize);
+          codiAssert(ExpressionTraits::NumberOfConstantTypeArguments<Rhs>::value < Config::MaxArgumentSize);
+          codiAssert(ExpressionTraits::NumberOfActiveTypeArguments<Lhs>::value < Config::MaxArgumentSize);
 
-//          size_t constexpr MaxOutputArgs = ExpressionTraits::NumberOfActiveTypeArguments<Lhs>::value;
+          size_t activeArguments = 0;
+          countActiveArguments.eval(rhs.cast(), activeArguments);
 
-//          codiAssert(MaxActiveArgs < Config::MaxArgumentSize);
-//          codiAssert(MaxConstantArgs < Config::MaxArgumentSize);
-//          codiAssert(MaxOutputArgs < Config::MaxArgumentSize);
+          if (CODI_ENABLE_CHECK(Config::CheckEmptyStatements, 0 != activeArguments)) {
+            FixedSizeStatementData::reserve(fixedSizeData);
+            DynamicStatementData::reserve(dynamicSizeData, StatementSizes::create<Expr>(), activeArguments);
 
-//          size_t activeArguments = 0;
-//          countActiveArguments.eval(rhs.cast(), activeArguments);
+            size_t passiveArguments = 0;
+            size_t idPos = 0;
+            size_t constantPos = 0;
+            DynamicStatementData dynamicPointers = DynamicStatementData::store(dynamicSizeData, StatementSizes::create<Expr>(), activeArguments);
+            pushStatement.eval(rhs.cast(), dynamicPointers, passiveArguments, idPos, constantPos);
 
-//          if (CODI_ENABLE_CHECK(Config::CheckEmptyStatements, 0 != activeArguments)) {
-//            size_t dynamicSize = (MaxActiveArgs - activeArguments) * sizeof(Real)
-//                                  + (MaxActiveArgs) * sizeof(Identifier)
-//                                  + MaxConstantArgs * sizeof(PassiveReal);
-//            if(!LinearIndexHandling) {
-//              dynamicSize += MaxOutputArgs * sizeof(Identifier) + MaxOutputArgs * sizeof(Real);
-//            }
-//            FixedSizeStatementData::reserve(fixedSizeData);
-//            dynamicSizeData.reserveItems(dynamicSize);
+            bool generatedNewIndex = false;
+            static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
+              generatedNewIndex |= indexManager.get().assignIndex(lhs.arrayValue[i.value].getIdentifier());
+            });
+            checkPrimalSize(generatedNewIndex);
 
-//            size_t passiveArguments = 0;
-//            pushPassive.eval(rhs.cast(), dynamicSizeData);
-//            pushIdentifier.eval(rhs.cast(), dynamicSizeData, passiveArguments);
-//            pushConstant.eval(rhs.cast(), dynamicSizeData);
+            Aggregated real = rhs.cast().getValue();
+            static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
+              Identifier lhsIdentifier = lhs.arrayValue[i.value].getIdentifier();
+              Real& primalEntry = primals[lhsIdentifier];
 
-//            bool generatedNewIndex = false;
-//            static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
-//              generatedNewIndex |= indexManager.get().assignIndex(lhs.arrayValue[i.value].getIdentifier());
-//            });
-//            checkPrimalSize(generatedNewIndex);
+              if(!LinearIndexHandling) {
+                dynamicPointers.lhsIdentifiers[i.value] = lhsIdentifier;
+                dynamicPointers.oldPrimalValues[i.value] = primalEntry;
+              }
 
-//            Identifier* lhsIdentifierData = nullptr;
-//            Real* oldPrimalData = nullptr;
-//            if(!LinearIndexHandling) {
-//              char* dynamicPointer;
-//              dynamicSizeData.getDataPointer(dynamicPointer);
-//              dynamicSizeData.addDataSize(MaxOutputArgs * sizeof(Identifier) + MaxOutputArgs * sizeof(Real));
+              lhs.arrayValue[i.value].value() = AggregatedTraits::template arrayAccess<i.value>(real);
+              primalEntry = lhs.arrayValue[i.value].getValue();
+            });
 
-//              lhsIdentifierData = (Identifier*)dynamicPointer;
-//              oldPrimalData = (Real*)(&dynamicPointer[MaxOutputArgs * sizeof(Identifier)]);
-//            }
+            FixedSizeStatementData::store(fixedSizeData, (Config::ArgumentSize)passiveArguments, StatementEvaluator::template createHandle<Impl, Impl, Expr>());
 
-//            Aggregated real = rhs.cast().getValue();
-//            static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
-//              Identifier lhsIdentifier = lhs.arrayValue[i.value].getIdentifier();
-//              Real& primalEntry = primals[lhsIdentifier];
+            primalsStored = true;
+          }
+        }
 
-//              if(!LinearIndexHandling) {
-//                lhsIdentifierData[i.value] = lhsIdentifier;
-//                oldPrimalData[i.value] = primalEntry;
-//              }
+        if(!primalsStored) {
+          Aggregated real = rhs.cast().getValue();
 
-//              lhs.arrayValue[i.value].value() = AggregatedTraits::template arrayAccess<i.value>(real);
-//              primalEntry = lhs.arrayValue[i.value].getValue();
-//            });
-
-//            FixedSizeStatementData::store(fixedSizeData, (Config::ArgumentSize)passiveArguments, StatementEvaluator::template createHandle<Impl, Impl, AssignExpression<Lhs, Rhs>>());
-
-//            primalsStored = true;
-//          }
-//        }
-
-//        if(!primalsStored) {
-//          Aggregated real = rhs.cast().getValue();
-
-//          static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
-//            lhs.arrayValue[i.value].value() = AggregatedTraits::template arrayAccess<i.value>(real);
-//            indexManager.get().freeIndex(lhs.arrayValue[i.value].getIdentifier());
-//          });
-//        }
-//      }
+          static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
+            lhs.arrayValue[i.value].value() = AggregatedTraits::template arrayAccess<i.value>(real);
+            indexManager.get().freeIndex(lhs.arrayValue[i.value].getIdentifier());
+          });
+        }
+      }
 
       /// \copydoc codi::InternalStatementRecordingTapeInterface::store()
       template<typename Lhs, typename Rhs>
