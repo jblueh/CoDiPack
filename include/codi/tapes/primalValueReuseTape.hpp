@@ -189,13 +189,17 @@ namespace codi {
         StackArray<Gradient> lhsAdjoints{};
         FixedSizeStatementData data;
 
+        using TempStatementEvalArguments = typename Base::TempStatementEvalArguments;
+
         while (curFixedSizePos > endFixedSizePos) {
 
           curFixedSizePos = data.readReverse(fixedSizeValues, curFixedSizePos);
 
+          size_t tempPos;
+          TempStatementEvalArguments stmtArgs{tempPos, data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues};
           StatementEvaluator::template call<StatementCall::Reverse, PrimalValueReuseTape>(
               data.handle,
-              StatementEvalArguments{data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues},
+              STMT_ARGS_UNPACK(stmtArgs),
               primalVector, adjointVector, lhsAdjoints.data());
         }
       }

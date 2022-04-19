@@ -300,6 +300,104 @@ namespace codi {
 
       /// @}
 
+      struct LinearStmtPackHelper {
+        public:
+          size_t&  __restrict__ linearAdjointPos;  ///< Position of the lhs adjoint.
+          Config::ArgumentSize numberOfPassiveArguments;  ///< Number of passive arguments.
+      };
+
+      struct ReuseStmtPackHelper {
+        public:
+          static size_t tempAdjointPos;  ///< Position of the lhs adjoint.
+          Config::ArgumentSize numberOfPassiveArguments;  ///< Number of passive arguments.
+      };
+
+      using StmtPackHelper = typename std::conditional<LinearIndexHandling, LinearStmtPackHelper, ReuseStmtPackHelper>::type;
+
+      /// Statement evaluation arguments for linear index handlers.
+      struct TempStatementEvalArgumentsBase {
+        public:
+          size_t&  __restrict__ linearAdjointPos;  ///< Position of the lhs adjoint.
+          Config::ArgumentSize numberOfPassiveArguments;  ///< Number of passive arguments.
+          size_t& __restrict__ curDynamicSizePos;  ///< Position for the dynamic size statement data.
+          char* const __restrict__ dynamicSizeValues;  ///< Pointer to the dynamic size statement data.
+
+          TempStatementEvalArgumentsBase(
+              size_t&  __restrict__ linearAdjointPos,
+              Config::ArgumentSize numberOfPassiveArguments,
+              size_t& __restrict__ curDynamicSizePos,
+              char* const __restrict__ dynamicSizeValues) :
+            linearAdjointPos(linearAdjointPos),
+            numberOfPassiveArguments(numberOfPassiveArguments),
+            curDynamicSizePos(curDynamicSizePos),
+            dynamicSizeValues(dynamicSizeValues)
+          {}
+
+          template<typename ... Args>
+          TempStatementEvalArgumentsBase(LinearStmtPackHelper packHelper, Args&& ... args) :
+            TempStatementEvalArgumentsBase(packHelper.linearAdjointPos, packHelper.numberOfPassiveArguments, std::forward<Args>(args)...) {}
+
+          template<typename ... Args>
+          TempStatementEvalArgumentsBase(ReuseStmtPackHelper packHelper, Args&& ... args) :
+            TempStatementEvalArgumentsBase(ReuseStmtPackHelper::tempAdjointPos, packHelper.numberOfPassiveArguments, std::forward<Args>(args)...) {}
+      };
+
+      struct TempLinearStatementEvalArguments : public TempStatementEvalArgumentsBase {
+          using TempStatementEvalArgumentsBase::TempStatementEvalArgumentsBase;
+
+          /// Moves the linear adjoint position by the number of output arguments.
+          CODI_INLINE void updateAdjointPosForward(size_t nOutputArgs) {
+            this->linearAdjointPos += nOutputArgs;
+          }
+
+          /// Moves the linear adjoint position by the number of output arguments.
+          CODI_INLINE void updateAdjointPosReverse(size_t nOutputArgs) {
+            this->linearAdjointPos -= nOutputArgs;
+          }
+
+          /// Computes the lhs identifier based on the linear adjoint position.
+          CODI_INLINE Identifier getLhsIdentifier(size_t pos, Identifier const* __restrict__ identifiers) {
+            CODI_UNUSED(identifiers);
+
+            return this->linearAdjointPos + 1 + pos;
+          }
+
+          CODI_INLINE LinearStmtPackHelper unpackVariadic() {
+            return LinearStmtPackHelper{this->linearAdjointPos, this->numberOfPassiveArguments};
+          }
+      };
+
+      struct TempReuseStatementEvalArguments : public TempStatementEvalArgumentsBase {
+          using TempStatementEvalArgumentsBase::TempStatementEvalArgumentsBase;
+
+          /// Does nothing.
+          CODI_INLINE void updateAdjointPosForward(size_t nOutputArgs) {
+            CODI_UNUSED(nOutputArgs);
+          }
+
+          /// Does nothing.
+          CODI_INLINE void updateAdjointPosReverse(size_t nOutputArgs) {
+            CODI_UNUSED(nOutputArgs);
+          }
+
+          /// Return the lhs identifier from the identifier vector.
+          CODI_INLINE Identifier getLhsIdentifier(size_t pos, Identifier const* __restrict__ identifiers) {
+            return this->identifiers[pos];
+          }
+
+          CODI_INLINE ReuseStmtPackHelper unpackVariadic() {
+            return ReuseStmtPackHelper{this->numberOfPassiveArguments};
+          }
+      };
+
+      using TempStatementEvalArguments = typename std::conditional<LinearIndexHandling, TempLinearStatementEvalArguments, TempReuseStatementEvalArguments>::type;
+
+
+#define STMT_ARGS StmtPackHelper packHelper, size_t& __restrict__ curDynamicSizePos, char* const __restrict__ dynamicSizeValues
+#define STMT_ARGS_UNPACK(arg) arg.unpackVariadic(), (arg).curDynamicSizePos, (arg).dynamicSizeValues
+#define STMT_ARGS_PACK TempStatementEvalArguments{packHelper, curDynamicSizePos, dynamicSizeValues}
+#define STMT_ARGS_FORWARD packHelper, curDynamicSizePos, dynamicSizeValues
+
       /// Statement evaluation arguments for linear index handlers.
       struct LinearStatementEvalArguments {
         public:
@@ -1521,11 +1619,14 @@ namespace codi {
           /// \copydoc codi::StatementEvaluatorInnerTapeInterface::StatementCallGen::evaluateFull()
           template<typename Func>
           CODI_INLINE static void evaluateFull(
-              Func const& evalInner, StatementSizes stmtSizes, StatementEvalArguments stmtArgs,
+              Func const& evalInner, StatementSizes stmtSizes,
               Real* __restrict__ primalVector, ADJOINT_VECTOR_TYPE* __restrict__ adjointVector,
-              Gradient* __restrict__ lhsAdjoints
+              Gradient* __restrict__ lhsAdjoints, STMT_ARGS
           ) {
 
+            TempStatementEvalArguments tmpStmtArgs = STMT_ARGS_PACK;
+            StatementEvalArguments stmtArgs{tmpStmtArgs.numberOfPassiveArguments, tmpStmtArgs.curDynamicSizePos,
+                  tmpStmtArgs.dynamicSizeValues};
             DynamicStatementData data = DynamicStatementData::readReverse(stmtSizes, stmtArgs);
 
             stmtArgs.updateAdjointPosReverse(stmtSizes.maxOutputArgs);
@@ -1562,11 +1663,12 @@ namespace codi {
 
           /// \copydoc codi::StatementEvaluatorTapeInterface::StatementCallGen::evaluate()
           CODI_INLINE static void evaluate(
-              StatementEvalArguments stmtArgs, Real* __restrict__ primalVector,
+              STMT_ARGS,
+              Real* __restrict__ primalVector,
               ADJOINT_VECTOR_TYPE* __restrict__ adjointVector, Gradient* __restrict__ lhsAdjoints
           ) {
-            evaluateFull(evaluateInner, StatementSizes::create<Expr>(), stmtArgs,primalVector, adjointVector,
-                         lhsAdjoints);
+            evaluateFull(evaluateInner, StatementSizes::create<Expr>(), primalVector, adjointVector,
+                         lhsAdjoints, STMT_ARGS_FORWARD); //StatementEvalArguments{numberOfPassiveArguments, stmtArgs.curDynamicSizePos, stmtArgs.dynamicSizeValues});
           }
       };
 
@@ -1750,6 +1852,10 @@ namespace codi {
         }
       }
   };
+
+
+  template<typename TapeTypes, typename Impl>
+  size_t PrimalValueBaseTape<TapeTypes, Impl>::ReuseStmtPackHelper::tempAdjointPos = 0;
 
 #define CREATE_EXPRESSION(size)                                                                                        \
   TapeTypes::StatementEvaluator::template createHandle<Impl, JacobianStatementGenerator<Impl, size>, \

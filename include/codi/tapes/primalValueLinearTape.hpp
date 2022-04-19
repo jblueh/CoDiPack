@@ -189,15 +189,18 @@ namespace codi {
 
         size_t curAdjointPos = startAdjointPos;
 
+        using TempStatementEvalArguments = typename Base::TempStatementEvalArguments;
+
         while (curAdjointPos > endAdjointPos) {
 
           curFixedSizePos = data.readReverse(fixedSizeValues, curFixedSizePos);
 
           if (Config::StatementInputTag != data.numberOfPassiveArguments) {
 
+            TempStatementEvalArguments stmtArgs{curAdjointPos, data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues};
             StatementEvaluator::template call<StatementCall::Reverse, PrimalValueLinearTape>(
                 data.handle,
-                StatementEvalArguments{curAdjointPos, data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues},
+                STMT_ARGS_UNPACK(stmtArgs),
                 primalVector, adjointVector, lhsAdjoints.data());
           } else {
             curAdjointPos -= 1;
