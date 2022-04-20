@@ -181,7 +181,7 @@ namespace codi {
   ///
   /// Primal value taping approach with linear index handling.
   template<typename Real, typename Gradient = Real, typename Index = int,
-           typename StatementEvaluator = InnerStatementEvaluator>
+           typename StatementEvaluator = DirectStatementEvaluator>
   using RealReversePrimalUncheckedGen = ActiveType<PrimalValueLinearTape<
       PrimalValueTapeTypes<Real, Gradient, LinearIndexManager<Index>, StatementEvaluator, DefaultChunkedData>>>;
 
@@ -193,7 +193,7 @@ namespace codi {
   ///
   /// Primal value taping approach with reuse index handling.
   template<typename Real, typename Gradient = Real, typename IndexManager = MultiUseIndexManager<int>,
-           typename StatementEvaluator = InnerStatementEvaluator>
+           typename StatementEvaluator = DirectStatementEvaluator>
   using RealReversePrimalIndexGen = ActiveType<
       PrimalValueReuseTape<PrimalValueTapeTypes<Real, Gradient, IndexManager, StatementEvaluator, DefaultChunkedData>>>;
 
@@ -211,7 +211,7 @@ namespace codi {
   ///
   /// Primal value taping approach with reuse index handling.
   template<typename Real, typename Gradient = Real, typename IndexManager = MultiUseIndexManager<int>,
-           typename StatementEvaluator = InnerStatementEvaluator>
+           typename StatementEvaluator = DirectStatementEvaluator>
   using RealReversePrimalIndexUncheckedGen = ActiveType<
       PrimalValueReuseTape<PrimalValueTapeTypes<Real, Gradient, IndexManager, StatementEvaluator, DefaultChunkedData>>>;
 
