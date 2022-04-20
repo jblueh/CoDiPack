@@ -29,13 +29,13 @@ namespace codi {
 
   // Do not need to define complex complex binding, they are handled by the default real definitions
 
-  // Define complex real bindings
+  /// Function overload for OPERATOR(complex, const real).
   template<typename Real, typename ArgA>
   CODI_INLINE bool operator OPERATOR(ExpressionInterface<std::complex<Real>, ArgA> const& argA, RealTraits::PassiveReal<Real> const& argB) {
     return RealTraits::getPassiveValue(argA.cast()) OPERATOR argB;
   }
 
-  // Define real complex bindings
+  /// Function overload for OPERATOR(const real, complex).
   template<typename Real, typename ArgB>
   CODI_INLINE bool operator OPERATOR(RealTraits::PassiveReal<Real> const& argA, ExpressionInterface<std::complex<Real>, ArgB> const& argB) {
     return argA OPERATOR RealTraits::getPassiveValue(argB.cast());

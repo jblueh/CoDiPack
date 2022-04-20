@@ -34,6 +34,8 @@ namespace std {
 #endif
 
   // Define complex complex bindings
+
+  /// Function overload for FUNCTION(complex, complex)
   template<typename Tape>
   CODI_INLINE codi::BinaryExpression<complex<typename Tape::Real>,
     complex<codi::ActiveType<Tape>>,
@@ -48,6 +50,8 @@ namespace std {
   }
 
   // Define complex real bindings
+
+  /// Function overload for FUNCTION(complex, real)
   template<typename Tape>
   CODI_INLINE codi::BinaryExpression<complex<typename Tape::Real>,
     complex<codi::ActiveType<Tape>>,
@@ -61,6 +65,7 @@ namespace std {
         OPERATION_LOGIC>(argA, codi::AdjointComplexToRealCast<typename Tape::Real, codi::ActiveType<Tape>>(argB));
   }
 
+  /// Function overload for FUNCTION(complex, const real)
   template<typename Tape>
   CODI_INLINE codi::BinaryExpression<complex<typename Tape::Real>,
     complex<codi::ActiveType<Tape>>,
@@ -75,6 +80,8 @@ namespace std {
   }
 
   // Define real complex bindings
+
+  /// Function overload for FUNCTION(real, complex)
   template<typename Tape>
   CODI_INLINE codi::BinaryExpression<complex<typename Tape::Real>,
     codi::AdjointComplexToRealCast<typename Tape::Real, codi::ActiveType<Tape>>,
@@ -88,6 +95,7 @@ namespace std {
         OPERATION_LOGIC>(codi::AdjointComplexToRealCast<typename Tape::Real, codi::ActiveType<Tape>>(argA), argB);
   }
 
+  /// Function overload for FUNCTION(const real, complex)
   template<typename Tape>
   CODI_INLINE codi::BinaryExpression<complex<typename Tape::Real>,
     codi::ConstantExpression<typename Tape::PassiveReal>,

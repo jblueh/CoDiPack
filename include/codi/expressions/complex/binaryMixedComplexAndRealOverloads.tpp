@@ -38,12 +38,15 @@ namespace codi {
   // Do not need to define complex complex binding, they are handled by the default real definitions
 
   // Define complex real bindings
+
+  /// Function overload for FUNCTION(complex, real)
   template<typename Real, typename ArgA, typename ArgB>
   CODI_INLINE BinaryExpression<std::complex<Real>, ArgA, AdjointComplexToRealCast<Real, ArgB>, OPERATION_LOGIC> FUNCTION(
       ExpressionInterface<std::complex<Real>, ArgA> const& argA, ExpressionInterface<Real, ArgB> const& argB) {
     return BinaryExpression<std::complex<Real>, ArgA, AdjointComplexToRealCast<Real, ArgB>, OPERATION_LOGIC>(argA, AdjointComplexToRealCast<Real, ArgB>(argB));
   }
 
+  /// Function overload for FUNCTION(const complex, real)
   template<typename Real, typename ArgA>
   CODI_INLINE
       BinaryExpression<std::complex<Real>, ArgA, ConstantExpression<RealTraits::PassiveReal<Real>>, OPERATION_LOGIC>
@@ -52,6 +55,7 @@ namespace codi {
                             OPERATION_LOGIC>(argA, ConstantExpression<RealTraits::PassiveReal<Real>>(argB));
   }
 
+  /// Function overload for FUNCTION(complex, const real)
   template<typename Real, typename ArgB>
   CODI_INLINE BinaryExpression<std::complex<Real>, ConstantExpression<std::complex<RealTraits::PassiveReal<Real>>>,
                                AdjointComplexToRealCast<Real, ArgB>, OPERATION_LOGIC>
@@ -62,12 +66,15 @@ namespace codi {
   }
 
   // Define real complex bindings
+
+  /// Function overload for FUNCTION(real, complex)
   template<typename Real, typename ArgA, typename ArgB>
   CODI_INLINE BinaryExpression<std::complex<Real>, AdjointComplexToRealCast<Real, ArgA>, ArgB, OPERATION_LOGIC> FUNCTION(
       ExpressionInterface<Real, ArgA> const& argA, ExpressionInterface<std::complex<Real>, ArgB> const& argB) {
     return BinaryExpression<std::complex<Real>, AdjointComplexToRealCast<Real, ArgA>, ArgB, OPERATION_LOGIC>(AdjointComplexToRealCast<Real, ArgA>(argA), argB);
   }
 
+  /// Function overload for FUNCTION(real, const complex)
   template<typename Real, typename ArgA>
   CODI_INLINE BinaryExpression<std::complex<Real>, AdjointComplexToRealCast<Real, ArgA>,
                                ConstantExpression<std::complex<RealTraits::PassiveReal<Real>>>, OPERATION_LOGIC>
@@ -77,6 +84,7 @@ namespace codi {
                                              ConstantExpression<std::complex<RealTraits::PassiveReal<Real>>>(argB));
   }
 
+  /// Function overload for FUNCTION(const real, complex)
   template<typename Real, typename ArgB>
   CODI_INLINE
       BinaryExpression<std::complex<Real>, ConstantExpression<RealTraits::PassiveReal<Real>>, ArgB, OPERATION_LOGIC>

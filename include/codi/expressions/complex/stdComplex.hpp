@@ -19,22 +19,32 @@
 /** \copydoc codi::Namespace */
 namespace codi {
 
+  /**
+   *  Define member operations for complex type expressions.
+   *
+   *  @tparam T_Real See ExpressionMemberOperations.
+   *  @tparam T_Impl See ExpressionMemberOperations.
+   */
   template<typename T_Real, typename T_Impl>
   struct ExpressionMemberOperations<T_Real, T_Impl, typename std::enable_if<std::is_same<T_Real, std::complex<typename T_Real::value_type>>::value>::type> {
 
-      using Real = CODI_DD(T_Real, std::complex<double>);
-      using Impl = CODI_DD(T_Impl, CODI_T(ExpressionInterface<Real, void>));
+      using Real = CODI_DD(T_Real, std::complex<double>); ///< See ExpressionMemberOperations.
+      using Impl = CODI_DD(T_Impl, CODI_T(ExpressionInterface<Real, void>));  ///< See ExpressionMemberOperations.
 
-      using InnerType = typename Real::value_type;
+      using InnerType = typename Real::value_type; ///< Inner type of the complex.
 
+      /// Expression returned by real.
       using ExpressionComplexReal = UnaryExpression<InnerType, Impl, OperationComplexReal>;
 
+      /// real member function for complex.
       ExpressionComplexReal real() const {
         return ExpressionComplexReal(cast());
       }
 
+      /// Expression returned by imag.
       using ExpressionComplexImag = UnaryExpression<InnerType, Impl, OperationComplexImag>;
 
+      /// imag member function for complex.
       ExpressionComplexImag imag() const {
         return ExpressionComplexImag(cast());
       }
@@ -46,12 +56,17 @@ namespace codi {
   };
 
   namespace RealTraits {
+
+    /// Specialize real traits for std::complex.
     template<typename T_InnerReal>
     struct AggregatedTypeTraits<std::complex<T_InnerReal>>
         : public ArrayAggregatedTypeTraitsBase<std::complex<T_InnerReal>, T_InnerReal, std::complex<RealTraits::Real<T_InnerReal>>, 2> {};
   }
 
 
+  /// Implementation of AggregatedExpressionType for complex types.
+  /// @tparam T_InnerActive The active type which is used in the inner store.
+  /// @tparam T_Impl The implementation if it extends this class, otherwise nothing.
   template<typename T_InnerActive, typename T_Impl = Self>
   struct ActiveComplex
       : public AggregatedExpressionType<std::complex<typename T_InnerActive::Real>, T_InnerActive,
@@ -59,20 +74,21 @@ namespace codi {
 
     public:
 
-      using InnerActive = CODI_DD(T_InnerActive, CODI_T(ActiveType<CODI_ANY>));
-      using Impl = CODI_DD(CODI_T(ReturnSelf<T_Impl, ActiveComplex>), ActiveComplex);
+      using InnerActive = CODI_DD(T_InnerActive, CODI_T(ActiveType<CODI_ANY>));  ///< See ActiveComplex.
+      using Impl = CODI_DD(CODI_T(ReturnSelf<T_Impl, ActiveComplex>), ActiveComplex);  ///< See ActiveComplex.
 
-      using InnerReal = typename InnerActive::Real;
-      using Real = std::complex<InnerReal>;
-      using PassiverInnerReal = RealTraits::PassiveReal<InnerReal>;
+      using InnerReal = typename InnerActive::Real; ///< Inner real value.
+      using Real = std::complex<InnerReal>; ///< Complex value with the inner real.
+      using PassiverInnerReal = RealTraits::PassiveReal<InnerReal>; ///< Passive inner value.
 
-      using Base = AggregatedExpressionType<Real, InnerActive, Impl>;
+      using Base = AggregatedExpressionType<Real, InnerActive, Impl>; ///< Abbreviation for the base class.
 
-      using value_type = InnerActive;
+      using value_type = InnerActive;  ///< std::complex interface.
 
-      using Base::Base;
-      using Base::operator =;
+      using Base::Base;  ///< Use Base constructors.
+      using Base::operator =; ///< Use Base assign operators.
 
+      /// Constructor.
       template<typename ArgR>
       ActiveComplex(
           ExpressionInterface<InnerReal, ArgR> const& argR) :
@@ -81,6 +97,7 @@ namespace codi {
         Base::template array<0>() = argR;
       }
 
+      /// Constructor.
       ActiveComplex(
           PassiverInnerReal const& argR) :
         Base()
@@ -88,6 +105,7 @@ namespace codi {
         Base::template array<0>() = argR;
       }
 
+      /// Constructor.
       template<typename ArgR, typename ArgI>
       ActiveComplex(
           ExpressionInterface<InnerReal, ArgR> const& argR,
@@ -98,6 +116,7 @@ namespace codi {
         Base::template array<1>() = argI;
       }
 
+      /// Constructor.
       template<typename ArgI>
       ActiveComplex(
           PassiverInnerReal const& argR,
@@ -108,6 +127,7 @@ namespace codi {
         Base::template array<1>() = argI;
       }
 
+      /// Constructor.
       template<typename ArgR>
       ActiveComplex(
           ExpressionInterface<InnerReal, ArgR> const& argR,
@@ -118,6 +138,7 @@ namespace codi {
         Base::template array<1>() = argI;
       }
 
+      /// Constructor.
       ActiveComplex(
           PassiverInnerReal const& argR,
           PassiverInnerReal const& argI) :
@@ -152,12 +173,14 @@ namespace codi {
       }
   };
 
+  /// Specialization of ActiveResultImpl for std::complex.
   template<typename T_InnerReal, typename T_Tape>
   struct ExpressionTraits::ActiveResultImpl<std::complex<T_InnerReal>, T_Tape, false> {
 
-      using InnerReal = CODI_DD(T_InnerReal, CODI_ANY);
-      using Tape = CODI_DD(T_Tape, CODI_ANY);
+      using InnerReal = CODI_DD(T_InnerReal, CODI_ANY); ///< See ActiveResultImpl.
+      using Tape = CODI_DD(T_Tape, CODI_ANY); ///< See ActiveResultImpl.
 
+      /// Active result of the inner type.
       using InnerActiveResult = ExpressionTraits::ActiveResult<InnerReal, Tape, false>;
 
       /// The resulting active type of an expression.
@@ -168,14 +191,17 @@ namespace codi {
 #endif
   };
 
+  /// Specialization of ActiveResultImpl for std::complex in a static context.
   template<typename T_InnerReal, typename T_Tape>
   struct ExpressionTraits::ActiveResultImpl<std::complex<T_InnerReal>, T_Tape, true> {
 
-      using InnerReal = CODI_DD(T_InnerReal, CODI_ANY);
-      using Tape = CODI_DD(T_Tape, CODI_ANY);
+      using InnerReal = CODI_DD(T_InnerReal, CODI_ANY); ///< See ActiveResultImpl.
+      using Tape = CODI_DD(T_Tape, CODI_ANY); ///< See ActiveResultImpl.
 
+       /// Active result of the inner type.
       using InnerActiveResult = ExpressionTraits::ActiveResult<InnerReal, Tape, true>;
 
+      /// The resulting active type of an expression.
       using ActiveResult = StaticAggregatedExpressionType<std::complex<InnerReal>, InnerActiveResult>;
   };
 }
@@ -187,34 +213,35 @@ namespace std {
   /// @name Specialization of std::complex for active types.
   /// @{
 
+  /// Specialization of std::complex for CoDiPack types.
+  /// @tparam T_Tape  The tape that manages all expressions created with this type.
   template<typename T_Tape>
   class complex<codi::ActiveType<T_Tape>> :
       public codi::ActiveComplex<codi::ActiveType<T_Tape>, complex<codi::ActiveType<T_Tape>>> {
 
     public:
 
+      /// See complex.
       using Tape = CODI_DD(T_Tape, CODI_T(codi::FullTapeInterface<double, double, int, codi::EmptyPosition>));
 
-      using Real = complex<typename Tape::Real>;
-      using InnerActive = codi::ActiveType<Tape>;
-      using InnerReal = typename InnerActive::Real;
+      using Real = complex<typename Tape::Real>;  ///< See ActiveComplex::Real.
+      using InnerActive = codi::ActiveType<Tape>;  ///< See ActiveComplex::InnerActive.
+      using InnerReal = typename InnerActive::Real;  ///< See ActiveComplex::InnerReal.
 
+      /// Base class abbreviation.
       using Base = codi::ActiveComplex<codi::ActiveType<Tape>, complex<codi::ActiveType<T_Tape>>>;
 
-      using Base::Base;
-      complex(complex const& value) : Base(value) {}
+      using Base::Base;  ///< Use Base constructors.
+      complex(complex const& value) : Base(value) {} ///< Constructor.
 
-      using Base::operator =;
+      using Base::operator =;  ///< Use Base assign operators.
+
+      /// Assign operator.
       complex& operator =(complex const& value) {
         Base::store(value);
 
         return *this;
       }
-
-      /*******************************************************************************/
-      /// Implementation of ExpressionInterface
-
-      //using StoreAs = complex const&;
   };
 
   /// @}
