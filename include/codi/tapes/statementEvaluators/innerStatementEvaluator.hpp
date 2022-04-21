@@ -57,8 +57,8 @@ namespace codi {
 
       using Base = PrimalTapeStatementFunctions;  ///< Base class abbreviation.
 
-      PrimalTapeStatementFunctions functions;
-      StatementSizes stmtSizes;
+      PrimalTapeStatementFunctions functions;  ///< Functions stored for the handle.
+      StatementSizes stmtSizes;                ///< Statement sizes stored for the handle.
 
       /// Constructor
       InnerPrimalTapeStatementData(PrimalTapeStatementFunctions functions, StatementSizes stmtSizes)

@@ -313,6 +313,7 @@ namespace codi {
 #else
   /// See codi::Config::ForcedInlines.
   #define CODI_INLINE inline
+  /// See codi::Config::ForcedInlines.
   #define CODI_LAMBDA_INLINE /*inline*/
 #endif
     /// Force inlining instead of using the heuristics from the compiler.

@@ -67,9 +67,6 @@
 /** \copydoc codi::Namespace */
 namespace codi {
 
-  template<typename T>
-  using StackArray = std::array<T, Config::MaxArgumentSize>;
-
   /**
    * @brief Type definitions for the primal value tapes.
    *
@@ -189,6 +186,10 @@ namespace codi {
       /// Helper structure for reading and writing the dynamic size portion of a statement data entry.
       using StmtDynamicDataEntry =
           StatementDynamicDataEntry<Real, Identifier, StmtCallArgs, DynamicSizeData, LinearIndexHandling>;
+
+      /// Used for generating arrays for lhs handling.
+      template<typename T>
+      using StackArray = std::array<T, Config::MaxArgumentSize>;
 
 /// Define the default arguments for evaluate handle calls.
 #define STMT_ARGS                                                                       \
@@ -1064,10 +1065,11 @@ namespace codi {
       /// Forward implementation
       template<typename Expr>
       struct StatementCallGenerator<StatementCall::Forward, Expr> : public StatementCallGeneratorBase<Expr> {
-          using Base = StatementCallGeneratorBase<Expr>;
-          using StaticRhs = typename Base::StaticRhs;
+        public:
+          using Base = StatementCallGeneratorBase<Expr>;  ///< Base class abbreviation.
+          using StaticRhs = typename Base::StaticRhs;     ///< See StatementCallGeneratorBase.
           template<size_t pos>
-          using ExtractExpr = typename Base::template ExtractExpr<pos>;
+          using ExtractExpr = typename Base::template ExtractExpr<pos>;  ///< See StatementCallGeneratorBase.
 
           /// Perform the adjoint update based on the configuration in
           /// codi::Config::VariableAdjointInterfaceInPrimalTapes.
@@ -1162,10 +1164,10 @@ namespace codi {
       template<typename Expr>
       struct StatementCallGenerator<StatementCall::Primal, Expr> : public StatementCallGeneratorBase<Expr> {
         public:
-          using Base = StatementCallGeneratorBase<Expr>;
-          using StaticRhs = typename Base::StaticRhs;
+          using Base = StatementCallGeneratorBase<Expr>;  ///< Base class abbreviation.
+          using StaticRhs = typename Base::StaticRhs;     ///< See StatementCallGeneratorBase.
           template<size_t pos>
-          using ExtractExpr = typename Base::template ExtractExpr<pos>;
+          using ExtractExpr = typename Base::template ExtractExpr<pos>;  ///< See StatementCallGeneratorBase.
 
           /// \copydoc codi::StatementEvaluatorInnerTapeInterface::StatementCallGenerator::evaluateInner()
           static void evaluateInner(Real* __restrict__ primalVector, Real* __restrict__ lhsPrimals,
@@ -1247,10 +1249,10 @@ namespace codi {
       template<typename Expr>
       struct StatementCallGenerator<StatementCall::Reverse, Expr> : public StatementCallGeneratorBase<Expr> {
         public:
-          using Base = StatementCallGeneratorBase<Expr>;
-          using StaticRhs = typename Base::StaticRhs;
+          using Base = StatementCallGeneratorBase<Expr>;  ///< Base class abbreviation.
+          using StaticRhs = typename Base::StaticRhs;     ///< See StatementCallGeneratorBase.
           template<size_t pos>
-          using ExtractExpr = typename Base::template ExtractExpr<pos>;
+          using ExtractExpr = typename Base::template ExtractExpr<pos>;  ///< See StatementCallGeneratorBase.
 
           /// Perform the adjoint update based on the configuration in
           /// codi::Config::VariableAdjointInterfaceInPrimalTapes.

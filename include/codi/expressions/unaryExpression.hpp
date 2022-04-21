@@ -88,8 +88,8 @@ namespace codi {
       using Arg = CODI_DD(T_Arg, CODI_T(ExpressionInterface<double, CODI_ANY>));           ///< See UnaryExpression.
       using Operation = CODI_DD(CODI_T(T_Operation<Real>), CODI_T(UnaryOperation<Real>));  ///< See UnaryExpression.
 
-      using Base = UnaryExpressionBase<T_Real, T_Arg, UnaryExpression>;
-      using Jacobian = typename Operation::Jacobian;
+      using Base = UnaryExpressionBase<T_Real, T_Arg, UnaryExpression>;  ///< Abbreviation of base class.
+      using Jacobian = typename Operation::Jacobian;                     ///< Jacobian defined by the operation.
 
       Real result;  ///< Precomputed result.
 
@@ -98,7 +98,7 @@ namespace codi {
       CODI_INLINE explicit UnaryExpression(ExpressionInterface<RealArg, Arg> const& arg)
           : Base(arg), result(Operation::primal(this->arg.getValue())) {}
 
-      CODI_INLINE UnaryExpression(UnaryExpression const&) = default;
+      CODI_INLINE UnaryExpression(UnaryExpression const&) = default;  ///< Constructor
 
       /*******************************************************************************/
       /// @name Implementation of ExpressionInterface

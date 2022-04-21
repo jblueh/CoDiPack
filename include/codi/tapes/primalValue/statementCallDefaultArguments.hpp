@@ -151,6 +151,7 @@ namespace codi {
       }
   };
 
+  /// Reuse index handling implementation of the StatementCallDefaultArgumentsBase.
   template<typename T_Identifier>
   struct ReuseStatementCallDefaultArguments : public StatementCallDefaultArgumentsBase<T_Identifier> {
     public:

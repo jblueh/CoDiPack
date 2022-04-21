@@ -84,6 +84,9 @@ namespace codi {
       using StmtFixedDataEntry = typename Base::StmtFixedDataEntry;  ///< See PrimalValueBaseTape.
       using StmtCallArgs = typename Base::StmtCallArgs;              ///< See PrimalValueBaseTape.
 
+      template<typename T>
+      using StackArray = typename Base::StackArray<T>;  ///< See PrimalValueBaseTape.
+
       /// Constructor
       PrimalValueLinearTape() : Base() {}
 

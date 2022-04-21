@@ -29,7 +29,7 @@ namespace codi {
 
       using Tape = typename ActiveInnerType::Tape;            ///< The tape of the inner active type.
       using Traits = RealTraits::AggregatedTypeTraits<Real>;  ///< The traits for the aggregated type.
-      static int constexpr Elements = Traits::Elements;
+      static int constexpr Elements = Traits::Elements;       ///< The number of elements in the aggregated type.
 
       using InnerReal = typename Traits::InnerType;       ///< Inner real type of the active type.
       using InnerIdentifier = typename Tape::Identifier;  ///< Identifier of the tape.

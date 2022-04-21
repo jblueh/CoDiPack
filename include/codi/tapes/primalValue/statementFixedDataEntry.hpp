@@ -55,8 +55,8 @@ namespace codi {
   struct StatementFixedDataEntry {
     public:
 
-      using EvalHandle = CODI_DD(T_EvalHandle, void*);
-      using FixedSizeData = CODI_DD(T_FixedSizeData, DataInterface);
+      using EvalHandle = CODI_DD(T_EvalHandle, void*);                ///< See StatementFixedDataEntry.
+      using FixedSizeData = CODI_DD(T_FixedSizeData, DataInterface);  ///< See StatementFixedDataEntry.
 
       EvalHandle handle;                              ///< The currently read handle.
       Config::ArgumentSize numberOfPassiveArguments;  ///< The currently read number of passive arguments.

@@ -46,7 +46,8 @@ namespace codi {
   /// Iterator in static_for.
   template<std::size_t N>
   struct static_for_iter {
-      static const constexpr auto value = N;
+    public:
+      static const constexpr auto value = N;  ///< Value of the iterator.
   };
 
   /// Static for specialization for an std::index_sequence.

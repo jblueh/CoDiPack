@@ -36,13 +36,13 @@ namespace codi {
 
               using Jacobian = Real;  ///< Jacobian is the aggregated type.
 
-              /// \copydoc UnaryOperation::primal().
+              /// \copydoc codi::UnaryOperation::primal()
               template<typename Arg>
               static CODI_INLINE OpReal primal(Arg const& arg) {
                 return Traits::template arrayAccess<element>(arg);
               }
 
-              /// \copydoc UnaryOperation::primal().
+              /// \copydoc codi::UnaryOperation::gradient()
               template<typename Arg>
               static CODI_INLINE Jacobian gradient(Arg const& arg, OpReal const& result) {
                 CODI_UNUSED(result);

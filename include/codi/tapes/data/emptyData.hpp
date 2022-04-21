@@ -65,7 +65,7 @@ namespace codi {
       /// \copydoc DataInterface::pushData
       CODI_INLINE void pushData() {}
 
-      /// \copydoc DataInterface::getDataPointers
+      /// \copydoc DataInterface::getDataPointer
       CODI_INLINE void getDataPointer() {}
 
       /// \copydoc DataInterface::addDataSize

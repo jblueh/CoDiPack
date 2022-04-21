@@ -13,10 +13,10 @@ namespace codi {
   /// @tparam T_ReturnType Used in the multiplication detection for the return type.
   template<typename T_Creator, typename T_ReturnType, size_t T_index>
   struct ArrayConstructorJacobian {
-      using Creator = CODI_DD(T_Creator, CODI_T(ExpressionInterface<double, void>));
-      using ReturnType = CODI_DD(T_ReturnType, double);
+      using Creator = CODI_DD(T_Creator, CODI_T(ExpressionInterface<double, void>));  ///< See ArrayConstructorJacobian.
+      using ReturnType = CODI_DD(T_ReturnType, double);                               ///< See ArrayConstructorJacobian.
 
-      static size_t constexpr index = CODI_DD(T_index, 0);
+      static size_t constexpr index = CODI_DD(T_index, 0);  ///< The index that is accessed.
 
       Creator const& creator;  ///< Reference to the creator.
 

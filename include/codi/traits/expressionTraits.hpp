@@ -98,8 +98,8 @@ namespace codi {
     /// @tparam T_isStatic If a static context active type should be used.
     template<typename T_Real, typename T_Tape, bool T_isStatic = false, typename = void>
     struct ActiveResultImpl {
-        using Real = CODI_DD(T_Real, CODI_ANY);
-        using Tape = CODI_DD(T_Tape, CODI_ANY);
+        using Real = CODI_DD(T_Real, CODI_ANY);  ///< See ActiveResultImpl.
+        using Tape = CODI_DD(T_Tape, CODI_ANY);  ///< See ActiveResultImpl.
 
         /// The resulting active type of an expression.
         using ActiveResult = CODI_ANY;
@@ -109,10 +109,10 @@ namespace codi {
     template<typename Real, typename Tape, bool isStatic = false>
     using ActiveResult = typename ActiveResultImpl<Real, Tape, isStatic>::ActiveResult;
 
-    /// Create an CoDiPack active type that can capture an expression result.
+    /// Create an CoDiPack active type that can capture the expression result.
     template<typename T_Expr, bool isStatic = false, typename = void>
     struct ActiveResultFromExprImpl {
-        using Expr = CODI_DD(T_Expr, CODI_ANY);
+        using Expr = CODI_DD(T_Expr, CODI_ANY);  ///< See ActiveResultFromExpr.
 
         /// The resulting active type of an expression.
         using ActiveResult = Expr;

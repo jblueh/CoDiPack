@@ -70,7 +70,8 @@ namespace codi {
       template<typename RealArg>
       CODI_INLINE explicit UnaryExpressionBase(ExpressionInterface<RealArg, Arg> const& arg) : arg(arg.cast()) {}
 
-      CODI_INLINE UnaryExpressionBase(UnaryExpressionBase const&) = default;
+      CODI_INLINE UnaryExpressionBase(UnaryExpressionBase const&) = default;  ///< Constructor
+
       /*******************************************************************************/
       /// @name Implementation of ExpressionInterface
       /// @{

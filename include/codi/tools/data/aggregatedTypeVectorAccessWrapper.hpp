@@ -100,7 +100,7 @@ namespace codi {
 
       using Real = typename RealTraits::DataExtraction<T_Type>::Real;  ///< Real value of the aggregate.
       using Identifier =
-          typename RealTraits::DataExtraction<T_Type>::Identifier;  /// Identifier value of the aggregate.
+          typename RealTraits::DataExtraction<T_Type>::Identifier;  ///< Identifier value of the aggregate.
 
       using Traits = RealTraits::AggregatedTypeTraits<Real>;  ///< Aggregated type traits.
 

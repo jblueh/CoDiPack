@@ -299,7 +299,7 @@ namespace codi {
 
         static int constexpr Elements = CODI_DD(T_Elements, 1);  ///< See AggregatedTypeTraits.
 
-        /// \copydoc AggregatedTypeTraits::arrayConstructor()
+        /// \copydoc codi::RealTraits::AggregatedTypeTraits::arrayConstructor()
         static Type arrayConstructor(InnerType const* v) {
           Type w{};
 
@@ -310,7 +310,7 @@ namespace codi {
           return w;
         }
 
-        /// \copydoc AggregatedTypeTraits::adjointOfConstructor()
+        /// \copydoc codi::RealTraits::AggregatedTypeTraits::adjointOfConstructor()
         template<size_t element>
         static InnerType adjointOfConstructor(Type const& w, Type const& w_b) {
           CODI_UNUSED(w);
@@ -322,7 +322,7 @@ namespace codi {
           return ComputationTraits::transpose(w_b_transArray[element]);
         }
 
-        /// \copydoc AggregatedTypeTraits::arrayAccess()
+        /// \copydoc codi::RealTraits::AggregatedTypeTraits::arrayAccess()
         template<int element>
         CODI_INLINE static InnerType& arrayAccess(Type& w) {
           InnerType* wArray = reinterpret_cast<InnerType*>(&w);
@@ -330,7 +330,7 @@ namespace codi {
           return wArray[element];
         }
 
-        /// \copydoc AggregatedTypeTraits::arrayAccess()
+        /// \copydoc codi::RealTraits::AggregatedTypeTraits::arrayAccess()
         template<size_t element>
         static InnerType arrayAccess(Type const& w) {
           InnerType const* wArray = reinterpret_cast<InnerType const*>(&w);
@@ -338,7 +338,7 @@ namespace codi {
           return wArray[element];
         }
 
-        /// \copydoc AggregatedTypeTraits::adjointOfArrayAccess()
+        /// \copydoc codi::RealTraits::AggregatedTypeTraits::adjointOfArrayAccess()
         template<size_t element>
         static Type adjointOfArrayAccess(Type const& w, InnerType const& v_b) {
           CODI_UNUSED(w);

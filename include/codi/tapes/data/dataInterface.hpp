@@ -195,7 +195,7 @@ namespace codi {
        *    argVector.addDataSize(5);
        *  \endcode
        *
-       * @param[in] data  The pointers that are populated with the data from the internal representation.
+       * @param[in] pointers  The pointers that are populated with the data from the internal representation.
        * @tparam Data Types of the pointers.
        */
       template<typename... Data>
