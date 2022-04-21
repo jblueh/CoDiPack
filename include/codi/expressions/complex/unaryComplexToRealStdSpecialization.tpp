@@ -20,8 +20,8 @@
 #ifndef FUNCTION
   #include <complex>
 
-  #include "../../misc/macros.hpp"
   #include "../../config.h"
+  #include "../../misc/macros.hpp"
   #include "../../traits/realTraits.hpp"
   #include "../activeType.hpp"
   #include "../unaryExpression.hpp"
@@ -34,14 +34,9 @@ namespace std {
 
   /// Function overload for FUNCTION(complex<ActiveType>).
   template<typename Tape>
-  CODI_INLINE codi::UnaryExpression<typename Tape::Real,
-    complex<codi::ActiveType<Tape>>,
-    OPERATION_LOGIC>
-  FUNCTION(complex<codi::ActiveType<Tape>> const& arg) {
-    return codi::UnaryExpression<
-        typename Tape::Real,
-        complex<codi::ActiveType<Tape>>,
-        OPERATION_LOGIC>(arg);
+  CODI_INLINE codi::UnaryExpression<typename Tape::Real, complex<codi::ActiveType<Tape>>, OPERATION_LOGIC> FUNCTION(
+      complex<codi::ActiveType<Tape>> const& arg) {
+    return codi::UnaryExpression<typename Tape::Real, complex<codi::ActiveType<Tape>>, OPERATION_LOGIC>(arg);
   }
 
 // Create a correct include environment for viewing and programming in an IDE

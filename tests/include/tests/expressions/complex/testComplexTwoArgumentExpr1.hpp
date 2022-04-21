@@ -35,12 +35,12 @@
 
 #pragma once
 
+#include <codi.hpp>
+
 #include "../../../testInterface.hpp"
 #include "complexTestHelpers.hpp"
 
-#include <codi.hpp>
-
-struct TestComplexTwoArgumentExpr1: public TestInterface {
+struct TestComplexTwoArgumentExpr1 : public TestInterface {
   public:
 
     template<typename T>
@@ -142,7 +142,6 @@ struct TestComplexTwoArgumentExpr1: public TestInterface {
 
     template<typename Number>
     static void func(Number* x, Number* y) {
-
       using C = Complex<Number>;
       C xC[in_complex_count];
       C yC[out_complex_count];
@@ -210,7 +209,6 @@ struct TestComplexTwoArgumentExpr1: public TestInterface {
 
     template<typename Arg>
     static std::complex<codi::RealTraits::PassiveReal<Arg>> passive(std::complex<Arg> const& arg) {
-      return {codi::RealTraits::getPassiveValue(std::real(arg)),
-              codi::RealTraits::getPassiveValue(std::imag(arg))};
+      return {codi::RealTraits::getPassiveValue(std::real(arg)), codi::RealTraits::getPassiveValue(std::imag(arg))};
     }
 };

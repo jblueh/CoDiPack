@@ -17,8 +17,8 @@
 #ifndef OPERATOR
   #include <complex>
 
-  #include "../../misc/macros.hpp"
   #include "../../config.h"
+  #include "../../misc/macros.hpp"
   #include "../../traits/realTraits.hpp"
   #include "../expressionInterface.hpp"
 
@@ -31,13 +31,15 @@ namespace codi {
 
   /// Function overload for OPERATOR(complex, const real).
   template<typename Real, typename ArgA>
-  CODI_INLINE bool operator OPERATOR(ExpressionInterface<std::complex<Real>, ArgA> const& argA, RealTraits::PassiveReal<Real> const& argB) {
+  CODI_INLINE bool operator OPERATOR(ExpressionInterface<std::complex<Real>, ArgA> const& argA,
+                                     RealTraits::PassiveReal<Real> const& argB) {
     return RealTraits::getPassiveValue(argA.cast()) OPERATOR argB;
   }
 
   /// Function overload for OPERATOR(const real, complex).
   template<typename Real, typename ArgB>
-  CODI_INLINE bool operator OPERATOR(RealTraits::PassiveReal<Real> const& argA, ExpressionInterface<std::complex<Real>, ArgB> const& argB) {
+  CODI_INLINE bool operator OPERATOR(RealTraits::PassiveReal<Real> const& argA,
+                                     ExpressionInterface<std::complex<Real>, ArgB> const& argB) {
     return argA OPERATOR RealTraits::getPassiveValue(argB.cast());
   }
 

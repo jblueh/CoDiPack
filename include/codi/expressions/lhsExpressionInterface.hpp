@@ -34,8 +34,8 @@
  */
 #pragma once
 
-#include "../misc/macros.hpp"
 #include "../config.h"
+#include "../misc/macros.hpp"
 #include "../tapes/interfaces/fullTapeInterface.hpp"
 #include "../traits/expressionTraits.hpp"
 #include "../traits/realTraits.hpp"
@@ -255,15 +255,15 @@ namespace codi {
 
   /// Specialize real traits for lhs expressions.
   template<typename T_Type>
-  struct RealTraits::AggregatedTypeTraits<T_Type, ExpressionTraits::EnableIfLhsExpression<T_Type>> :
-    RealTraits::ArrayAggregatedTypeTraitsBase<T_Type, T_Type, typename T_Type::Real, 1> {};
+  struct RealTraits::AggregatedTypeTraits<T_Type, ExpressionTraits::EnableIfLhsExpression<T_Type>>
+      : RealTraits::ArrayAggregatedTypeTraitsBase<T_Type, T_Type, typename T_Type::Real, 1> {};
 
   /// Specialize computation traits for lhs expressions.
   template<typename T>
   struct ComputationTraits::TransposeImpl<T, ExpressionTraits::EnableIfLhsExpression<T>> {
     public:
-      using Jacobian = T; ///< See codi::ComputationTraits::TransposeImpl.
-      using Return = T;   ///< See codi::ComputationTraits::TransposeImpl.
+      using Jacobian = T;  ///< See codi::ComputationTraits::TransposeImpl.
+      using Return = T;    ///< See codi::ComputationTraits::TransposeImpl.
 
       /// \copydoc ComputationTraits::TransposeImpl::transpose()
       CODI_INLINE static Return transpose(Jacobian const& jacobian) {

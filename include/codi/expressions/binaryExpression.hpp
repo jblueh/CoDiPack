@@ -34,8 +34,8 @@
  */
 #pragma once
 
-#include "../misc/macros.hpp"
 #include "../config.h"
+#include "../misc/macros.hpp"
 #include "../traits/expressionTraits.hpp"
 #include "expressionInterface.hpp"
 #include "logic/compileTimeTraversalLogic.hpp"
@@ -102,7 +102,7 @@ namespace codi {
       /// Constructor
       template<typename RealA, typename RealB>
       CODI_INLINE explicit BinaryExpression(ExpressionInterface<RealA, ArgA> const& argA,
-                                ExpressionInterface<RealB, ArgB> const& argB)
+                                            ExpressionInterface<RealB, ArgB> const& argB)
           : argA(argA.cast()),
             argB(argB.cast()),
             result(Operation::primal(this->argA.getValue(), this->argB.getValue())) {}
@@ -112,9 +112,8 @@ namespace codi {
       /// @{
 
       using StoreAs = BinaryExpression;  ///< \copydoc codi::ExpressionInterface::StoreAs
-      using ADLogic =
-          typename ExpressionTraits::ValidateADLogic<typename ArgA::ADLogic, typename ArgB::ADLogic>::
-              ADLogic;  ///< \copydoc codi::ExpressionInterface::ADLogic
+      using ADLogic = typename ExpressionTraits::ValidateADLogic<
+          typename ArgA::ADLogic, typename ArgB::ADLogic>::ADLogic;  ///< \copydoc codi::ExpressionInterface::ADLogic
 
       /// \copydoc codi::ExpressionInterface::getValue()
       CODI_INLINE Real const& getValue() const {

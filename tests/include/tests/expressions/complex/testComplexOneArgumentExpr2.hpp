@@ -41,8 +41,7 @@
 template<typename C>
 struct PolarCall;
 
-
-struct TestComplexOneArgumentExpr2: public TestInterface {
+struct TestComplexOneArgumentExpr2 : public TestInterface {
   public:
 
     template<typename T>
@@ -81,7 +80,6 @@ struct TestComplexOneArgumentExpr2: public TestInterface {
 
     template<typename Number>
     static void func(Number* x, Number* y) {
-
       using C = Complex<Number>;
       C xC[in_complex_count];
       C yC[out_complex_count];
@@ -89,9 +87,9 @@ struct TestComplexOneArgumentExpr2: public TestInterface {
       assignToComplex(xC, x, in_complex_count);
 
       yC[0] = asinh(xC[0]);  // R x R \ {0} x R
-      yC[1] = asin(xC[0]);  // R x R \ R^+ x {0}
-      yC[2] = acos(xC[0]);  // R x R \ R^+ x {0}
-      yC[3] = sqrt(xC[0]);  // R x R \ {0} x R
+      yC[1] = asin(xC[0]);   // R x R \ R^+ x {0}
+      yC[2] = acos(xC[0]);   // R x R \ R^+ x {0}
+      yC[3] = sqrt(xC[0]);   // R x R \ {0} x R
 
       assignToReal(y, yC, out_complex_count);
     }

@@ -36,9 +36,9 @@
 
 #include <cmath>
 
+#include "../../config.h"
 #include "../../misc/exceptions.hpp"
 #include "../../misc/macros.hpp"
-#include "../../config.h"
 #include "../../traits/realTraits.hpp"
 #include "../unaryExpression.hpp"
 
@@ -183,10 +183,10 @@ namespace codi {
 
       template<typename Arg>
       CODI_INLINE static void checkArgument(std::complex<Arg> const& arg) {
-        if (0.0 == RealTraits::getPassiveValue(imag(arg)) && (RealTraits::getPassiveValue(real(arg)) == -1.0 || 1.0 == RealTraits::getPassiveValue(real(arg)))) {
+        if (0.0 == RealTraits::getPassiveValue(imag(arg)) &&
+            (RealTraits::getPassiveValue(real(arg)) == -1.0 || 1.0 == RealTraits::getPassiveValue(real(arg)))) {
           CODI_EXCEPTION("acos outside of C \\ {(-1, 0), (1, 0)}.(Value: %0.15e + %0.15e i)",
-                         RealTraits::getPassiveValue(real(arg)),
-                         RealTraits::getPassiveValue(imag(arg)));
+                         RealTraits::getPassiveValue(real(arg)), RealTraits::getPassiveValue(imag(arg)));
         }
       }
   };
@@ -217,7 +217,6 @@ namespace codi {
         return 1.0 / (sqrt(arg + 1.0) * sqrt(arg - 1.0));
       }
 
-
     private:
 
       template<typename Arg>
@@ -231,8 +230,7 @@ namespace codi {
       CODI_INLINE static void checkArgument(std::complex<Arg> const& arg) {
         if (0.0 == RealTraits::getPassiveValue(imag(arg)) && RealTraits::getPassiveValue(real(arg)) >= 1.0) {
           CODI_EXCEPTION("asin outside of C \\ (-inf, 1)x(0).(Value: %0.15e + %0.15e i)",
-                         RealTraits::getPassiveValue(real(arg)),
-                         RealTraits::getPassiveValue(imag(arg)));
+                         RealTraits::getPassiveValue(real(arg)), RealTraits::getPassiveValue(imag(arg)));
         }
       }
   };
@@ -274,10 +272,10 @@ namespace codi {
 
       template<typename Arg>
       CODI_INLINE static void checkArgument(std::complex<Arg> const& arg) {
-        if (0.0 == RealTraits::getPassiveValue(imag(arg)) && (RealTraits::getPassiveValue(real(arg)) == -1.0 || 1.0 == RealTraits::getPassiveValue(real(arg)))) {
+        if (0.0 == RealTraits::getPassiveValue(imag(arg)) &&
+            (RealTraits::getPassiveValue(real(arg)) == -1.0 || 1.0 == RealTraits::getPassiveValue(real(arg)))) {
           CODI_EXCEPTION("asin outside of C \\ {(-1, 0), (1, 0)}.(Value: %0.15e + %0.15e i)",
-                         RealTraits::getPassiveValue(real(arg)),
-                         RealTraits::getPassiveValue(imag(arg)));
+                         RealTraits::getPassiveValue(real(arg)), RealTraits::getPassiveValue(imag(arg)));
         }
       }
   };
@@ -368,10 +366,10 @@ namespace codi {
 
       template<typename Arg>
       CODI_INLINE static void checkArgument(std::complex<Arg> const& arg) {
-        if (0.0 == RealTraits::getPassiveValue(imag(arg)) && (RealTraits::getPassiveValue(real(arg)) <= -1.0 || 1.0 <= RealTraits::getPassiveValue(real(arg)))) {
+        if (0.0 == RealTraits::getPassiveValue(imag(arg)) &&
+            (RealTraits::getPassiveValue(real(arg)) <= -1.0 || 1.0 <= RealTraits::getPassiveValue(real(arg)))) {
           CODI_EXCEPTION("atanh outside of C \\ (-1, 1) x (0).(Value: %0.15e + %0.15e i)",
-                         RealTraits::getPassiveValue(real(arg)),
-                         RealTraits::getPassiveValue(imag(arg)));
+                         RealTraits::getPassiveValue(real(arg)), RealTraits::getPassiveValue(imag(arg)));
         }
       }
   };

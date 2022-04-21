@@ -60,6 +60,5 @@ namespace codi {
     PrimalSize,             ///< [A: RW] Number of primal vector entries in primal value tapes.
     StatementSize,          ///< [A: RW] Allocated number of entries in the statement vector in Jacobian tapes.
     FixedSizeDataSize       ///< [A: RW] Allocated number of entries in static data vector in primal value tapes.
-
   };
 }

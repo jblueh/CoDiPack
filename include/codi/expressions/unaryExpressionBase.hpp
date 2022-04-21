@@ -34,8 +34,8 @@
  */
 #pragma once
 
-#include "../misc/macros.hpp"
 #include "../config.h"
+#include "../misc/macros.hpp"
 #include "expressionInterface.hpp"
 #include "logic/compileTimeTraversalLogic.hpp"
 #include "logic/nodeInterface.hpp"
@@ -60,23 +60,22 @@ namespace codi {
   struct UnaryExpressionBase : public ExpressionInterface<T_Real, T_Impl> {
     public:
 
-      using Real = CODI_DD(T_Real, double);                                                ///< See UnaryExpressionBase.
-      using Arg = CODI_DD(T_Arg, CODI_T(ExpressionInterface<double, CODI_ANY>));           ///< See UnaryExpressionBase.
-      using Impl = CODI_DD(T_Impl, ExpressionInterface);                                   ///< See UnaryExpressionBase.
+      using Real = CODI_DD(T_Real, double);                                       ///< See UnaryExpressionBase.
+      using Arg = CODI_DD(T_Arg, CODI_T(ExpressionInterface<double, CODI_ANY>));  ///< See UnaryExpressionBase.
+      using Impl = CODI_DD(T_Impl, ExpressionInterface);                          ///< See UnaryExpressionBase.
 
       typename Arg::StoreAs arg;  ///< Argument of the expression.
 
       /// Constructor
       template<typename RealArg>
-      CODI_INLINE explicit UnaryExpressionBase(ExpressionInterface<RealArg, Arg> const& arg)
-          : arg(arg.cast()) {}
+      CODI_INLINE explicit UnaryExpressionBase(ExpressionInterface<RealArg, Arg> const& arg) : arg(arg.cast()) {}
 
       CODI_INLINE UnaryExpressionBase(UnaryExpressionBase const&) = default;
       /*******************************************************************************/
       /// @name Implementation of ExpressionInterface
       /// @{
 
-      using StoreAs = Impl;  ///< \copydoc codi::ExpressionInterface::StoreAs
+      using StoreAs = Impl;                   ///< \copydoc codi::ExpressionInterface::StoreAs
       using ADLogic = typename Arg::ADLogic;  ///< \copydoc codi::ExpressionInterface::ADLogic
 
       /// @}

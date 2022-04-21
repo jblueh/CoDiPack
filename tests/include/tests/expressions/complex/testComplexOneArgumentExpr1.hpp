@@ -38,7 +38,7 @@
 #include "../../../testInterface.hpp"
 #include "complexTestHelpers.hpp"
 
-struct TestComplexOneArgumentExpr1: public TestInterface {
+struct TestComplexOneArgumentExpr1 : public TestInterface {
   public:
 
     template<typename T>
@@ -84,7 +84,6 @@ struct TestComplexOneArgumentExpr1: public TestInterface {
 
     template<typename Number>
     static void func(Number* x, Number* y) {
-
       int constexpr realOffset = out_real_offset;
       using C = Complex<Number>;
       C xC[in_complex_count];
@@ -92,29 +91,29 @@ struct TestComplexOneArgumentExpr1: public TestInterface {
 
       assignToComplex(xC, x, in_complex_count);
 
-      yC[0] = conj(xC[0]); // R x R
-      yC[1] = proj(xC[0]); // R x R
-      yC[2] = exp(xC[0]); // R x R
-      yC[3] = log(xC[0]);  // R x R
-      yC[4] = log10(xC[0]);  // R x R
-      yC[5] = sin(xC[0]);  // R x R
-      yC[6] = cos(xC[0]);  // R x R
-      yC[7] = tan(xC[0]);  // R x R
-      yC[8] = atan(xC[0]);  // R x R
-      yC[9] = sinh(xC[0]);  // R x R
-      yC[10] = cosh(xC[0]);  // R x R
-      yC[11] = tanh(xC[0]);  // R x R
-      yC[12] = acosh(xC[0]);  // R x R
-      yC[13] = atanh(xC[0]);  // R x R
-      yC[14] = +xC[0];  // R x R
-      yC[15] = -xC[0];  // R x R
+      yC[0] = conj(xC[0]);               // R x R
+      yC[1] = proj(xC[0]);               // R x R
+      yC[2] = exp(xC[0]);                // R x R
+      yC[3] = log(xC[0]);                // R x R
+      yC[4] = log10(xC[0]);              // R x R
+      yC[5] = sin(xC[0]);                // R x R
+      yC[6] = cos(xC[0]);                // R x R
+      yC[7] = tan(xC[0]);                // R x R
+      yC[8] = atan(xC[0]);               // R x R
+      yC[9] = sinh(xC[0]);               // R x R
+      yC[10] = cosh(xC[0]);              // R x R
+      yC[11] = tanh(xC[0]);              // R x R
+      yC[12] = acosh(xC[0]);             // R x R
+      yC[13] = atanh(xC[0]);             // R x R
+      yC[14] = +xC[0];                   // R x R
+      yC[15] = -xC[0];                   // R x R
       y[realOffset + 0] = xC[0].real();  // R x R
       y[realOffset + 1] = xC[0].imag();  // R x R
-      y[realOffset + 2] = real(xC[0]);  // R x R
-      y[realOffset + 3] = imag(xC[0]);  // R x R
-      y[realOffset + 4] = abs(xC[0]);  // R x R \ {0,0}
-      y[realOffset + 5] = arg(xC[0]);  // R x R \ {0,0}
-      y[realOffset + 6] = norm(xC[0]); // R x R
+      y[realOffset + 2] = real(xC[0]);   // R x R
+      y[realOffset + 3] = imag(xC[0]);   // R x R
+      y[realOffset + 4] = abs(xC[0]);    // R x R \ {0,0}
+      y[realOffset + 5] = arg(xC[0]);    // R x R \ {0,0}
+      y[realOffset + 6] = norm(xC[0]);   // R x R
 
       assignToReal(y, yC, out_complex_count);
     }

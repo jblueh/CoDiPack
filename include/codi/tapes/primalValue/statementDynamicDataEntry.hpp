@@ -34,10 +34,10 @@
  */
 #pragma once
 
-#include "../../misc/macros.hpp"
 #include "../../config.h"
-#include "../misc/statementSizes.hpp"
+#include "../../misc/macros.hpp"
 #include "../data/dataInterface.hpp"
+#include "../misc/statementSizes.hpp"
 
 /** \copydoc codi::Namespace */
 namespace codi {
@@ -61,15 +61,17 @@ namespace codi {
   struct StatementDynamicDataEntry {
     public:
 
-      using Real = CODI_DD(T_Real, double);  ///< See StatementDynamicDataEntry.
+      using Real = CODI_DD(T_Real, double);           ///< See StatementDynamicDataEntry.
       using Identifier = CODI_DD(T_Identifier, int);  ///< See StatementDynamicDataEntry.
-      using StatementCallDefaultArguments = CODI_DD(T_StatementCallDefaultArguments, CODI_T(StatementCallDefaultArgumentsBase<Identifier>));   ///< See StatementDynamicDataEntry.
-      using DynamicSizeData = CODI_DD(T_DynamicSizeData, DataInterface);  ///< See StatementDynamicDataEntry.
-      static bool constexpr LinearIndexHandling = T_LinearIndexHandling;  ///< See StatementDynamicDataEntry.
+      using StatementCallDefaultArguments =
+          CODI_DD(T_StatementCallDefaultArguments,
+                  CODI_T(StatementCallDefaultArgumentsBase<Identifier>));  ///< See StatementDynamicDataEntry.
+      using DynamicSizeData = CODI_DD(T_DynamicSizeData, DataInterface);   ///< See StatementDynamicDataEntry.
+      static bool constexpr LinearIndexHandling = T_LinearIndexHandling;   ///< See StatementDynamicDataEntry.
 
       using PassiveReal = RealTraits::PassiveReal<Real>;  ///< Basic computation type.
 
-      Real* __restrict__ oldPrimalValues;  ///< Overwritten primal values. Only used for reuse index handling.
+      Real* __restrict__ oldPrimalValues;       ///< Overwritten primal values. Only used for reuse index handling.
       Identifier* __restrict__ lhsIdentifiers;  ///< Lhs identifiers. Only used for reuse index handling.
 
       PassiveReal* __restrict__ constantValues;  ///< Constant values in the statement.
@@ -77,18 +79,20 @@ namespace codi {
       Real* __restrict__ passiveValues;          ///< Passive values from active arguments of the statement.
 
       /// The dynamic data position in stmtArgs is updated.
-      CODI_INLINE static StatementDynamicDataEntry readForward(StatementSizes const& stmtSizes, StatementCallDefaultArguments& stmtArgs) {
-
-        return readForward(stmtSizes, stmtArgs.dynamicSizeValues, stmtArgs.curDynamicSizePos, stmtArgs.numberOfPassiveArguments);
+      CODI_INLINE static StatementDynamicDataEntry readForward(StatementSizes const& stmtSizes,
+                                                               StatementCallDefaultArguments& stmtArgs) {
+        return readForward(stmtSizes, stmtArgs.dynamicSizeValues, stmtArgs.curDynamicSizePos,
+                           stmtArgs.numberOfPassiveArguments);
       }
 
       /// The dynamic data position in stmtArgs is updated.
-      CODI_INLINE static StatementDynamicDataEntry readReverse(StatementSizes const& stmtSizes, StatementCallDefaultArguments& stmtArgs) {
+      CODI_INLINE static StatementDynamicDataEntry readReverse(StatementSizes const& stmtSizes,
+                                                               StatementCallDefaultArguments& stmtArgs) {
         StatementDynamicDataEntry data;
 
         size_t pos = stmtArgs.curDynamicSizePos;
 
-        if(!LinearIndexHandling) {
+        if (!LinearIndexHandling) {
           pos -= stmtSizes.outputArgs * sizeof(Real);
           data.oldPrimalValues = ((Real*)(&stmtArgs.dynamicSizeValues[pos]));
           pos -= stmtSizes.outputArgs * sizeof(Identifier);
@@ -109,8 +113,8 @@ namespace codi {
 
       /// Overwrite the old primal values with new ones. Usually called in a forward tape evaluation.
       CODI_INLINE void updateOldPrimalValues(StatementSizes const& stmtSizes, StatementCallDefaultArguments& revArgs,
-                                 Real* __restrict__ primalVector) {
-        for(size_t iLhs = 0; iLhs < stmtSizes.outputArgs; iLhs += 1) {
+                                             Real* __restrict__ primalVector) {
+        for (size_t iLhs = 0; iLhs < stmtSizes.outputArgs; iLhs += 1) {
           Identifier const lhsIdentifier = revArgs.getLhsIdentifier(iLhs, lhsIdentifiers);
           oldPrimalValues[iLhs] = primalVector[lhsIdentifier];
         }
@@ -125,13 +129,15 @@ namespace codi {
       }
 
       /// Reserve the data for the dynamic size data stream.
-      CODI_INLINE static void reserve(DynamicSizeData& data, StatementSizes const& sizes, size_t const& activeArguments) {
+      CODI_INLINE static void reserve(DynamicSizeData& data, StatementSizes const& sizes,
+                                      size_t const& activeArguments) {
         data.reserveItems(computeSize(sizes, activeArguments));
       }
 
       /// Store the data for the dynamic data stream.
       /// @return The pointers need to be populated with the data.
-      CODI_INLINE static StatementDynamicDataEntry store(DynamicSizeData& data, StatementSizes const& sizes, size_t const& activeArguments) {
+      CODI_INLINE static StatementDynamicDataEntry store(DynamicSizeData& data, StatementSizes const& sizes,
+                                                         size_t const& activeArguments) {
         char* dataPointer = nullptr;
         data.getDataPointer(dataPointer);
         data.addDataSize(computeSize(sizes, activeArguments));
@@ -144,9 +150,9 @@ namespace codi {
 
       /// Common read forward function for static context and data reservation.
       CODI_INLINE static StatementDynamicDataEntry readForward(StatementSizes const& stmtSizes,
-                                                          char* __restrict__ dynamicSizeValues,
-                                                          size_t& __restrict__ curDynamicSizePos,
-                                                          size_t const& __restrict__ numberOfPassiveArguments) {
+                                                               char* __restrict__ dynamicSizeValues,
+                                                               size_t& __restrict__ curDynamicSizePos,
+                                                               size_t const& __restrict__ numberOfPassiveArguments) {
         StatementDynamicDataEntry data;
 
         size_t pos = curDynamicSizePos;
@@ -158,7 +164,7 @@ namespace codi {
         data.constantValues = (PassiveReal*)(&dynamicSizeValues[pos]);
         pos += stmtSizes.constantArgs * sizeof(PassiveReal);
 
-        if(!LinearIndexHandling) {
+        if (!LinearIndexHandling) {
           data.lhsIdentifiers = ((Identifier*)(&dynamicSizeValues[pos]));
           pos += stmtSizes.outputArgs * sizeof(Identifier);
           data.oldPrimalValues = ((Real*)(&dynamicSizeValues[pos]));
@@ -172,10 +178,9 @@ namespace codi {
 
       /// Size in bytes of the dynamic statement data.
       CODI_INLINE static size_t computeSize(StatementSizes const& sizes, size_t const& activeArguments) {
-        size_t dynamicSize = (sizes.inputArgs - activeArguments) * sizeof(Real)
-                              + (sizes.inputArgs) * sizeof(Identifier)
-                              + sizes.constantArgs * sizeof(PassiveReal);
-        if(!LinearIndexHandling) {
+        size_t dynamicSize = (sizes.inputArgs - activeArguments) * sizeof(Real) +
+                             (sizes.inputArgs) * sizeof(Identifier) + sizes.constantArgs * sizeof(PassiveReal);
+        if (!LinearIndexHandling) {
           dynamicSize += sizes.outputArgs * (sizeof(Identifier) + sizeof(Real));
         }
 

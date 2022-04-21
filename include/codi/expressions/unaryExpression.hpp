@@ -34,8 +34,8 @@
  */
 #pragma once
 
-#include "../misc/macros.hpp"
 #include "../config.h"
+#include "../misc/macros.hpp"
 #include "logic/compileTimeTraversalLogic.hpp"
 #include "logic/nodeInterface.hpp"
 #include "logic/traversalLogic.hpp"
@@ -56,7 +56,7 @@ namespace codi {
     public:
 
       using Real = CODI_DD(T_Real, double);  ///< See UnaryOperation.
-      using Jacobian = Real;  ///< Can be overwritten by the implementation.
+      using Jacobian = Real;                 ///< Can be overwritten by the implementation.
 
       /// Compute the primal value from the argument.
       ///
@@ -91,7 +91,7 @@ namespace codi {
       using Base = UnaryExpressionBase<T_Real, T_Arg, UnaryExpression>;
       using Jacobian = typename Operation::Jacobian;
 
-      Real result;                ///< Precomputed result.
+      Real result;  ///< Precomputed result.
 
       /// Constructor
       template<typename RealArg>

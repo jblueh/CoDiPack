@@ -38,13 +38,13 @@
 #include <functional>
 #include <type_traits>
 
-#include "../misc/macros.hpp"
-#include "../misc/memberStore.hpp"
 #include "../config.h"
 #include "../expressions/lhsExpressionInterface.hpp"
 #include "../expressions/logic/compileTimeTraversalLogic.hpp"
 #include "../expressions/logic/constructStaticContext.hpp"
 #include "../expressions/logic/traversalLogic.hpp"
+#include "../misc/macros.hpp"
+#include "../misc/memberStore.hpp"
 #include "../traits/expressionTraits.hpp"
 #include "data/chunk.hpp"
 #include "indices/indexManagerInterface.hpp"
@@ -124,14 +124,13 @@ namespace codi {
         size_t curAdjointPos = startAdjointPos;
 
         while (curAdjointPos < endAdjointPos) {
-
           curFixedSizePos = data.readForward(fixedSizeValues, curFixedSizePos);
 
           if (Config::StatementInputTag != data.numberOfPassiveArguments) {
-
             StmtCallArgs stmtArgs{curAdjointPos, data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues};
             StatementEvaluator::template call<StatementCall::Forward, PrimalValueLinearTape>(
-                data.handle, STMT_ARGS_UNPACK(stmtArgs), primalVector, adjointVector, lhsPrimals.data(), lhsTangents.data());
+                data.handle, STMT_ARGS_UNPACK(stmtArgs), primalVector, adjointVector, lhsPrimals.data(),
+                lhsTangents.data());
           } else {
             curAdjointPos += 1;
           }
@@ -156,11 +155,9 @@ namespace codi {
         size_t curAdjointPos = startAdjointPos;
 
         while (curAdjointPos < endAdjointPos) {
-
           curFixedSizePos = data.readForward(fixedSizeValues, curFixedSizePos);
 
           if (Config::StatementInputTag != data.numberOfPassiveArguments) {
-
             StmtCallArgs stmtArgs{curAdjointPos, data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues};
             StatementEvaluator::template call<StatementCall::Primal, PrimalValueLinearTape>(
                 data.handle, STMT_ARGS_UNPACK(stmtArgs), primalVector, lhsPrimals.data());
@@ -188,11 +185,9 @@ namespace codi {
         size_t curAdjointPos = startAdjointPos;
 
         while (curAdjointPos > endAdjointPos) {
-
           curFixedSizePos = data.readReverse(fixedSizeValues, curFixedSizePos);
 
           if (Config::StatementInputTag != data.numberOfPassiveArguments) {
-
             StmtCallArgs stmtArgs{curAdjointPos, data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues};
             StatementEvaluator::template call<StatementCall::Reverse, PrimalValueLinearTape>(
                 data.handle, STMT_ARGS_UNPACK(stmtArgs), primalVector, adjointVector, lhsAdjoints.data());

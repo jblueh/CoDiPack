@@ -34,9 +34,9 @@
  */
 #pragma once
 
+#include "../../config.h"
 #include "../../misc/macros.hpp"
 #include "../../misc/staticFor.hpp"
-#include "../../config.h"
 #include "../../traits/realTraits.hpp"
 #include "../aggregate/aggregatedActiveType.hpp"
 #include "../logic/constructStaticContext.hpp"
@@ -54,26 +54,29 @@ namespace codi {
    */
   template<typename T_Real, typename T_ActiveInnerType>
   struct StaticAggregatedActiveType
-      : public AggregatedActiveTypeBase<T_Real,T_ActiveInnerType, StaticAggregatedActiveType<T_Real, T_ActiveInnerType>, true> {
-
+      : public AggregatedActiveTypeBase<T_Real, T_ActiveInnerType,
+                                        StaticAggregatedActiveType<T_Real, T_ActiveInnerType>, true> {
       using Real = T_Real;  ///< See StaticAggregatedActiveType.
-      using ActiveInnerType = CODI_DD(T_ActiveInnerType, CODI_T(ActiveType<void>)); ///< See StaticAggregatedActiveType.
+      using ActiveInnerType = CODI_DD(T_ActiveInnerType,
+                                      CODI_T(ActiveType<void>));  ///< See StaticAggregatedActiveType.
 
-      using InnerReal = typename ActiveInnerType::Real;  ///< Inner real type of the active type.
+      using InnerReal = typename ActiveInnerType::Real;              ///< Inner real type of the active type.
       using InnerIdentifier = typename ActiveInnerType::Identifier;  ///< Inner real type of the active type.
 
-      using Base = AggregatedActiveTypeBase<Real, ActiveInnerType, StaticAggregatedActiveType, true>; ///< Abbreviation for base class.
+      using Base =
+          AggregatedActiveTypeBase<Real, ActiveInnerType, StaticAggregatedActiveType, true>;  ///< Abbreviation for base
+                                                                                              ///< class.
 
-      CODI_INLINE StaticAggregatedActiveType() : Base() {} ///< Constructor.
+      CODI_INLINE StaticAggregatedActiveType() : Base() {}  ///< Constructor.
 
-      CODI_INLINE StaticAggregatedActiveType(StaticAggregatedActiveType const&) = default; ///< Constructor.
+      CODI_INLINE StaticAggregatedActiveType(StaticAggregatedActiveType const&) = default;  ///< Constructor.
   };
 
 #ifndef DOXYGEN_DISABLE
 
   template<typename T_Rhs, typename T_Tape, size_t T_primalValueOffset, size_t T_constantValueOffset>
   struct ConstructStaticContextLogic<T_Rhs, T_Tape, T_primalValueOffset, T_constantValueOffset,
-      RealTraits::EnableIfAggregatedActiveType<T_Rhs>> {
+                                     RealTraits::EnableIfAggregatedActiveType<T_Rhs>> {
     public:
 
       using Rhs = CODI_DD(T_Rhs, CODI_T(AggregatedActiveType<double, ActiveType<CODI_ANY>, CODI_ANY, 1>));
@@ -96,14 +99,14 @@ namespace codi {
 
       /// Forwards to the static construction of the inner active type.
       CODI_INLINE static ResultType construct(InnerReal* primalVector, InnerIdentifier const* const identifiers,
-                                  PasiverInnerReal const* const constantData) {
+                                              PasiverInnerReal const* const constantData) {
         CODI_UNUSED(constantData);
 
         ResultType value;
 
         static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
-          new (&value.arrayValue[i.value]) StaticInnerType(InnerConstructor::construct(primalVector, &identifiers[primalValueOffset + i.value],
-              &constantData[constantValueOffset + i.value]));
+          new (&value.arrayValue[i.value]) StaticInnerType(InnerConstructor::construct(
+              primalVector, &identifiers[primalValueOffset + i.value], &constantData[constantValueOffset + i.value]));
         });
 
         return value;

@@ -55,8 +55,8 @@
 #ifndef FUNCTION
   #define PROXY
 
-  #include "../../misc/macros.hpp"
   #include "../../config.h"
+  #include "../../misc/macros.hpp"
   #include "../../traits/realTraits.hpp"
   #include "../activeType.hpp"
   #include "../binaryExpression.hpp"
@@ -71,24 +71,31 @@ namespace codi {
 
   /// Function overload for FUNCTION(real, real).
   template<typename Real, typename ArgA, typename ArgB>
-  CODI_INLINE BinaryExpression<std::complex<Real>, AdjointComplexToRealCast<Real, ArgA>, AdjointComplexToRealCast<Real, ArgB>, OPERATION_LOGIC> FUNCTION(
-      ExpressionInterface<Real, ArgA> const& argA, ExpressionInterface<Real, ArgB> const& argB) {
-    return BinaryExpression<std::complex<Real>, AdjointComplexToRealCast<Real, ArgA>, AdjointComplexToRealCast<Real, ArgB>, OPERATION_LOGIC>(AdjointComplexToRealCast<Real, ArgA>(argA), AdjointComplexToRealCast<Real, ArgB>(argB));
+  CODI_INLINE BinaryExpression<std::complex<Real>, AdjointComplexToRealCast<Real, ArgA>,
+                               AdjointComplexToRealCast<Real, ArgB>, OPERATION_LOGIC>
+  FUNCTION(ExpressionInterface<Real, ArgA> const& argA, ExpressionInterface<Real, ArgB> const& argB) {
+    return BinaryExpression<std::complex<Real>, AdjointComplexToRealCast<Real, ArgA>,
+                            AdjointComplexToRealCast<Real, ArgB>, OPERATION_LOGIC>(
+        AdjointComplexToRealCast<Real, ArgA>(argA), AdjointComplexToRealCast<Real, ArgB>(argB));
   }
 
   /// Function overload for FUNCTION(real, const real).
   template<typename Real, typename ArgA>
-  CODI_INLINE BinaryExpression<std::complex<Real>, AdjointComplexToRealCast<Real, ArgA>, ConstantExpression<RealTraits::PassiveReal<Real>>, OPERATION_LOGIC> FUNCTION(
-      ExpressionInterface<Real, ArgA> const& argA, RealTraits::PassiveReal<Real> const& argB) {
-    return BinaryExpression<std::complex<Real>, AdjointComplexToRealCast<Real, ArgA>, ConstantExpression<RealTraits::PassiveReal<Real>>, OPERATION_LOGIC>(
+  CODI_INLINE BinaryExpression<std::complex<Real>, AdjointComplexToRealCast<Real, ArgA>,
+                               ConstantExpression<RealTraits::PassiveReal<Real>>, OPERATION_LOGIC>
+  FUNCTION(ExpressionInterface<Real, ArgA> const& argA, RealTraits::PassiveReal<Real> const& argB) {
+    return BinaryExpression<std::complex<Real>, AdjointComplexToRealCast<Real, ArgA>,
+                            ConstantExpression<RealTraits::PassiveReal<Real>>, OPERATION_LOGIC>(
         AdjointComplexToRealCast<Real, ArgA>(argA), ConstantExpression<RealTraits::PassiveReal<Real>>(argB));
   }
 
   /// Function overload for FUNCTION(const real, real).
   template<typename Real, typename ArgB>
-  CODI_INLINE BinaryExpression<std::complex<Real>, ConstantExpression<RealTraits::PassiveReal<Real>>, AdjointComplexToRealCast<Real, ArgB>, OPERATION_LOGIC> FUNCTION(
-      RealTraits::PassiveReal<Real> const& argA, ExpressionInterface<Real, ArgB> const& argB) {
-    return BinaryExpression<std::complex<Real>, ConstantExpression<RealTraits::PassiveReal<Real>>, AdjointComplexToRealCast<Real, ArgB>, OPERATION_LOGIC>(
+  CODI_INLINE BinaryExpression<std::complex<Real>, ConstantExpression<RealTraits::PassiveReal<Real>>,
+                               AdjointComplexToRealCast<Real, ArgB>, OPERATION_LOGIC>
+  FUNCTION(RealTraits::PassiveReal<Real> const& argA, ExpressionInterface<Real, ArgB> const& argB) {
+    return BinaryExpression<std::complex<Real>, ConstantExpression<RealTraits::PassiveReal<Real>>,
+                            AdjointComplexToRealCast<Real, ArgB>, OPERATION_LOGIC>(
         ConstantExpression<RealTraits::PassiveReal<Real>>(argA), AdjointComplexToRealCast<Real, ArgB>(argB));
   }
 
@@ -96,16 +103,14 @@ namespace codi {
   /// Function overload for FUNCTION(ActiveReal, ActiveReal).
   template<typename Tape>
   CODI_INLINE BinaryExpression<std::complex<typename Tape::Real>,
-    AdjointComplexToRealCast<typename Tape::Real, ActiveType<Tape>>,
-    AdjointComplexToRealCast<typename Tape::Real, ActiveType<Tape>>,
-    OPERATION_LOGIC>
+                               AdjointComplexToRealCast<typename Tape::Real, ActiveType<Tape>>,
+                               AdjointComplexToRealCast<typename Tape::Real, ActiveType<Tape>>, OPERATION_LOGIC>
   FUNCTION(ActiveType<Tape> const& argA, ActiveType<Tape> const& argB) {
-    return BinaryExpression<
-        std::complex<typename Tape::Real>,
-        AdjointComplexToRealCast<typename Tape::Real, ActiveType<Tape>>,
-        AdjointComplexToRealCast<typename Tape::Real, ActiveType<Tape>>,
-        OPERATION_LOGIC>(AdjointComplexToRealCast<typename Tape::Real, ActiveType<Tape>>(argA),
-                         AdjointComplexToRealCast<typename Tape::Real, ActiveType<Tape>>(argB));
+    return BinaryExpression<std::complex<typename Tape::Real>,
+                            AdjointComplexToRealCast<typename Tape::Real, ActiveType<Tape>>,
+                            AdjointComplexToRealCast<typename Tape::Real, ActiveType<Tape>>, OPERATION_LOGIC>(
+        AdjointComplexToRealCast<typename Tape::Real, ActiveType<Tape>>(argA),
+        AdjointComplexToRealCast<typename Tape::Real, ActiveType<Tape>>(argB));
   }
 #endif
 

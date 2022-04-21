@@ -38,11 +38,11 @@
 #include <cmath>
 #include <complex>
 
+#include "../config.h"
 #include "../misc/macros.hpp"
 #include "../misc/staticFor.hpp"
-#include "../config.h"
-#include "expressionTraits.hpp"
 #include "computationTraits.hpp"
+#include "expressionTraits.hpp"
 
 /** \copydoc codi::Namespace */
 namespace codi {
@@ -182,7 +182,7 @@ namespace codi {
         CODI_INLINE static void setValue(Type& v, Real const& value);
 
         /// Set the identifiers of a type of aggregated active types.
-        CODI_INLINE static void setIdentifier(Type& v, Identifier  const& identifier);
+        CODI_INLINE static void setIdentifier(Type& v, Identifier const& identifier);
     };
 
     /**
@@ -227,31 +227,29 @@ namespace codi {
     struct AggregatedTypeTraits {
       public:
         using Type = CODI_DD(T_Type, CODI_ANY);  ///< See AggregatedTypeTraits.
-        using InnerType = CODI_ANY; ///< Inner type of the aggregated type.
-        using Real = CODI_ANY; ///< Real version of the aggregated type without the active CoDiPack types.
+        using InnerType = CODI_ANY;              ///< Inner type of the aggregated type.
+        using Real = CODI_ANY;  ///< Real version of the aggregated type without the active CoDiPack types.
 
-        static int constexpr Elements = 0; ///< Number of elements of the aggregated type.
+        static int constexpr Elements = 0;  ///< Number of elements of the aggregated type.
 
         /// Array construction of the aggregated type. That is defined as
         /// \f$ w = T(v_0, v_1, ..., v_N) \f$ where \f$ N \f$  is the number of elements.
         static Type arrayConstructor(InnerType const* v) {
           CODI_UNUSED(v);
-          static_assert(false && std::is_void<Type>::value,
-                        "Instantiation of unspecialized AggregatedTypeTraits.");
+          static_assert(false && std::is_void<Type>::value, "Instantiation of unspecialized AggregatedTypeTraits.");
 
           return Type{};
         }
 
-        /// Adjoint implementation of element wise construction. That is, T is our aggregated type and the construction is
-        /// defined as w = T(v_0, v_1, ..., v_N) where N is the number of elements. Then this function needs to implement
-        /// the adjoint formulation of this construction, which is defined as
+        /// Adjoint implementation of element wise construction. That is, T is our aggregated type and the construction
+        /// is defined as w = T(v_0, v_1, ..., v_N) where N is the number of elements. Then this function needs to
+        /// implement the adjoint formulation of this construction, which is defined as
         ///
         /// \f$ \bar v_i = dT/dv_i^T * \bar w \f$ .
         template<size_t element>
         static InnerType adjointOfConstructor(Type const& w, Type const& w_b) {
           CODI_UNUSED(w, w_b);
-          static_assert(false && std::is_void<Type>::value,
-                        "Instantiation of unspecialized AggregatedTypeTraits.");
+          static_assert(false && std::is_void<Type>::value, "Instantiation of unspecialized AggregatedTypeTraits.");
 
           return InnerType{};
         }
@@ -261,8 +259,7 @@ namespace codi {
         template<size_t element>
         static InnerType arrayAccess(Type const& w) {
           CODI_UNUSED(w);
-          static_assert(false && std::is_void<Type>::value,
-                        "Instantiation of unspecialized AggregatedTypeTraits.");
+          static_assert(false && std::is_void<Type>::value, "Instantiation of unspecialized AggregatedTypeTraits.");
 
           return InnerType{};
         }
@@ -271,20 +268,17 @@ namespace codi {
         template<int pos>
         CODI_INLINE static InnerType& arrayAccess(Type& v) {
           CODI_UNUSED(v);
-          static_assert(false && std::is_void<Type>::value,
-                        "Instantiation of unspecialized AggregatedTypeTraits.");
+          static_assert(false && std::is_void<Type>::value, "Instantiation of unspecialized AggregatedTypeTraits.");
 
           return *(InnerType*)(nullptr);
         }
 
-        /// Implementation of the adjoint array access. See arrayAccess for the equation definition. The adjoint is defined
-        /// as
-        /// \f$ \bar w += dw[i]/w^T * \bar v \f$.
+        /// Implementation of the adjoint array access. See arrayAccess for the equation definition. The adjoint is
+        /// defined as \f$ \bar w += dw[i]/w^T * \bar v \f$.
         template<size_t element>
         static Type adjointOfArrayAccess(Type const& w, InnerType const& v_b) {
           CODI_UNUSED(w, v_b);
-          static_assert(false && std::is_void<Type>::value,
-                        "Instantiation of unspecialized AggregatedTypeTraits.");
+          static_assert(false && std::is_void<Type>::value, "Instantiation of unspecialized AggregatedTypeTraits.");
 
           return Type{};
         }
@@ -294,13 +288,14 @@ namespace codi {
     template<typename T_Type, typename T_InnerType, typename T_Real, int T_Elements>
     struct ArrayAggregatedTypeTraitsBase {
       public:
-        static_assert(sizeof(T_Type) == T_Elements * sizeof(T_InnerType),
-                      "Instantiation of ArrayAggregatedTypeTraitsBase with inner real and number of elements that do not"
-                      "have the size of real.");
+        static_assert(
+            sizeof(T_Type) == T_Elements * sizeof(T_InnerType),
+            "Instantiation of ArrayAggregatedTypeTraitsBase with inner real and number of elements that do not"
+            "have the size of real.");
 
-        using Type = CODI_DD(T_Type, CODI_ANY);  ///< See AggregatedTypeTraits.
+        using Type = CODI_DD(T_Type, CODI_ANY);            ///< See AggregatedTypeTraits.
         using InnerType = CODI_DD(T_InnerType, CODI_ANY);  ///< See AggregatedTypeTraits.
-        using Real = CODI_DD(T_Real, CODI_ANY);  ///< See AggregatedTypeTraits.
+        using Real = CODI_DD(T_Real, CODI_ANY);            ///< See AggregatedTypeTraits.
 
         static int constexpr Elements = CODI_DD(T_Elements, 1);  ///< See AggregatedTypeTraits.
 
@@ -310,9 +305,7 @@ namespace codi {
 
           InnerType* wArray = reinterpret_cast<InnerType*>(&w);
 
-          static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
-            wArray[i.value] = v[i.value];
-          });
+          static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE { wArray[i.value] = v[i.value]; });
 
           return w;
         }
@@ -325,7 +318,6 @@ namespace codi {
           // We compute (\bar w^T * dT/dv_i)^T because then we do not need a transpose implementation on dT/dv_i.
           Type w_b_trans = ComputationTraits::transpose(w_b);
           InnerType const* w_b_transArray = reinterpret_cast<InnerType const*>(&w_b_trans);
-
 
           return ComputationTraits::transpose(w_b_transArray[element]);
         }
@@ -403,17 +395,16 @@ namespace codi {
 
     /// Enable if helper when a type has been specialized for the AggregatedTypeTraits.
     template<typename Type>
-    using EnableIfAggregatedTypeTratisIsSpecialized = typename std::enable_if<(AggregatedTypeTraits<Type>::Elements != 0) & (!ExpressionTraits::IsLhsExpression<Type>::value)>::type;
+    using EnableIfAggregatedTypeTratisIsSpecialized =
+        typename std::enable_if<(AggregatedTypeTraits<Type>::Elements != 0) &
+                                (!ExpressionTraits::IsLhsExpression<Type>::value)>::type;
 
     /// Enable if helper for AggregatedActiveType.
     template<typename Expr>
-    using EnableIfAggregatedActiveType = typename enable_if_base_of<
-        AggregatedActiveTypeBase<
-            typename Expr::Real,
-            typename Expr::ActiveInnerType,
-            typename Expr::Impl,
-            Expr::isStatic
-        >, Expr>::type;
+    using EnableIfAggregatedActiveType =
+        typename enable_if_base_of<AggregatedActiveTypeBase<typename Expr::Real, typename Expr::ActiveInnerType,
+                                                            typename Expr::Impl, Expr::isStatic>,
+                                   Expr>::type;
 
     /// If the real type is not handled by CoDiPack
     template<typename Type>
@@ -467,7 +458,7 @@ namespace codi {
         }
 
         /// \copydoc DataExtraction::setIdentifier()
-        CODI_INLINE static void setIdentifier(Type& v, Identifier  const& identifier) {
+        CODI_INLINE static void setIdentifier(Type& v, Identifier const& identifier) {
           CODI_UNUSED(v, identifier);
         }
     };
@@ -495,7 +486,8 @@ namespace codi {
           Real real{};
 
           static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
-            RealTypeTraits::template arrayAccess<i.value>(real) = InnerDataExtraction::getValue(TypeTraits::template arrayAccess<i.value>(v));
+            RealTypeTraits::template arrayAccess<i.value>(real) =
+                InnerDataExtraction::getValue(TypeTraits::template arrayAccess<i.value>(v));
           });
 
           return real;
@@ -515,7 +507,8 @@ namespace codi {
         /// \copydoc DataExtraction::setValue()
         CODI_INLINE static void setValue(Type& v, Real const& value) {
           static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
-            InnerDataExtraction::setValue(TypeTraits::template arrayAccess<i.value>(v), RealTypeTraits::template arrayAccess<i.value>(value));
+            InnerDataExtraction::setValue(TypeTraits::template arrayAccess<i.value>(v),
+                                          RealTypeTraits::template arrayAccess<i.value>(value));
           });
         }
 
@@ -562,7 +555,8 @@ namespace codi {
           Real res{};
 
           static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
-            RealTypeTraits::template arrayAccess<i.value>(res) = InnerTraits::registerExternalFunctionOutput(TypeTraits::template arrayAccess<i.value>(v));
+            RealTypeTraits::template arrayAccess<i.value>(res) =
+                InnerTraits::registerExternalFunctionOutput(TypeTraits::template arrayAccess<i.value>(v));
           });
 
           return res;
@@ -570,16 +564,15 @@ namespace codi {
     };
 
     template<typename T_Type>
-    struct AggregatedTypeTraits<T_Type, typename std::enable_if<std::is_floating_point<T_Type>::value>::type> :
-      ArrayAggregatedTypeTraitsBase<T_Type, T_Type, T_Type, 1> {};
+    struct AggregatedTypeTraits<T_Type, typename std::enable_if<std::is_floating_point<T_Type>::value>::type>
+        : ArrayAggregatedTypeTraitsBase<T_Type, T_Type, T_Type, 1> {};
 
     template<typename T_Type>
-    struct AggregatedTypeTraits<T_Type, typename std::enable_if<std::is_integral<T_Type>::value>::type> :
-      ArrayAggregatedTypeTraitsBase<T_Type, T_Type, T_Type, 1> {};
+    struct AggregatedTypeTraits<T_Type, typename std::enable_if<std::is_integral<T_Type>::value>::type>
+        : ArrayAggregatedTypeTraitsBase<T_Type, T_Type, T_Type, 1> {};
 
     template<>
-    struct AggregatedTypeTraits<int*> :
-      ArrayAggregatedTypeTraitsBase<int*, int*, int*, 1> {};
+    struct AggregatedTypeTraits<int*> : ArrayAggregatedTypeTraitsBase<int*, int*, int*, 1> {};
 
 #endif
 

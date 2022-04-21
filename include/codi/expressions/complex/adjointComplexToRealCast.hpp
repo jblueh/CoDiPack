@@ -2,15 +2,15 @@
 
 #include <complex>
 
-#include "../../misc/macros.hpp"
 #include "../../config.h"
+#include "../../misc/macros.hpp"
 #include "../../traits/expressionTraits.hpp"
 #include "../unaryExpression.hpp"
 
 /** \copydoc codi::Namespace */
 namespace codi {
 
-  struct ReduceToReal {}; ///< Placeholder to identify the operation on the Jacobian.
+  struct ReduceToReal {};  ///< Placeholder to identify the operation on the Jacobian.
 
   /**
    * Returns a proxy object for the gradient that implements the operation in the multiplication of the proxy.
@@ -21,8 +21,8 @@ namespace codi {
   struct OperationCastRealToComplex : public UnaryOperation<T_Real> {
     public:
 
-      using Real = CODI_DD(T_Real, double); ///< See OperationCastRealToComplex.
-      using Jacobian = ReduceToReal;   ///< See OperationCastRealToComplex.
+      using Real = CODI_DD(T_Real, double);  ///< See OperationCastRealToComplex.
+      using Jacobian = ReduceToReal;         ///< See OperationCastRealToComplex.
 
       /// \copydoc codi::UnaryOperation::primal
       template<typename Arg>
@@ -35,7 +35,7 @@ namespace codi {
       static CODI_INLINE ReduceToReal gradient(Arg const& arg, Real const& result) {
         CODI_UNUSED(arg, result);
 
-        return ReduceToReal {};
+        return ReduceToReal{};
       }
   };
 
@@ -45,13 +45,14 @@ namespace codi {
 
   /// See codi::OperationCastRealToComplex.
   template<typename Real>
-  CODI_INLINE Real operator *(ReduceToReal, std::complex<Real> const& adjoint) {
+  CODI_INLINE Real operator*(ReduceToReal, std::complex<Real> const& adjoint) {
     return adjoint.real();
   }
 
   /// See codi::OperationCastRealToComplex.
   template<typename Real, typename Arg>
-  CODI_INLINE ExpressionTraits::ActiveResult<Real, typename Arg::ADLogic> operator *(ReduceToReal, ExpressionInterface<std::complex<Real>, Arg> const& adjoint) {
+  CODI_INLINE ExpressionTraits::ActiveResult<Real, typename Arg::ADLogic> operator*(
+      ReduceToReal, ExpressionInterface<std::complex<Real>, Arg> const& adjoint) {
     return adjoint.cast().real();
   }
 }

@@ -39,8 +39,8 @@
 #include <string>
 #include <vector>
 
-#include "../../misc/exceptions.hpp"
 #include "../../config.h"
+#include "../../misc/exceptions.hpp"
 
 /** \copydoc codi::Namespace */
 namespace codi {

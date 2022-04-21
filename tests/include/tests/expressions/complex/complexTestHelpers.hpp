@@ -35,20 +35,19 @@
 
 #pragma once
 
-#include <complex>
-
 #include <codi/expressions/complex/stdComplex.hpp>
+#include <complex>
 
 template<typename C, typename R>
 static void assignToComplex(C* c, R const* r, int complexCount) {
-  for(int i = 0; i < complexCount; i += 1) {
+  for (int i = 0; i < complexCount; i += 1) {
     c[i] = C(r[i * 2], r[i * 2 + 1]);
   }
 }
 
 template<typename R, typename C>
 static void assignToReal(R* r, C const* c, int complexCount) {
-  for(int i = 0; i < complexCount; i += 1) {
+  for (int i = 0; i < complexCount; i += 1) {
     r[i * 2] = std::real(c[i]);
     r[i * 2 + 1] = std::imag(c[i]);
   }

@@ -38,9 +38,9 @@
 #include <functional>
 #include <type_traits>
 
-#include "../../misc/macros.hpp"
 #include "../../expressions/activeType.hpp"
 #include "../../expressions/assignExpression.hpp"
+#include "../../misc/macros.hpp"
 #include "../../traits/expressionTraits.hpp"
 #include "../misc/statementSizes.hpp"
 #include "directStatementEvaluator.hpp"
@@ -62,8 +62,7 @@ namespace codi {
 
       /// Constructor
       InnerPrimalTapeStatementData(PrimalTapeStatementFunctions functions, StatementSizes stmtSizes)
-          : functions(functions),
-            stmtSizes(stmtSizes) {}
+          : functions(functions), stmtSizes(stmtSizes) {}
   };
 
   /// Store InnerPrimalTapeStatementData as static variables for each combination of generator (tape) and expression
@@ -77,14 +76,13 @@ namespace codi {
       static InnerPrimalTapeStatementData const staticStore;  ///< Static storage.
 
       /// Generates the data for the static store.
-      template<StatementCall ... types>
+      template<StatementCall... types>
       static InnerPrimalTapeStatementData gen() {
         using Handle = typename PrimalTapeStatementFunctions::Handle;
 
         return InnerPrimalTapeStatementData(
             PrimalTapeStatementFunctions(
-              ((Handle)Generator::template StatementCallGenerator<types, Expr>::evaluateInner)...
-            ),
+                ((Handle)Generator::template StatementCallGenerator<types, Expr>::evaluateInner)...),
             StatementSizes::create<Expr>());
       }
   };

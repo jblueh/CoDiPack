@@ -2,8 +2,8 @@
 
 #include <complex>
 
-#include "../../misc/macros.hpp"
 #include "../../config.h"
+#include "../../misc/macros.hpp"
 #include "../binaryExpression.hpp"
 #include "../expressionInterface.hpp"
 #include "../real/allOperators.hpp"
@@ -53,8 +53,8 @@ namespace codi {
   struct OperationComplexPolar : public BinaryOperation<T_Real> {
     public:
 
-      using Real = CODI_DD(T_Real, double);   ///< See BinaryOperation.
-      using Jacobian = Real;   ///< See BinaryOperation.
+      using Real = CODI_DD(T_Real, double);  ///< See BinaryOperation.
+      using Jacobian = Real;                 ///< See BinaryOperation.
 
       /// \copydoc codi::BinaryOperation::primal()
       template<typename ArgA, typename ArgB>
@@ -156,9 +156,8 @@ namespace codi {
       /// \copydoc UnaryOperation::gradient
       template<typename Arg>
       static CODI_INLINE Jacobian gradient(Arg const& arg, Real const& result) {
-
         checkResult(result);
-        if(result != 0.0) {
+        if (result != 0.0) {
           return Jacobian(real(arg) / result, -imag(arg) / result);
         } else {
           return Jacobian(1.0);
@@ -218,7 +217,7 @@ namespace codi {
 #define OPERATION_LOGIC OperationComplexArg
 #include "unaryComplexToRealOverloads.tpp"
 
-  struct RevConj {}; ///< Placeholder to identify the conj operation on the Jacobian.
+  struct RevConj {};  ///< Placeholder to identify the conj operation on the Jacobian.
 
   /// UnaryOperation implementation for complex conj.
   template<typename T_Real>
@@ -226,7 +225,7 @@ namespace codi {
     public:
 
       using Real = CODI_DD(T_Real, double);  ///< See UnaryOperation.
-      using Jacobian = RevConj;  ///< See UnaryOperation.
+      using Jacobian = RevConj;              ///< See UnaryOperation.
 
       /// \copydoc UnaryOperation::primal
       template<typename Arg>
@@ -259,7 +258,7 @@ namespace codi {
     public:
 
       using Real = CODI_DD(T_Real, double);  ///< See UnaryOperation.
-      using Jacobian = std::complex<Real>;  ///< See UnaryOperation.
+      using Jacobian = std::complex<Real>;   ///< See UnaryOperation.
 
       /// \copydoc UnaryOperation::primal
       template<typename Arg>
@@ -286,7 +285,7 @@ namespace codi {
     public:
 
       using Real = CODI_DD(T_Real, double);  ///< See UnaryOperation.
-      using Jacobian = std::complex<Real>;  ///< See UnaryOperation.
+      using Jacobian = std::complex<Real>;   ///< See UnaryOperation.
 
       /// \copydoc UnaryOperation::primal
       template<typename Arg>
@@ -313,7 +312,7 @@ namespace codi {
     public:
 
       using Real = CODI_DD(T_Real, double);  ///< See UnaryOperation.
-      using Jacobian = double;  ///< See UnaryOperation.
+      using Jacobian = double;               ///< See UnaryOperation.
 
       /// \copydoc UnaryOperation::primal
       template<typename Arg>

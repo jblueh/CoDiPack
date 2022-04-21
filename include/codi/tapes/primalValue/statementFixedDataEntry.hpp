@@ -34,8 +34,8 @@
  */
 #pragma once
 
-#include "../../misc/macros.hpp"
 #include "../../config.h"
+#include "../../misc/macros.hpp"
 #include "../data/dataInterface.hpp"
 
 /** \copydoc codi::Namespace */
@@ -58,7 +58,7 @@ namespace codi {
       using EvalHandle = CODI_DD(T_EvalHandle, void*);
       using FixedSizeData = CODI_DD(T_FixedSizeData, DataInterface);
 
-      EvalHandle handle;  ///< The currently read handle.
+      EvalHandle handle;                              ///< The currently read handle.
       Config::ArgumentSize numberOfPassiveArguments;  ///< The currently read number of passive arguments.
 
       /// See StatementFixedDataEntry.
@@ -89,7 +89,8 @@ namespace codi {
       }
 
       /// Store the data for the fixed data stream.
-      CODI_INLINE static void store(FixedSizeData& data, Config::ArgumentSize numberOfPassiveArguments, EvalHandle handle) {
+      CODI_INLINE static void store(FixedSizeData& data, Config::ArgumentSize numberOfPassiveArguments,
+                                    EvalHandle handle) {
         data.pushData(numberOfPassiveArguments);
         data.pushData(handle);
       }

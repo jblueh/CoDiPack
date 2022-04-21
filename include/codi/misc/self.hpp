@@ -34,15 +34,17 @@
  */
 #pragma once
 
-#include "../misc/macros.hpp"
-#include "../config.h"
-
 #include <type_traits>
+
+#include "../config.h"
+#include "../misc/macros.hpp"
 
 /** \copydoc codi::Namespace */
 namespace codi {
 
-  struct Self {}; ///< Proxy for detecting a template argument that should be the same as the class.
+  struct Self {};  ///< Proxy for detecting a template argument that should be the same as the class.
+
+  // clang-format off
 
   /// If Impl == Self
   ///   return SelfType
@@ -54,4 +56,6 @@ namespace codi {
         SelfType,                    // true
         Impl                         // false
     >::type;                         // return
+
+  // clang-format on
 }

@@ -34,8 +34,8 @@
  */
 #pragma once
 
-#include "../../misc/macros.hpp"
 #include "../../config.h"
+#include "../../misc/macros.hpp"
 
 /** \copydoc codi::Namespace */
 namespace codi {
@@ -50,7 +50,7 @@ namespace codi {
       /// Linear version of the pack helper.
       struct LinearPackHelper {
         public:
-          size_t&  __restrict__ linearAdjointPos;  ///< Position of the lhs adjoint.
+          size_t& __restrict__ linearAdjointPos;          ///< Position of the lhs adjoint.
           Config::ArgumentSize numberOfPassiveArguments;  ///< Number of passive arguments.
       };
 
@@ -62,45 +62,44 @@ namespace codi {
 
       static size_t tempAdjointPos;  ///< Temporary position of the lhs adjoint.
 
-      size_t&  __restrict__ linearAdjointPos;  ///< Position of the lhs adjoint.
+      size_t& __restrict__ linearAdjointPos;          ///< Position of the lhs adjoint.
       Config::ArgumentSize numberOfPassiveArguments;  ///< Number of passive arguments.
-      size_t& __restrict__ curDynamicSizePos;  ///< Position for the dynamic size statement data.
-      char* const __restrict__ dynamicSizeValues;  ///< Pointer to the dynamic size statement data.
+      size_t& __restrict__ curDynamicSizePos;         ///< Position for the dynamic size statement data.
+      char* const __restrict__ dynamicSizeValues;     ///< Pointer to the dynamic size statement data.
 
       /// Constructor.
-      StatementCallDefaultArgumentsBase(
-          size_t&  __restrict__ linearAdjointPos,
-          Config::ArgumentSize numberOfPassiveArguments,
-          size_t& __restrict__ curDynamicSizePos,
-          char* const __restrict__ dynamicSizeValues) :
-        linearAdjointPos(linearAdjointPos),
-        numberOfPassiveArguments(numberOfPassiveArguments),
-        curDynamicSizePos(curDynamicSizePos),
-        dynamicSizeValues(dynamicSizeValues)
-      {}
+      StatementCallDefaultArgumentsBase(size_t& __restrict__ linearAdjointPos,
+                                        Config::ArgumentSize numberOfPassiveArguments,
+                                        size_t& __restrict__ curDynamicSizePos,
+                                        char* const __restrict__ dynamicSizeValues)
+          : linearAdjointPos(linearAdjointPos),
+            numberOfPassiveArguments(numberOfPassiveArguments),
+            curDynamicSizePos(curDynamicSizePos),
+            dynamicSizeValues(dynamicSizeValues) {}
 
       /// Constructor.
-      StatementCallDefaultArgumentsBase(
-          Config::ArgumentSize numberOfPassiveArguments,
-          size_t& __restrict__ curDynamicSizePos,
-          char* const __restrict__ dynamicSizeValues) :
-        StatementCallDefaultArgumentsBase(tempAdjointPos, numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues) {}
+      StatementCallDefaultArgumentsBase(Config::ArgumentSize numberOfPassiveArguments,
+                                        size_t& __restrict__ curDynamicSizePos,
+                                        char* const __restrict__ dynamicSizeValues)
+          : StatementCallDefaultArgumentsBase(tempAdjointPos, numberOfPassiveArguments, curDynamicSizePos,
+                                              dynamicSizeValues) {}
 
       /// Constructor.
-      template<typename ... Args>
-      StatementCallDefaultArgumentsBase(LinearPackHelper packHelper, Args&& ... args) :
-        StatementCallDefaultArgumentsBase(packHelper.linearAdjointPos, packHelper.numberOfPassiveArguments, std::forward<Args>(args)...) {}
+      template<typename... Args>
+      StatementCallDefaultArgumentsBase(LinearPackHelper packHelper, Args&&... args)
+          : StatementCallDefaultArgumentsBase(packHelper.linearAdjointPos, packHelper.numberOfPassiveArguments,
+                                              std::forward<Args>(args)...) {}
 
       /// Constructor.
-      template<typename ... Args>
-      StatementCallDefaultArgumentsBase(ReusePackHelper packHelper, Args&& ... args) :
-        StatementCallDefaultArgumentsBase(tempAdjointPos, packHelper.numberOfPassiveArguments, std::forward<Args>(args)...) {}
-
+      template<typename... Args>
+      StatementCallDefaultArgumentsBase(ReusePackHelper packHelper, Args&&... args)
+          : StatementCallDefaultArgumentsBase(tempAdjointPos, packHelper.numberOfPassiveArguments,
+                                              std::forward<Args>(args)...) {}
 
       /*******************************************************************************/
       /// Interface definition
 
-      using PackHelper = CODI_DD(CODI_UNDEFINED, LinearPackHelper); ///< Defines which pack helper is used.
+      using PackHelper = CODI_DD(CODI_UNDEFINED, LinearPackHelper);  ///< Defines which pack helper is used.
 
       /// Moves the linear adjoint position by the number of output arguments.
       CODI_INLINE void updateAdjointPosForward(size_t nOutputArgs);
@@ -122,12 +121,12 @@ namespace codi {
   template<typename T_Identifier>
   struct LinearStatementCallDefaultArguments : public StatementCallDefaultArgumentsBase<T_Identifier> {
     public:
-      using Identifier = CODI_DD(T_Identifier, int);  ///< See StatementCallDefaultArgumentsBase.
-      using Base = StatementCallDefaultArgumentsBase<Identifier>; ///< Base class abbreviation.
+      using Identifier = CODI_DD(T_Identifier, int);               ///< See StatementCallDefaultArgumentsBase.
+      using Base = StatementCallDefaultArgumentsBase<Identifier>;  ///< Base class abbreviation.
 
-      using PackHelper = typename Base::LinearPackHelper; ///< See StatementCallDefaultArgumentsBase.
+      using PackHelper = typename Base::LinearPackHelper;  ///< See StatementCallDefaultArgumentsBase.
 
-      using Base::Base; ///< Use all constructors.
+      using Base::Base;  ///< Use all constructors.
 
       /// Moves the linear adjoint position by the number of output arguments.
       CODI_INLINE void updateAdjointPosForward(size_t nOutputArgs) {
@@ -155,12 +154,12 @@ namespace codi {
   template<typename T_Identifier>
   struct ReuseStatementCallDefaultArguments : public StatementCallDefaultArgumentsBase<T_Identifier> {
     public:
-      using Identifier = CODI_DD(T_Identifier, int); ///< See StatementCallDefaultArgumentsBase.
-      using Base = StatementCallDefaultArgumentsBase<Identifier>; ///< Base class abbreviation.
+      using Identifier = CODI_DD(T_Identifier, int);               ///< See StatementCallDefaultArgumentsBase.
+      using Base = StatementCallDefaultArgumentsBase<Identifier>;  ///< Base class abbreviation.
 
-      using PackHelper = typename Base::ReusePackHelper; ///< See StatementCallDefaultArgumentsBase.
+      using PackHelper = typename Base::ReusePackHelper;  ///< See StatementCallDefaultArgumentsBase.
 
-      using Base::Base; ///< Use all constructors.
+      using Base::Base;  ///< Use all constructors.
 
       /// Does nothing.
       CODI_INLINE void updateAdjointPosForward(size_t nOutputArgs) {

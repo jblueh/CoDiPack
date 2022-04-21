@@ -38,7 +38,7 @@
 #include "../../testInterface.hpp"
 #include "../expressions/complex/complexTestHelpers.hpp"
 
-struct TestDataExtractionTraits: public TestInterface {
+struct TestDataExtractionTraits : public TestInterface {
   public:
 
     template<typename T>
@@ -57,7 +57,6 @@ struct TestDataExtractionTraits: public TestInterface {
 
     template<typename Number>
     static void func(Number* x, Number* y) {
-
       using C = Complex<Number>;
       C xC[in_complex_count];
       C yC[out_complex_count];

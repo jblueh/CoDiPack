@@ -55,8 +55,8 @@
 #ifndef FUNCTION
   #define PROXY
 
-  #include "../../misc/macros.hpp"
   #include "../../config.h"
+  #include "../../misc/macros.hpp"
   #include "../activeType.hpp"
   #include "../expressionInterface.hpp"
   #include "../unaryExpression.hpp"
@@ -68,7 +68,8 @@ namespace codi {
 
   /// Function overload for FUNCTION.
   template<typename Real, typename Arg>
-  CODI_INLINE UnaryExpression<std::complex<Real>, Arg, OPERATION_LOGIC> FUNCTION(ExpressionInterface<std::complex<Real>, Arg> const& arg) {
+  CODI_INLINE UnaryExpression<std::complex<Real>, Arg, OPERATION_LOGIC> FUNCTION(
+      ExpressionInterface<std::complex<Real>, Arg> const& arg) {
     return UnaryExpression<std::complex<Real>, Arg, OPERATION_LOGIC>(arg);
   }
 

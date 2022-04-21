@@ -49,10 +49,8 @@ namespace codi {
       size_t const outputArgs;    ///< Number of output arguments.
 
       /// Constructor
-      StatementSizes(size_t const inputArgs, size_t const constantArgs, size_t const maxOutputArgs) :
-        inputArgs(inputArgs),
-        constantArgs(constantArgs),
-        outputArgs(maxOutputArgs) {}
+      StatementSizes(size_t const inputArgs, size_t const constantArgs, size_t const maxOutputArgs)
+          : inputArgs(inputArgs), constantArgs(constantArgs), outputArgs(maxOutputArgs) {}
 
       /// Creation function from AssignExpression.
       template<typename T_Expr>

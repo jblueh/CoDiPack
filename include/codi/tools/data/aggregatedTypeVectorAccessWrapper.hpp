@@ -37,10 +37,10 @@
 #include <complex>
 #include <vector>
 
-#include "../../misc/macros.hpp"
 #include "../../config.h"
-#include "../../expressions/lhsExpressionInterface.hpp"
 #include "../../expressions/aggregate/aggregatedActiveType.hpp"
+#include "../../expressions/lhsExpressionInterface.hpp"
+#include "../../misc/macros.hpp"
 #include "../../tapes/misc/vectorAccessInterface.hpp"
 #include "../../traits/computationTraits.hpp"
 #include "../../traits/expressionTraits.hpp"
@@ -89,23 +89,27 @@ namespace codi {
   struct AggregatedTypeVectorAccessWrapper<T_Type, RealTraits::EnableIfAggregatedActiveType<T_Type>> {
     public:
 
-      using Type = CODI_DD(T_Type, CODI_T(AggregatedActiveType<double, CODI_ANY, CODI_ANY>)); ///< See AggregatedTypeVectorAccessWrapper.
-      using InnerType = typename Type::ActiveInnerType; ///< Active inner type of the aggregate.
-      static int constexpr Elements = Type::Elements;  ///< Number of elements in the aggregate.
+      using Type = CODI_DD(
+          T_Type,
+          CODI_T(AggregatedActiveType<double, CODI_ANY, CODI_ANY>));  ///< See AggregatedTypeVectorAccessWrapper.
+      using InnerType = typename Type::ActiveInnerType;               ///< Active inner type of the aggregate.
+      static int constexpr Elements = Type::Elements;                 ///< Number of elements in the aggregate.
 
       /// Inner interface expected by this wrapper.
-      using InnerInterface = VectorAccessInterface< typename InnerType::Real, typename InnerType::Identifier>;
+      using InnerInterface = VectorAccessInterface<typename InnerType::Real, typename InnerType::Identifier>;
 
-      using Real = typename RealTraits::DataExtraction<T_Type>::Real; ///< Real value of the aggregate.
-      using Identifier = typename RealTraits::DataExtraction<T_Type>::Identifier; /// Identifier value of the aggregate.
+      using Real = typename RealTraits::DataExtraction<T_Type>::Real;  ///< Real value of the aggregate.
+      using Identifier =
+          typename RealTraits::DataExtraction<T_Type>::Identifier;  /// Identifier value of the aggregate.
 
-      using Traits = RealTraits::AggregatedTypeTraits<Real>; ///< Aggregated type traits.
+      using Traits = RealTraits::AggregatedTypeTraits<Real>;  ///< Aggregated type traits.
 
-      InnerInterface& innerInterface; ///< Reference to inner interface.
-      int lhsOffset;                  ///< Offset of indirect access if this aggregated type is part of an outer aggregated type.
+      InnerInterface& innerInterface;  ///< Reference to inner interface.
+      int lhsOffset;  ///< Offset of indirect access if this aggregated type is part of an outer aggregated type.
 
       /// Constructor
-      CODI_INLINE AggregatedTypeVectorAccessWrapper(InnerInterface* innerInterface) : innerInterface(*innerInterface), lhsOffset(0) {
+      CODI_INLINE AggregatedTypeVectorAccessWrapper(InnerInterface* innerInterface)
+          : innerInterface(*innerInterface), lhsOffset(0) {
         innerInterface->setSizeForIndirectAccess(Elements);
       }
 
@@ -185,16 +189,12 @@ namespace codi {
 
       /// \copydoc VectorAccessInterface::resetAdjoint()
       CODI_INLINE void resetAdjoint(Identifier const& index, size_t dim) {
-        static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
-          innerInterface.resetAdjoint(index[i.value], dim);
-        });
+        static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE { innerInterface.resetAdjoint(index[i.value], dim); });
       }
 
       /// \copydoc VectorAccessInterface::resetAdjointVec()
       CODI_INLINE void resetAdjointVec(Identifier const& index) {
-        static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
-          innerInterface.resetAdjointVec(index[i.value]);
-        });
+        static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE { innerInterface.resetAdjointVec(index[i.value]); });
       }
 
       /// \copydoc VectorAccessInterface::getAdjoint()
@@ -240,7 +240,7 @@ namespace codi {
       /// \copydoc VectorAccessInterface::setPrimal()
       CODI_INLINE void setPrimal(Identifier const& index, Real const& primal) {
         static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
-           innerInterface.setPrimal(index[i.value], Traits::template arrayAccess<i.value>(primal));
+          innerInterface.setPrimal(index[i.value], Traits::template arrayAccess<i.value>(primal));
         });
       }
 

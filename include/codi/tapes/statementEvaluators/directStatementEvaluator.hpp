@@ -38,9 +38,9 @@
 #include <functional>
 #include <type_traits>
 
-#include "../../misc/macros.hpp"
 #include "../../expressions/activeType.hpp"
 #include "../../expressions/assignExpression.hpp"
+#include "../../misc/macros.hpp"
 #include "statementEvaluatorInterface.hpp"
 
 /** \copydoc codi::Namespace */
@@ -54,12 +54,11 @@ namespace codi {
 
       using Handle = void*;  ///< Function pointer.
 
-      std::array<Handle, (size_t)StatementCall::N_Elements> funcs; ///< Array for the function handles.
+      std::array<Handle, (size_t)StatementCall::N_Elements> funcs;  ///< Array for the function handles.
 
       /// Constructor
-      template<typename ... Args>
-      PrimalTapeStatementFunctions(Args... args)
-          : funcs{args...} {}
+      template<typename... Args>
+      PrimalTapeStatementFunctions(Args... args) : funcs{args...} {}
   };
 
   /// Store PrimalTapeStatementFunctions as static variables for each combination of generator (tape) and expression
@@ -73,13 +72,12 @@ namespace codi {
       static PrimalTapeStatementFunctions const staticStore;
 
       /// Generates the data for the static store.
-      template<StatementCall ... types>
+      template<StatementCall... types>
       static PrimalTapeStatementFunctions gen() {
         using Handle = typename PrimalTapeStatementFunctions::Handle;
 
         return PrimalTapeStatementFunctions(
-          reinterpret_cast<Handle>(Generator::template StatementCallGenerator<types, Expr>::evaluate)...
-         );
+            reinterpret_cast<Handle>(Generator::template StatementCallGenerator<types, Expr>::evaluate)...);
       }
   };
 

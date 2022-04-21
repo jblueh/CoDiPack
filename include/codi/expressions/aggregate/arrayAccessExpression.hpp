@@ -1,41 +1,40 @@
 #pragma once
 
-#include "../../misc/macros.hpp"
 #include "../../config.h"
+#include "../../misc/macros.hpp"
 #include "../../traits/realTraits.hpp"
 #include "../unaryExpression.hpp"
 
 /** \copydoc codi::Namespace */
 namespace codi {
 
-
   /// Definitions for the ArrayAccessExpression.
   ///
   /// @tparam T_Real Return type of the expression.
   template<typename T_Real>
   struct ArrayAccessExpressionImpl {
+    public:
+      using Real = CODI_DD(T_Real, CODI_ANY);  ///< See ArrayAccessExpressionImpl.
 
-      using Real = CODI_DD(T_Real, CODI_ANY); ///< See ArrayAccessExpressionImpl.
+      using Traits = RealTraits::AggregatedTypeTraits<Real>;  ///< Traits of the aggregated type.
 
-      using Traits = RealTraits::AggregatedTypeTraits<Real>; ///< Traits of the aggregated type.
-
-      using InnerReal = typename Traits::InnerType; ///< Inner type of the aggregate.
+      using InnerReal = typename Traits::InnerType;  ///< Inner type of the aggregate.
 
       /// Implementation of the array access operator for a specific element.
       /// @tparam T_element Element that is accessed.
       template<size_t T_element>
       struct ArrayAccessOperationImpl {
-
+        public:
           /// Operation for array access.
           /// @tparam T_OpReal Real value of the operator.
           template<typename T_OpReal>
           struct type : public UnaryOperation<T_OpReal> {
             public:
 
-              using OpReal = CODI_DD(T_OpReal, double);  ///< See type.
-              static size_t constexpr element = T_element; ///< See ArrayAccessOperationImpl.
+              using OpReal = CODI_DD(T_OpReal, double);     ///< See type.
+              static size_t constexpr element = T_element;  ///< See ArrayAccessOperationImpl.
 
-              using Jacobian = Real; ///< Jacobian is the aggregated type.
+              using Jacobian = Real;  ///< Jacobian is the aggregated type.
 
               /// \copydoc UnaryOperation::primal().
               template<typename Arg>

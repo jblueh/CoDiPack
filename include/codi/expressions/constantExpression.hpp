@@ -34,8 +34,8 @@
  */
 #pragma once
 
-#include "../misc/macros.hpp"
 #include "../config.h"
+#include "../misc/macros.hpp"
 #include "expressionInterface.hpp"
 #include "logic/nodeInterface.hpp"
 #include "logic/traversalLogic.hpp"
@@ -95,7 +95,7 @@ namespace codi {
       /// @{
 
       using StoreAs = ConstantExpression;  ///< \copydoc codi::ExpressionInterface::StoreAs
-      using ADLogic = void;           ///< \copydoc codi::ExpressionInterface::ADLogic
+      using ADLogic = void;                ///< \copydoc codi::ExpressionInterface::ADLogic
 
       /// \copydoc codi::ExpressionInterface::getValue
       CODI_INLINE Real const& getValue() const {

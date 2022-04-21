@@ -34,8 +34,8 @@
  */
 #pragma once
 
-#include "../../misc/macros.hpp"
 #include "../../config.h"
+#include "../../misc/macros.hpp"
 #include "../../tapes/interfaces/gradientAccessTapeInterface.hpp"
 #include "../../tapes/interfaces/internalStatementRecordingTapeInterface.hpp"
 #include "../../traits/realTraits.hpp"
@@ -79,8 +79,7 @@ namespace codi {
           : primal(value.primal), identifier(value.identifier) {}
 
       /// Empty constructor for delayed construction that is overwritten with placement new operators
-      CODI_INLINE StaticContextActiveType()
-          : primal(), identifier() {}
+      CODI_INLINE StaticContextActiveType() : primal(), identifier() {}
 
       /*******************************************************************************/
       /// @name Partial implementation of LhsExpressionInterface
@@ -96,8 +95,8 @@ namespace codi {
       /// @name Implementation of ExpressionInterface
       /// @{
 
-      using StoreAs = StaticContextActiveType;       ///< \copydoc codi::ExpressionInterface::EndPoint
-      using ADLogic = Tape;  ///< \copydoc codi::ExpressionInterface::ADLogic
+      using StoreAs = StaticContextActiveType;  ///< \copydoc codi::ExpressionInterface::EndPoint
+      using ADLogic = Tape;                     ///< \copydoc codi::ExpressionInterface::ADLogic
 
       /// \copydoc codi::ExpressionInterface::getValue()
       CODI_INLINE Real const getValue() const {

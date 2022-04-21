@@ -37,8 +37,8 @@
 #include <cstddef>
 #include <vector>
 
-#include "../../misc/macros.hpp"
 #include "../../config.h"
+#include "../../misc/macros.hpp"
 #include "../../tools/data/direction.hpp"
 #include "../../traits/realTraits.hpp"
 #include "vectorAccessInterface.hpp"
@@ -119,7 +119,7 @@ namespace codi {
 
       /// \copydoc codi::VectorAccessInterface::setSizeForIndirectAccess
       void setSizeForIndirectAccess(size_t size) {
-        if(lhs.size() < size) {
+        if (lhs.size() < size) {
           lhs.resize(size);
         }
       }

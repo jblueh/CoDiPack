@@ -34,8 +34,8 @@
  */
 #pragma once
 
-#include "../misc/macros.hpp"
 #include "../config.h"
+#include "../misc/macros.hpp"
 #include "../tapes/interfaces/gradientAccessTapeInterface.hpp"
 #include "../traits/realTraits.hpp"
 #include "assignmentOperators.hpp"
@@ -93,8 +93,8 @@ namespace codi {
       /// @name Implementation of LhsExpressionInterface
       /// @{
 
-      using StoreAs = ReferenceActiveType const&;        ///< \copydoc codi::ExpressionInterface::StoreAs
-      using ADLogic = Tape;  ///< \copydoc codi::ExpressionInterface::ADLogic
+      using StoreAs = ReferenceActiveType const&;  ///< \copydoc codi::ExpressionInterface::StoreAs
+      using ADLogic = Tape;                        ///< \copydoc codi::ExpressionInterface::ADLogic
 
       /// \copydoc codi::LhsExpressionInterface::getIdentifier()
       CODI_INLINE Identifier& getIdentifier() {

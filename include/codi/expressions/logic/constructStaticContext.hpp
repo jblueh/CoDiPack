@@ -34,12 +34,12 @@
  */
 #pragma once
 
-#include "../../misc/macros.hpp"
 #include "../../config.h"
+#include "../../misc/macros.hpp"
 #include "../../tapes/interfaces/reverseTapeInterface.hpp"
 #include "../../traits/expressionTraits.hpp"
-#include "../constantExpression.hpp"
 #include "../binaryExpression.hpp"
+#include "../constantExpression.hpp"
 #include "../expressionInterface.hpp"
 #include "../static/staticContextActiveType.hpp"
 #include "../unaryExpression.hpp"
@@ -115,7 +115,7 @@ namespace codi {
 
       /// Uses primalVector[identifiers[primalValueOffset]] and identifiers[primalValueOffset].
       CODI_INLINE static ResultType construct(Real* primalVector, Identifier const* const identifiers,
-                                  PassiveReal const* const constantData) {
+                                              PassiveReal const* const constantData) {
         CODI_UNUSED(constantData);
 
         Identifier const identifier = identifiers[primalValueOffset];
@@ -145,7 +145,7 @@ namespace codi {
 
       /// Uses constantData[constantValueOffset].
       CODI_INLINE static ResultType construct(InnerReal* primalVector, Identifier const* const identifiers,
-                                  PassiveInnerReal const* const constantData) {
+                                              PassiveInnerReal const* const constantData) {
         CODI_UNUSED(primalVector, identifiers);
 
         using ConversionOperator = typename Rhs::template ConversionOperator<PassiveInnerReal>;
@@ -153,7 +153,8 @@ namespace codi {
 
         Real value{};
         static_for<AggregateTraits::Elements>([&](auto i) CODI_LAMBDA_INLINE {
-          AggregateTraits::template arrayAccess<i.value>(value) = ConversionOperator::fromDataStore(constantData[constantValueOffset + i.value]);
+          AggregateTraits::template arrayAccess<i.value>(value) =
+              ConversionOperator::fromDataStore(constantData[constantValueOffset + i.value]);
         });
 
         return ResultType(value);
@@ -194,7 +195,7 @@ namespace codi {
       using ResultType = BinaryExpression<OpReal, ArgAMod, ArgBMod, Operation>;
 
       CODI_INLINE static ResultType construct(Real* primalVector, Identifier const* const identifiers,
-                                  PassiveReal const* const constantData) {
+                                              PassiveReal const* const constantData) {
         return ResultType(ArgAConstructor::construct(primalVector, identifiers, constantData),
                           ArgBConstructor::construct(primalVector, identifiers, constantData));
       }
@@ -225,7 +226,7 @@ namespace codi {
       using ResultType = UnaryExpression<OpReal, ArgMod, Operation>;
 
       CODI_INLINE static ResultType construct(Real* primalVector, Identifier const* const identifiers,
-                                  PassiveReal const* const constantData) {
+                                              PassiveReal const* const constantData) {
         return ResultType(ArgConstructor::construct(primalVector, identifiers, constantData));
       }
   };

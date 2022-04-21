@@ -38,8 +38,6 @@
 #include <cmath>
 #include <type_traits>
 
-#include "../misc/macros.hpp"
-#include "../misc/memberStore.hpp"
 #include "../config.h"
 #include "../expressions/aggregate/aggregatedActiveType.hpp"
 #include "../expressions/aggregate/arrayAccessExpression.hpp"
@@ -49,14 +47,16 @@
 #include "../expressions/logic/helpers/jacobianComputationLogic.hpp"
 #include "../expressions/logic/traversalLogic.hpp"
 #include "../expressions/referenceActiveType.hpp"
+#include "../misc/macros.hpp"
+#include "../misc/memberStore.hpp"
 #include "../traits/computationTraits.hpp"
 #include "../traits/expressionTraits.hpp"
-#include "misc/adjointVectorAccess.hpp"
-#include "misc/duplicateJacobianRemover.hpp"
 #include "commonTapeImplementation.hpp"
 #include "data/chunk.hpp"
 #include "data/chunkedData.hpp"
 #include "indices/indexManagerInterface.hpp"
+#include "misc/adjointVectorAccess.hpp"
+#include "misc/duplicateJacobianRemover.hpp"
 
 /** \copydoc codi::Namespace */
 namespace codi {
@@ -346,13 +346,11 @@ namespace codi {
       template<typename Aggregated, typename Type, typename Lhs, typename Rhs>
       CODI_INLINE void store(AggregatedActiveType<Aggregated, Type, Lhs>& lhs,
                              ExpressionInterface<Aggregated, Rhs> const& rhs) {
-
         using AggregatedTraits = RealTraits::AggregatedTypeTraits<Aggregated>;
 
         int constexpr Elements = AggregatedTraits::Elements;
 
         if (CODI_ENABLE_CHECK(Config::CheckTapeActivity, cast().isActive())) {
-
           Aggregated real{};
           Identifier identifierVec[Elements];
           static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
@@ -363,8 +361,7 @@ namespace codi {
           // Perform the storing for each index
           static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
             ActiveTypeWrapper<typename Lhs::ActiveInnerType> wrapper(
-                  AggregatedTraits::template arrayAccess<i.value>(real),
-                  identifierVec[i.value]);
+                AggregatedTraits::template arrayAccess<i.value>(real), identifierVec[i.value]);
             wrapper = ArrayAccessExpression<Aggregated, i.value, Rhs>(rhs);
           });
 

@@ -34,8 +34,8 @@
  */
 #pragma once
 
-#include "../misc/macros.hpp"
 #include "../config.h"
+#include "../misc/macros.hpp"
 
 /** \copydoc codi::Namespace */
 namespace codi {
@@ -50,7 +50,6 @@ namespace codi {
    */
   template<typename T_Real, typename T_Impl, typename = void>
   struct ExpressionMemberOperations {
-
       using Real = CODI_DD(T_Real, double);    ///< See ExpressionMemberOperations.
       using Impl = CODI_DD(T_Impl, CODI_ANY);  ///< See ExpressionMemberOperations.
 

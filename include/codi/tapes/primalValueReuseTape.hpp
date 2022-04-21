@@ -38,13 +38,13 @@
 #include <functional>
 #include <type_traits>
 
-#include "../misc/macros.hpp"
-#include "../misc/memberStore.hpp"
 #include "../config.h"
 #include "../expressions/lhsExpressionInterface.hpp"
 #include "../expressions/logic/compileTimeTraversalLogic.hpp"
 #include "../expressions/logic/constructStaticContext.hpp"
 #include "../expressions/logic/traversalLogic.hpp"
+#include "../misc/macros.hpp"
+#include "../misc/memberStore.hpp"
 #include "../traits/expressionTraits.hpp"
 #include "data/chunk.hpp"
 #include "indices/indexManagerInterface.hpp"
@@ -91,19 +91,18 @@ namespace codi {
       /// \copydoc codi::PositionalEvaluationTapeInterface::clearAdjoints
       void clearAdjoints(Position const& start, Position const& end) {
         auto clearFunc = [](
-            /* data from call */
-            ADJOINT_VECTOR_TYPE* adjointVector, size_t adjointVectorSize,
-            /* data from dynamicSizeData */
-            size_t& curDynamicSizePos, size_t const& endDynamicPos, char* const dynamicSizeValues,
-            /* data from fixedSizeData */
-            size_t& curFixedSizePos, size_t const& endFixedSizePos, char const* const fixedSizeValues)
-        {
+                             /* data from call */
+                             ADJOINT_VECTOR_TYPE* adjointVector, size_t adjointVectorSize,
+                             /* data from dynamicSizeData */
+                             size_t& curDynamicSizePos, size_t const& endDynamicPos, char* const dynamicSizeValues,
+                             /* data from fixedSizeData */
+                             size_t& curFixedSizePos, size_t const& endFixedSizePos,
+                             char const* const fixedSizeValues) {
           CODI_UNUSED(endDynamicPos);
 
           StmtFixedDataEntry data;
 
           while (curFixedSizePos > endFixedSizePos) {
-
             curFixedSizePos = data.readReverse(fixedSizeValues, curFixedSizePos);
 
             StmtCallArgs stmtArgs{data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues};
@@ -132,8 +131,7 @@ namespace codi {
           /* data from dynamicSizeData */
           size_t& curDynamicSizePos, size_t const& endDynamicPos, char* const dynamicSizeValues,
           /* data from fixedSizeData */
-          size_t& curFixedSizePos, size_t const& endFixedSizePos, char const* const fixedSizeValues
-      ) {
+          size_t& curFixedSizePos, size_t const& endFixedSizePos, char const* const fixedSizeValues) {
         CODI_UNUSED(endDynamicPos);
 
         StackArray<Real> lhsPrimals{};
@@ -141,12 +139,12 @@ namespace codi {
         StmtFixedDataEntry data;
 
         while (curFixedSizePos < endFixedSizePos) {
-
           curFixedSizePos = data.readForward(fixedSizeValues, curFixedSizePos);
 
           StmtCallArgs stmtArgs{data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues};
           StatementEvaluator::template call<StatementCall::Forward, PrimalValueReuseTape>(
-              data.handle, STMT_ARGS_UNPACK(stmtArgs), primalVector, adjointVector, lhsPrimals.data(), lhsTangents.data());
+              data.handle, STMT_ARGS_UNPACK(stmtArgs), primalVector, adjointVector, lhsPrimals.data(),
+              lhsTangents.data());
         }
       }
 
@@ -164,7 +162,6 @@ namespace codi {
         StmtFixedDataEntry data;
 
         while (curFixedSizePos < endFixedSizePos) {
-
           curFixedSizePos = data.readForward(fixedSizeValues, curFixedSizePos);
 
           StmtCallArgs stmtArgs{data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues};
@@ -187,7 +184,6 @@ namespace codi {
         StmtFixedDataEntry data;
 
         while (curFixedSizePos > endFixedSizePos) {
-
           curFixedSizePos = data.readReverse(fixedSizeValues, curFixedSizePos);
 
           StmtCallArgs stmtArgs{data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues};
@@ -199,19 +195,18 @@ namespace codi {
       /// \copydoc codi::PrimalValueBaseTape::internalResetPrimalValues
       CODI_INLINE void internalResetPrimalValues(Position const& pos) {
         auto clearFunc = [](
-            /* data from call */
-            Real* primalVector,
-            /* data from dynamicSizeData */
-            size_t& curDynamicSizePos, size_t const& endDynamicPos, char* const dynamicSizeValues,
-            /* data from fixedSizeData */
-            size_t& curFixedSizePos, size_t const& endFixedSizePos, char const* const fixedSizeValues)
-        {
+                             /* data from call */
+                             Real* primalVector,
+                             /* data from dynamicSizeData */
+                             size_t& curDynamicSizePos, size_t const& endDynamicPos, char* const dynamicSizeValues,
+                             /* data from fixedSizeData */
+                             size_t& curFixedSizePos, size_t const& endFixedSizePos,
+                             char const* const fixedSizeValues) {
           CODI_UNUSED(endDynamicPos);
 
           StmtFixedDataEntry data;
 
           while (curFixedSizePos > endFixedSizePos) {
-
             curFixedSizePos = data.readReverse(fixedSizeValues, curFixedSizePos);
 
             StmtCallArgs stmtArgs{data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues};
@@ -221,7 +216,8 @@ namespace codi {
         };
 
         using DynamicPosition = typename Base::DynamicSizeData::Position;
-        DynamicPosition startStmt = this->externalFunctionData.template extractPosition<DynamicPosition>(this->getPosition());
+        DynamicPosition startStmt =
+            this->externalFunctionData.template extractPosition<DynamicPosition>(this->getPosition());
         DynamicPosition endStmt = this->externalFunctionData.template extractPosition<DynamicPosition>(pos);
 
         this->dynamicSizeData.evaluateReverse(startStmt, endStmt, clearFunc, this->primals.data());

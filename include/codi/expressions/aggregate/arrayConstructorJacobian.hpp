@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../../misc/macros.hpp"
 #include "../../config.h"
+#include "../../misc/macros.hpp"
 #include "../../traits/realTraits.hpp"
 #include "../expressionInterface.hpp"
 
@@ -18,7 +18,7 @@ namespace codi {
 
       static size_t constexpr index = CODI_DD(T_index, 0);
 
-      Creator const& creator; ///< Reference to the creator.
+      Creator const& creator;  ///< Reference to the creator.
 
       /// Constructor.
       CODI_INLINE ArrayConstructorJacobian(Creator const& creator) : creator(creator) {}
@@ -26,7 +26,9 @@ namespace codi {
 
   /// Detection of the application of an Jacobian from an array constructor. See ArrayConstructorJacobian.
   template<typename Type, typename Creator, typename ReturnType, size_t index>
-  CODI_INLINE ReturnType operator*(ArrayConstructorJacobian<Creator, ReturnType, index> const& reduce, Type const& jac) {
-    return RealTraits::AggregatedTypeTraits<typename Creator::Real>::template adjointOfConstructor<index>(reduce.creator.getValue(), jac);
+  CODI_INLINE ReturnType operator*(ArrayConstructorJacobian<Creator, ReturnType, index> const& reduce,
+                                   Type const& jac) {
+    return RealTraits::AggregatedTypeTraits<typename Creator::Real>::template adjointOfConstructor<index>(
+        reduce.creator.getValue(), jac);
   }
 }

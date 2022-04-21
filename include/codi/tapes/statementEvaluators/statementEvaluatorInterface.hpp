@@ -81,8 +81,8 @@ namespace codi {
    * the generator.
    *
    * In general, implementations of this interface need to store functions pointers to the `evaluate`
-   * functions of the StatementCallGenerator structures in the StatementEvaluatorTapeInterface or the `evaluateInner` function
-   * for the StatementEvaluatorInnerTapeInterface.
+   * functions of the StatementCallGenerator structures in the StatementEvaluatorTapeInterface or the `evaluateInner`
+   * function for the StatementEvaluatorInnerTapeInterface.
    *
    * A usual call flow for the first approach is (see also the code for ReverseStatementEvaluator):
    * \code{.cpp}

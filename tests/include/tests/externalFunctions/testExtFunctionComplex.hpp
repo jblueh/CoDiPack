@@ -39,7 +39,7 @@
 #include "../expressions/complex/complexTestHelpers.hpp"
 #include "multiplyExternalFunction.hpp"
 
-struct TestExtFunctionComplex: public TestInterface {
+struct TestExtFunctionComplex : public TestInterface {
   public:
 
     template<typename T>
@@ -58,7 +58,6 @@ struct TestExtFunctionComplex: public TestInterface {
 
     template<typename Number>
     static void func(Number* x, Number* y) {
-
       using C = Complex<Number>;
       C xC[in_complex_count];
       C yC[out_complex_count];

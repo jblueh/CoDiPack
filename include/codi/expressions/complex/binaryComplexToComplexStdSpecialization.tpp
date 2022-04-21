@@ -20,15 +20,15 @@
 #ifndef FUNCTION
   #include <complex>
 
-  #include "../../misc/macros.hpp"
   #include "../../config.h"
+  #include "../../misc/macros.hpp"
   #include "../activeType.hpp"
-  #include "../constantExpression.hpp"
   #include "../binaryExpression.hpp"
+  #include "../constantExpression.hpp"
   #include "adjointComplexToRealCast.hpp"
 
-#define OPERATION_LOGIC codi::BinaryOperation
-#define FUNCTION func
+  #define OPERATION_LOGIC codi::BinaryOperation
+  #define FUNCTION func
 
 namespace std {
 #endif
@@ -37,46 +37,35 @@ namespace std {
 
   /// Function overload for FUNCTION(complex, complex)
   template<typename Tape>
-  CODI_INLINE codi::BinaryExpression<complex<typename Tape::Real>,
-    complex<codi::ActiveType<Tape>>,
-    complex<codi::ActiveType<Tape>>,
-    OPERATION_LOGIC>
+  CODI_INLINE codi::BinaryExpression<complex<typename Tape::Real>, complex<codi::ActiveType<Tape>>,
+                                     complex<codi::ActiveType<Tape>>, OPERATION_LOGIC>
   FUNCTION(complex<codi::ActiveType<Tape>> const& argA, complex<codi::ActiveType<Tape>> const& argB) {
-    return codi::BinaryExpression<
-        complex<typename Tape::Real>,
-        complex<codi::ActiveType<Tape>>,
-        complex<codi::ActiveType<Tape>>,
-        OPERATION_LOGIC>(argA, argB);
+    return codi::BinaryExpression<complex<typename Tape::Real>, complex<codi::ActiveType<Tape>>,
+                                  complex<codi::ActiveType<Tape>>, OPERATION_LOGIC>(argA, argB);
   }
 
   // Define complex real bindings
 
   /// Function overload for FUNCTION(complex, real)
   template<typename Tape>
-  CODI_INLINE codi::BinaryExpression<complex<typename Tape::Real>,
-    complex<codi::ActiveType<Tape>>,
-    codi::AdjointComplexToRealCast<typename Tape::Real, codi::ActiveType<Tape>>,
-    OPERATION_LOGIC>
+  CODI_INLINE codi::BinaryExpression<complex<typename Tape::Real>, complex<codi::ActiveType<Tape>>,
+                                     codi::AdjointComplexToRealCast<typename Tape::Real, codi::ActiveType<Tape>>,
+                                     OPERATION_LOGIC>
   FUNCTION(complex<codi::ActiveType<Tape>> const& argA, codi::ActiveType<Tape> const& argB) {
-    return codi::BinaryExpression<
-        complex<typename Tape::Real>,
-        complex<codi::ActiveType<Tape>>,
-        codi::AdjointComplexToRealCast<typename Tape::Real, codi::ActiveType<Tape>>,
-        OPERATION_LOGIC>(argA, codi::AdjointComplexToRealCast<typename Tape::Real, codi::ActiveType<Tape>>(argB));
+    return codi::BinaryExpression<complex<typename Tape::Real>, complex<codi::ActiveType<Tape>>,
+                                  codi::AdjointComplexToRealCast<typename Tape::Real, codi::ActiveType<Tape>>,
+                                  OPERATION_LOGIC>(
+        argA, codi::AdjointComplexToRealCast<typename Tape::Real, codi::ActiveType<Tape>>(argB));
   }
 
   /// Function overload for FUNCTION(complex, const real)
   template<typename Tape>
-  CODI_INLINE codi::BinaryExpression<complex<typename Tape::Real>,
-    complex<codi::ActiveType<Tape>>,
-    codi::ConstantExpression<typename Tape::PassiveReal>,
-    OPERATION_LOGIC>
+  CODI_INLINE codi::BinaryExpression<complex<typename Tape::Real>, complex<codi::ActiveType<Tape>>,
+                                     codi::ConstantExpression<typename Tape::PassiveReal>, OPERATION_LOGIC>
   FUNCTION(complex<codi::ActiveType<Tape>> const& argA, typename Tape::PassiveReal const& argB) {
-    return codi::BinaryExpression<
-        complex<typename Tape::Real>,
-        complex<codi::ActiveType<Tape>>,
-        codi::ConstantExpression<typename Tape::PassiveReal>,
-        OPERATION_LOGIC>(argA, codi::ConstantExpression<typename Tape::PassiveReal>(argB));
+    return codi::BinaryExpression<complex<typename Tape::Real>, complex<codi::ActiveType<Tape>>,
+                                  codi::ConstantExpression<typename Tape::PassiveReal>, OPERATION_LOGIC>(
+        argA, codi::ConstantExpression<typename Tape::PassiveReal>(argB));
   }
 
   // Define real complex bindings
@@ -84,29 +73,23 @@ namespace std {
   /// Function overload for FUNCTION(real, complex)
   template<typename Tape>
   CODI_INLINE codi::BinaryExpression<complex<typename Tape::Real>,
-    codi::AdjointComplexToRealCast<typename Tape::Real, codi::ActiveType<Tape>>,
-    complex<codi::ActiveType<Tape>>,
-    OPERATION_LOGIC>
+                                     codi::AdjointComplexToRealCast<typename Tape::Real, codi::ActiveType<Tape>>,
+                                     complex<codi::ActiveType<Tape>>, OPERATION_LOGIC>
   FUNCTION(codi::ActiveType<Tape> const& argA, complex<codi::ActiveType<Tape>> const& argB) {
-    return codi::BinaryExpression<
-        complex<typename Tape::Real>,
-        codi::AdjointComplexToRealCast<typename Tape::Real, codi::ActiveType<Tape>>,
-        complex<codi::ActiveType<Tape>>,
-        OPERATION_LOGIC>(codi::AdjointComplexToRealCast<typename Tape::Real, codi::ActiveType<Tape>>(argA), argB);
+    return codi::BinaryExpression<complex<typename Tape::Real>,
+                                  codi::AdjointComplexToRealCast<typename Tape::Real, codi::ActiveType<Tape>>,
+                                  complex<codi::ActiveType<Tape>>, OPERATION_LOGIC>(
+        codi::AdjointComplexToRealCast<typename Tape::Real, codi::ActiveType<Tape>>(argA), argB);
   }
 
   /// Function overload for FUNCTION(const real, complex)
   template<typename Tape>
-  CODI_INLINE codi::BinaryExpression<complex<typename Tape::Real>,
-    codi::ConstantExpression<typename Tape::PassiveReal>,
-    complex<codi::ActiveType<Tape>>,
-    OPERATION_LOGIC>
+  CODI_INLINE codi::BinaryExpression<complex<typename Tape::Real>, codi::ConstantExpression<typename Tape::PassiveReal>,
+                                     complex<codi::ActiveType<Tape>>, OPERATION_LOGIC>
   FUNCTION(typename Tape::PassiveReal const& argA, complex<codi::ActiveType<Tape>> const& argB) {
-    return codi::BinaryExpression<
-        complex<typename Tape::Real>,
-        codi::ConstantExpression<typename Tape::PassiveReal>,
-        complex<codi::ActiveType<Tape>>,
-        OPERATION_LOGIC>(codi::ConstantExpression<typename Tape::PassiveReal>(argA), argB);
+    return codi::BinaryExpression<complex<typename Tape::Real>, codi::ConstantExpression<typename Tape::PassiveReal>,
+                                  complex<codi::ActiveType<Tape>>, OPERATION_LOGIC>(
+        codi::ConstantExpression<typename Tape::PassiveReal>(argA), argB);
   }
 
 // Create a correct include environment for viewing and programming in an IDE

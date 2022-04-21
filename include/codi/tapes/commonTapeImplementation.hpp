@@ -37,15 +37,15 @@
 #include <algorithm>
 #include <type_traits>
 
+#include "../config.h"
 #include "../misc/fileIo.hpp"
 #include "../misc/macros.hpp"
-#include "../config.h"
-#include "misc/externalFunction.hpp"
-#include "misc/vectorAccessInterface.hpp"
 #include "data/dataInterface.hpp"
 #include "data/position.hpp"
 #include "indices/indexManagerInterface.hpp"
 #include "interfaces/fullTapeInterface.hpp"
+#include "misc/externalFunction.hpp"
+#include "misc/vectorAccessInterface.hpp"
 
 /** \copydoc codi::Namespace */
 namespace codi {

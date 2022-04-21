@@ -34,12 +34,12 @@
  */
 #pragma once
 
-#include "../misc/macros.hpp"
 #include "../config.h"
-#include "../expressions/lhsExpressionInterface.hpp"
-#include "../expressions/logic/helpers/jacobianComputationLogic.hpp"
 #include "../expressions/aggregate/aggregatedActiveType.hpp"
 #include "../expressions/aggregate/arrayAccessExpression.hpp"
+#include "../expressions/lhsExpressionInterface.hpp"
+#include "../expressions/logic/helpers/jacobianComputationLogic.hpp"
+#include "../misc/macros.hpp"
 #include "../traits/expressionTraits.hpp"
 #include "../traits/realTraits.hpp"
 #include "../traits/tapeTraits.hpp"
@@ -107,7 +107,6 @@ namespace codi {
         public:
           template<typename Node, typename Jacobian>
           CODI_INLINE void handleJacobianOnActive(Node const& node, Jacobian jacobianExpr, Gradient& lhsGradient) {
-
             Real jacobian = jacobianExpr;
 
             if (CODI_ENABLE_CHECK(Config::IgnoreInvalidJacobians, RealTraits::isTotalFinite(jacobian))) {
@@ -138,11 +137,9 @@ namespace codi {
       template<typename Aggregated, typename Type, typename Lhs, typename Rhs>
       CODI_INLINE void store(AggregatedActiveType<Aggregated, Type, Lhs>& lhs,
                              ExpressionInterface<Aggregated, Rhs> const& rhs) {
-
         using AggregatedTraits = RealTraits::AggregatedTypeTraits<Aggregated>;
         int constexpr Elements = AggregatedTraits::Elements;
         LocalReverseLogic reversal;
-
 
         Gradient newGradient[Elements] = {};
         static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {

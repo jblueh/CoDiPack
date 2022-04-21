@@ -36,9 +36,9 @@
 
 #include <type_traits>
 
-#include "../misc/macros.hpp"
 #include "../config.h"
 #include "../expressions/logic/compileTimeTraversalLogic.hpp"
+#include "../misc/macros.hpp"
 #include "misc/enableIfHelpers.hpp"
 
 /** \copydoc codi::Namespace */
@@ -98,7 +98,6 @@ namespace codi {
     /// @tparam T_isStatic If a static context active type should be used.
     template<typename T_Real, typename T_Tape, bool T_isStatic = false, typename = void>
     struct ActiveResultImpl {
-
         using Real = CODI_DD(T_Real, CODI_ANY);
         using Tape = CODI_DD(T_Tape, CODI_ANY);
 
@@ -113,7 +112,6 @@ namespace codi {
     /// Create an CoDiPack active type that can capture an expression result.
     template<typename T_Expr, bool isStatic = false, typename = void>
     struct ActiveResultFromExprImpl {
-
         using Expr = CODI_DD(T_Expr, CODI_ANY);
 
         /// The resulting active type of an expression.
@@ -271,7 +269,6 @@ namespace codi {
     // Can not directly be specialized since EnableIfExpression is not available at the time of definition.
     template<typename T_Expr, bool isStatic>
     struct ActiveResultFromExprImpl<T_Expr, isStatic, EnableIfExpression<T_Expr>> {
-
         using Expr = CODI_DD(T_Expr, CODI_ANY);
         using Real = typename Expr::Real;
         using Tape = typename Expr::ADLogic;
@@ -280,7 +277,6 @@ namespace codi {
         using ActiveResult = typename ActiveResultImpl<Real, Tape, isStatic>::ActiveResult;
     };
 #endif
-
 
     /// @}
   }

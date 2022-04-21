@@ -34,8 +34,8 @@
  */
 #pragma once
 
-#include "../misc/macros.hpp"
 #include "../config.h"
+#include "../misc/macros.hpp"
 #include "expressionInterface.hpp"
 #include "lhsExpressionInterface.hpp"
 
@@ -50,7 +50,8 @@ namespace codi {
    */
   template<typename T_Lhs, typename T_Rhs>
   struct AssignExpression {
-      using Lhs = CODI_DD(T_Lhs, CODI_T(LhsExpressionInterface<double, double, CODI_ANY, CODI_ANY>)); ///< See AssignExpression.
-      using Rhs = CODI_DD(T_Rhs, CODI_T(ExpressionInterface<double, CODI_ANY>)); ///< See AssignExpression.
+      using Lhs = CODI_DD(
+          T_Lhs, CODI_T(LhsExpressionInterface<double, double, CODI_ANY, CODI_ANY>));  ///< See AssignExpression.
+      using Rhs = CODI_DD(T_Rhs, CODI_T(ExpressionInterface<double, CODI_ANY>));       ///< See AssignExpression.
   };
 }

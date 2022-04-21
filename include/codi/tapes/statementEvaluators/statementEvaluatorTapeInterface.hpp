@@ -42,17 +42,19 @@
 namespace codi {
 
   /// Defines all the operations which can be evaluated on a statement by a tape.
-  enum class StatementCall {
-    ClearAdjoint, ///< Clear the adjoints of the expression.
-    Forward,      ///< Evaluate expression in a forward mode.
-    Primal,       ///< Evaluate primal expression.
-    ResetPrimal,  ///< Reset the primal values of the expression.
-    Reverse,      ///< Evaluate expression in a reverse mode.
-    N_Elements    ///< Number of elements.
+  enum class StatementCall
+  {
+    ClearAdjoint,  ///< Clear the adjoints of the expression.
+    Forward,       ///< Evaluate expression in a forward mode.
+    Primal,        ///< Evaluate primal expression.
+    ResetPrimal,   ///< Reset the primal values of the expression.
+    Reverse,       ///< Evaluate expression in a reverse mode.
+    N_Elements     ///< Number of elements.
   };
 
-#define CODI_STMT_CALL_GEN_ARGS StatementCall::ClearAdjoint, StatementCall::Forward, StatementCall::Primal,\
-                                StatementCall::ResetPrimal, StatementCall::Reverse
+#define CODI_STMT_CALL_GEN_ARGS                                                                           \
+  StatementCall::ClearAdjoint, StatementCall::Forward, StatementCall::Primal, StatementCall::ResetPrimal, \
+      StatementCall::Reverse
 
   /**
    * @brief Tape side interface for StatementEvaluatorInterface.
@@ -74,7 +76,6 @@ namespace codi {
       /// This structure is accessed by the StatementEvaluatorInterface.
       template<StatementCall type, typename Expr>
       struct StatementCallGenerator {
-
           /// Evaluate the full expression.
           template<typename... Args>
           CODI_INLINE static void evaluate(Args&&... args);
@@ -102,7 +103,6 @@ namespace codi {
       /// This structure is accessed by the StatementEvaluatorInterface.
       template<StatementCall type, typename Expr>
       struct StatementCallGenerator {
-
           /// Evaluate expression in a forward mode.
           template<typename... Args>
           CODI_INLINE static void evaluateInner(Args&&... args);

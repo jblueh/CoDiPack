@@ -36,12 +36,12 @@
 
 #include <iostream>
 
-#include "../misc/macros.hpp"
 #include "../config.h"
+#include "../misc/macros.hpp"
 #include "../traits/expressionTraits.hpp"
 #include "../traits/realTraits.hpp"
-#include "logic/nodeInterface.hpp"
 #include "expressionMemberOperations.hpp"
+#include "logic/nodeInterface.hpp"
 
 /** \copydoc codi::Namespace */
 namespace codi {
@@ -57,8 +57,7 @@ namespace codi {
    * @tparam T_Impl  Class implementing this interface.
    */
   template<typename T_Real, typename T_Impl>
-  struct ExpressionInterface : public NodeInterface<T_Impl>,
-                               public ExpressionMemberOperations<T_Real, T_Impl>{
+  struct ExpressionInterface : public NodeInterface<T_Impl>, public ExpressionMemberOperations<T_Real, T_Impl> {
     public:
 
       using Real = CODI_DD(T_Real, double);               ///< See ExpressionInterface.

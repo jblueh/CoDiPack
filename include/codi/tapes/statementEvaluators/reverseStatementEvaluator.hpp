@@ -38,11 +38,11 @@
 #include <functional>
 #include <type_traits>
 
+#include "../../expressions/activeType.hpp"
+#include "../../expressions/assignExpression.hpp"
 #include "../../misc/exceptions.hpp"
 #include "../../misc/macros.hpp"
 #include "../../misc/memberStore.hpp"
-#include "../../expressions/activeType.hpp"
-#include "../../expressions/assignExpression.hpp"
 #include "statementEvaluatorInterface.hpp"
 #include "statementEvaluatorTapeInterface.hpp"
 
@@ -73,7 +73,7 @@ namespace codi {
 
         Function func = (Function)h;
 
-        if(StatementCall::Reverse == type) {
+        if (StatementCall::Reverse == type) {
           func(std::forward<Args>(args)...);
         } else {
           CODI_EXCEPTION("ReverseStatementEvaluator only supports reverse evaluation calls.");
