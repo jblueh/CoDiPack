@@ -37,9 +37,11 @@
 #include "codi/config.h"
 #include "codi/expressions/activeType.hpp"
 #include "codi/expressions/activeTypeWrapper.hpp"
+#include "codi/expressions/complex/stdComplex.hpp"
 #include "codi/expressions/immutableActiveType.hpp"
 #include "codi/expressions/real/allOperators.hpp"
 #include "codi/expressions/referenceActiveType.hpp"
+#include "codi/expressions/static/staticContextAggregateActiveType.hpp"
 #include "codi/tapes/data/blockData.hpp"
 #include "codi/tapes/data/chunkedData.hpp"
 #include "codi/tapes/forwardEvaluation.hpp"
@@ -66,7 +68,6 @@
 #include "codi/traits/computationTraits.hpp"
 #include "codi/traits/numericLimits.hpp"
 #include "codi/traits/tapeTraits.hpp"
-#include "codi/expressions/complex/stdComplex.hpp"
 
 #if CODI_EnableMPI
   #include "codi/tools/mpi/codiMpiTypes.hpp"

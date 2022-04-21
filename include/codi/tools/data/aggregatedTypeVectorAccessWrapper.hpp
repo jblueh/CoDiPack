@@ -40,6 +40,7 @@
 #include "../../misc/macros.hpp"
 #include "../../config.h"
 #include "../../expressions/lhsExpressionInterface.hpp"
+#include "../../expressions/aggregate/aggregatedActiveType.hpp"
 #include "../../tapes/misc/vectorAccessInterface.hpp"
 #include "../../traits/computationTraits.hpp"
 #include "../../traits/expressionTraits.hpp"
@@ -81,53 +82,49 @@ namespace codi {
       using Type = CODI_DD(T_Type, CODI_ANY);  ///< See AggregatedTypeVectorAccessWrapperBase.
   };
 
-  /**
-   * @brief Implements all methods from AggregatedTypeVectorAccessWrapper, that can be implemented with combinations of
-   * other methods.
-   *
-   * @tparam T_Real  Primal value type of the combined type.
-   * @tparam T_Identifier  Identifier type type of the combined type.
-   * @tparam T_InnerInterface  The VectorAccessInterface of the underlying tape.
-   */
-  template<typename T_Real, typename T_Identifier, typename T_InnerInterface>
-  struct AggregatedTypeVectorAccessWrapperBase : public VectorAccessInterface<T_Real, T_Identifier> {
+  /// Specialization of AggregatedTypeVectorAccessWrapper for aggregated types.
+  ///
+  /// @tparam The aggregated data type.
+  template<typename T_Type>
+  struct AggregatedTypeVectorAccessWrapper<T_Type, RealTraits::EnableIfAggregatedActiveType<T_Type>> {
     public:
 
-      using Real = CODI_DD(T_Real, CODI_ANY);              ///< See RealTraits::DataExtraction::Real.
-      using Identifier = CODI_DD(T_Identifier, CODI_ANY);  ///< See RealTraits::DataExtraction::Identifier.
+      using Type = CODI_DD(T_Type, CODI_T(AggregatedActiveType<double, CODI_ANY, CODI_ANY>)); ///< See AggregatedTypeVectorAccessWrapper.
+      using InnerType = typename Type::ActiveInnerType; ///< Active inner type of the aggregate.
+      static int constexpr Elements = Type::Elements;  ///< Number of elements in the aggregate.
 
-      using InnerInterface =
-          CODI_DD(T_InnerInterface,
-                  CODI_T(VectorAccessInterface<double, int>));  ///< See AggregatedTypeVectorAccessWrapperBase.
+      /// Inner interface expected by this wrapper.
+      using InnerInterface = VectorAccessInterface< typename InnerType::Real, typename InnerType::Identifier>;
 
-    protected:
+      using Real = typename RealTraits::DataExtraction<T_Type>::Real; ///< Real value of the aggregate.
+      using Identifier = typename RealTraits::DataExtraction<T_Type>::Identifier; /// Identifier value of the aggregate.
 
-      InnerInterface& innerInterface;  ///< Reference to the accessor of the underlying tape.
+      using Traits = RealTraits::AggregatedTypeTraits<Real>; ///< Aggregated type traits.
 
-      std::vector<Real> lhs;  ///< Temporary storage for indirect adjoint or tangent updates.
-      size_t lhsOffset;       ///< Offset into lhs vector
-
-    public:
+      InnerInterface& innerInterface; ///< Reference to inner interface.
+      int lhsOffset;                  ///< Offset of indirect access if this aggregated type is part of an outer aggregated type.
 
       /// Constructor
-      AggregatedTypeVectorAccessWrapperBase(InnerInterface* innerInterface)
-          : innerInterface(*innerInterface), lhs(innerInterface->getVectorSize()) {}
+      CODI_INLINE AggregatedTypeVectorAccessWrapper(InnerInterface* innerInterface) : innerInterface(*innerInterface), lhsOffset(0) {
+        innerInterface->setSizeForIndirectAccess(Elements);
+      }
 
       /*******************************************************************************/
       /// @name Misc
 
       /// \copydoc VectorAccessInterface::getVectorSize()
-      size_t getVectorSize() const {
+      CODI_INLINE size_t getVectorSize() const {
         return innerInterface.getVectorSize();
       }
 
       /// \copydoc VectorAccessInterface::isLhsZero()
-      bool isLhsZero() {
+      CODI_INLINE bool isLhsZero() {
         bool isZero = true;
 
-        for (size_t curDim = 0; isZero && curDim < innerInterface.getVectorSize(); curDim += 1) {
-          isZero &= RealTraits::isTotalZero(lhs[lhsOffset + curDim]);
-        }
+        static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
+          innerInterface.setActiveViariableForIndirectAccess(lhsOffset + i.value);
+          isZero &= innerInterface.isLhsZero();
+        });
 
         return isZero;
       }
@@ -135,68 +132,98 @@ namespace codi {
       /*******************************************************************************/
       /// @name Indirect adjoint access
 
-      /// \copydoc VectorAccessInterface::setLhsAdjoint()
-      void setLhsAdjoint(Identifier const& index) {
-        getAdjointVec(index, &lhs[lhsOffset]);
-        this->resetAdjointVec(index);
+      /// \copydoc codi::VectorAccessInterface::setLhsAdjoint
+      CODI_INLINE void setLhsAdjoint(Identifier const& index) {
+        static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
+          innerInterface.setActiveViariableForIndirectAccess(lhsOffset + i.value);
+          innerInterface.setLhsAdjoint(index[i.value]);
+        });
       }
 
-      /// \copydoc VectorAccessInterface::updateAdjointWithLhs()
-      void updateAdjointWithLhs(Identifier const& index, Real const& jacobian) {
-        for (size_t curDim = 0; curDim < innerInterface.getVectorSize(); curDim += 1) {
-          Real update = jacobian * lhs[lhsOffset + curDim];
-          this->updateAdjoint(index, curDim, update);
-        }
+      /// \copydoc codi::VectorAccessInterface::updateAdjointWithLhs
+      CODI_INLINE void updateAdjointWithLhs(Identifier const& index, Real const& jacobian) {
+        static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
+          innerInterface.setActiveViariableForIndirectAccess(lhsOffset + i.value);
+          innerInterface.updateAdjointWithLhs(index[i.value], Traits::template arrayAccess<i.value>(jacobian));
+        });
       }
 
       /*******************************************************************************/
       /// @name Indirect tangent access
 
-      /// \copydoc VectorAccessInterface::setLhsTangent()
-      void setLhsTangent(Identifier const& index) {
-        updateAdjointVec(index, lhs.data());
-
-        for (size_t curDim = 0; curDim < lhs.size(); curDim += 1) {
-          lhs[curDim] = Real();
-        }
+      /// \copydoc codi::VectorAccessInterface::setLhsTangent
+      CODI_INLINE void setLhsTangent(Identifier const& index) {
+        static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
+          innerInterface.setActiveViariableForIndirectAccess(lhsOffset + i.value);
+          innerInterface.setLhsTangent(index[i.value]);
+        });
       }
 
-      /// \copydoc VectorAccessInterface::updateTangentWithLhs()
-      void updateTangentWithLhs(Identifier const& index, Real const& jacobian) {
-        for (size_t curDim = 0; curDim < innerInterface.getVectorSize(); curDim += 1) {
-          lhs[lhsOffset + curDim] += jacobian * this->getAdjoint(index, curDim);
-        }
+      /// \copydoc codi::VectorAccessInterface::updateTangentWithLhs
+      CODI_INLINE void updateTangentWithLhs(Identifier const& index, Real const& jacobian) {
+        static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
+          innerInterface.setActiveViariableForIndirectAccess(lhsOffset + i.value);
+          innerInterface.updateTangentWithLhs(index[i.value], Traits::template arrayAccess<i.value>(jacobian));
+        });
       }
 
       /*******************************************************************************/
       /// @name Indirect adjoint/tangent access for functions with multiple outputs
 
       /// \copydoc VectorAccessInterface::setSizeForIndirectAccess()
-      void setSizeForIndirectAccess(size_t size) {
-        size_t newSize = size * innerInterface.getVectorSize();
-        if(newSize > lhs.size()) {
-          lhs.resize(newSize);
-        }
+      CODI_INLINE void setSizeForIndirectAccess(size_t size) {
+        innerInterface.setSizeForIndirectAccess(size * Elements);
       }
 
       /// \copydoc VectorAccessInterface::setActiveViariableForIndirectAccess()
-      void setActiveViariableForIndirectAccess(size_t pos) {
-        lhsOffset = pos * innerInterface.getVectorSize();
+      CODI_INLINE void setActiveViariableForIndirectAccess(size_t pos) {
+        lhsOffset = pos * Elements;
       }
-
 
       /*******************************************************************************/
       /// @name Direct adjoint access
 
+      /// \copydoc VectorAccessInterface::resetAdjoint()
+      CODI_INLINE void resetAdjoint(Identifier const& index, size_t dim) {
+        static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
+          innerInterface.resetAdjoint(index[i.value], dim);
+        });
+      }
+
+      /// \copydoc VectorAccessInterface::resetAdjointVec()
+      CODI_INLINE void resetAdjointVec(Identifier const& index) {
+        static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
+          innerInterface.resetAdjointVec(index[i.value]);
+        });
+      }
+
+      /// \copydoc VectorAccessInterface::getAdjoint()
+      CODI_INLINE Real getAdjoint(Identifier const& index, size_t dim) {
+        Real adjoint{};
+
+        static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
+          Traits::template arrayAccess<i.value>(adjoint) = innerInterface.getAdjoint(index[i.value], dim);
+        });
+
+        return adjoint;
+      }
+
       /// \copydoc VectorAccessInterface::getAdjointVec()
-      void getAdjointVec(Identifier const& index, Real* const vec) {
+      CODI_INLINE void getAdjointVec(Identifier const& index, Real* const vec) {
         for (size_t curDim = 0; curDim < innerInterface.getVectorSize(); curDim += 1) {
           vec[curDim] = this->getAdjoint(index, curDim);
         }
       }
 
+      /// \copydoc VectorAccessInterface::updateAdjoint()
+      CODI_INLINE void updateAdjoint(Identifier const& index, size_t dim, Real const& adjoint) {
+        static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
+          innerInterface.updateAdjoint(index[i.value], dim, Traits::template arrayAccess<i.value>(adjoint));
+        });
+      }
+
       /// \copydoc VectorAccessInterface::updateAdjointVec()
-      void updateAdjointVec(Identifier const& index, Real const* const vec) {
+      CODI_INLINE void updateAdjointVec(Identifier const& index, Real const* const vec) {
         for (size_t curDim = 0; curDim < innerInterface.getVectorSize(); curDim += 1) {
           this->updateAdjoint(index, curDim, vec[curDim]);
         }
@@ -206,8 +233,26 @@ namespace codi {
       /// @name Primal access
 
       /// \copydoc VectorAccessInterface::hasPrimals()
-      bool hasPrimals() {
+      CODI_INLINE bool hasPrimals() {
         return innerInterface.hasPrimals();
+      }
+
+      /// \copydoc VectorAccessInterface::setPrimal()
+      CODI_INLINE void setPrimal(Identifier const& index, Real const& primal) {
+        static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
+           innerInterface.setPrimal(index[i.value], Traits::template arrayAccess<i.value>(primal));
+        });
+      }
+
+      /// \copydoc VectorAccessInterface::getPrimal()
+      CODI_INLINE Real getPrimal(Identifier const& index) {
+        Real primal{};
+
+        static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
+          Traits::template arrayAccess<i.value>(primal) = innerInterface.getPrimal(index[i.value]);
+        });
+
+        return primal;
       }
   };
 

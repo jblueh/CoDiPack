@@ -47,6 +47,9 @@
 /** \copydoc codi::Namespace */
 namespace codi {
 
+  template<typename T_Real, typename T_ActiveInnerType, typename T_Impl, bool T_isStatic>
+  struct AggregatedActiveTypeBase;
+
   /// Traits for values that can be used as real values e.g. double, float, codi::RealReverse etc..
   namespace RealTraits {
 
@@ -167,7 +170,7 @@ namespace codi {
 
         using Real = typename Type::Real;  ///< Type of primal values extracted from the type with AD values.
         using Identifier =
-        typename Type::Identifier;  ///< Type of identifier values extracted from the type with AD values.
+            typename Type::Identifier;  ///< Type of identifier values extracted from the type with AD values.
 
         /// Extract the primal values from a type of aggregated active types.
         CODI_INLINE static Real getValue(Type const& v);
@@ -211,7 +214,7 @@ namespace codi {
         CODI_INLINE static Real registerExternalFunctionOutput(Type& v);
     };
 
-    /** TODO
+    /**
      * @brief Methods that access inner values of aggregated types that contain CoDiPack active types.
      *
      * An aggregated type is for example std::complex<codi::RealReverse>, which contains two CoDiPack values. The
@@ -224,24 +227,13 @@ namespace codi {
     struct AggregatedTypeTraits {
       public:
         using Type = CODI_DD(T_Type, CODI_ANY);  ///< See AggregatedTypeTraits.
-
         using InnerType = CODI_ANY; ///< Inner type of the aggregated type.
-
         using Real = CODI_ANY; ///< Real version of the aggregated type without the active CoDiPack types.
 
         static int constexpr Elements = 0; ///< Number of elements of the aggregated type.
 
-        template<int pos>
-        CODI_INLINE static InnerType& arrayAccess(Type& v) {
-          CODI_UNUSED(v);
-          static_assert(false && std::is_void<Type>::value,
-                        "Instantiation of unspecialized AggregatedTypeTraits.");
-
-          return *(InnerType*)(nullptr);
-        }
-
         /// Array construction of the aggregated type. That is defined as
-        /// w = T(v_0, v_1, ..., v_N) where N is the number of elements.
+        /// \f$ w = T(v_0, v_1, ..., v_N) \f$ where \f$ N \f$  is the number of elements.
         static Type arrayConstructor(InnerType const* v) {
           CODI_UNUSED(v);
           static_assert(false && std::is_void<Type>::value,
@@ -254,7 +246,7 @@ namespace codi {
         /// defined as w = T(v_0, v_1, ..., v_N) where N is the number of elements. Then this function needs to implement
         /// the adjoint formulation of this construction, which is defined as
         ///
-        /// \bar v_i = dT/dv_i^T * \bar w.
+        /// \f$ \bar v_i = dT/dv_i^T * \bar w \f$ .
         template<size_t element>
         static InnerType adjointOfConstructor(Type const& w, Type const& w_b) {
           CODI_UNUSED(w, w_b);
@@ -265,7 +257,7 @@ namespace codi {
         }
 
         /// Implementation of the array access. That is defined as
-        /// v = w[i] with w is our type.
+        /// \f$ v = w[i] \f$ with \f$ w \f$ is our type.
         template<size_t element>
         static InnerType arrayAccess(Type const& w) {
           CODI_UNUSED(w);
@@ -275,9 +267,19 @@ namespace codi {
           return InnerType{};
         }
 
+        /// \copydoc AggregatedTypeTraits::arrayAccess()
+        template<int pos>
+        CODI_INLINE static InnerType& arrayAccess(Type& v) {
+          CODI_UNUSED(v);
+          static_assert(false && std::is_void<Type>::value,
+                        "Instantiation of unspecialized AggregatedTypeTraits.");
+
+          return *(InnerType*)(nullptr);
+        }
+
         /// Implementation of the adjoint array access. See arrayAccess for the equation definition. The adjoint is defined
         /// as
-        /// \bar w += dw[i]/w^T * \bar v.
+        /// \f$ \bar w += dw[i]/w^T * \bar v \f$.
         template<size_t element>
         static Type adjointOfArrayAccess(Type const& w, InnerType const& v_b) {
           CODI_UNUSED(w, v_b);
@@ -288,8 +290,75 @@ namespace codi {
         }
     };
 
-    template<typename Type>
-    using EnableIfAggregatedTypeTratisIsSpecialized = typename std::enable_if<(AggregatedTypeTraits<Type>::Elements != 0) & (!ExpressionTraits::IsLhsExpression<Type>::value)>::type;
+    /// Base implementation for AggregatedTypeTraits that can be defined as an array.
+    template<typename T_Type, typename T_InnerType, typename T_Real, int T_Elements>
+    struct ArrayAggregatedTypeTraitsBase {
+      public:
+        static_assert(sizeof(T_Type) == T_Elements * sizeof(T_InnerType),
+                      "Instantiation of ArrayAggregatedTypeTraitsBase with inner real and number of elements that do not"
+                      "have the size of real.");
+
+        using Type = CODI_DD(T_Type, CODI_ANY);  ///< See AggregatedTypeTraits.
+        using InnerType = CODI_DD(T_InnerType, CODI_ANY);  ///< See AggregatedTypeTraits.
+        using Real = CODI_DD(T_Real, CODI_ANY);  ///< See AggregatedTypeTraits.
+
+        static int constexpr Elements = CODI_DD(T_Elements, 1);  ///< See AggregatedTypeTraits.
+
+        /// \copydoc AggregatedTypeTraits::arrayConstructor()
+        static Type arrayConstructor(InnerType const* v) {
+          Type w{};
+
+          InnerType* wArray = reinterpret_cast<InnerType*>(&w);
+
+          static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
+            wArray[i.value] = v[i.value];
+          });
+
+          return w;
+        }
+
+        /// \copydoc AggregatedTypeTraits::adjointOfConstructor()
+        template<size_t element>
+        static InnerType adjointOfConstructor(Type const& w, Type const& w_b) {
+          CODI_UNUSED(w);
+
+          // We compute (\bar w^T * dT/dv_i)^T because then we do not need a transpose implementation on dT/dv_i.
+          Type w_b_trans = ComputationTraits::transpose(w_b);
+          InnerType const* w_b_transArray = reinterpret_cast<InnerType const*>(&w_b_trans);
+
+
+          return ComputationTraits::transpose(w_b_transArray[element]);
+        }
+
+        /// \copydoc AggregatedTypeTraits::arrayAccess()
+        template<int element>
+        CODI_INLINE static InnerType& arrayAccess(Type& w) {
+          InnerType* wArray = reinterpret_cast<InnerType*>(&w);
+
+          return wArray[element];
+        }
+
+        /// \copydoc AggregatedTypeTraits::arrayAccess()
+        template<size_t element>
+        static InnerType arrayAccess(Type const& w) {
+          InnerType const* wArray = reinterpret_cast<InnerType const*>(&w);
+
+          return wArray[element];
+        }
+
+        /// \copydoc AggregatedTypeTraits::adjointOfArrayAccess()
+        template<size_t element>
+        static Type adjointOfArrayAccess(Type const& w, InnerType const& v_b) {
+          CODI_UNUSED(w);
+
+          Type w_b{};
+
+          InnerType* w_bArray = reinterpret_cast<InnerType*>(&w_b);
+          w_bArray[element] = v_b;
+
+          return ComputationTraits::transpose(w_b);
+        }
+    };
 
     /// \copydoc codi::RealTraits::DataExtraction::getValue()
     template<typename Type>
@@ -327,7 +396,49 @@ namespace codi {
       return TapeRegistration<Type>::registerExternalFunctionOutput(v);
     }
 
+    /// @}
+    /*******************************************************************************/
+    /// @name Detection of specific real value types
+    /// @{
+
+    /// Enable if helper when a type has been specialized for the AggregatedTypeTraits.
+    template<typename Type>
+    using EnableIfAggregatedTypeTratisIsSpecialized = typename std::enable_if<(AggregatedTypeTraits<Type>::Elements != 0) & (!ExpressionTraits::IsLhsExpression<Type>::value)>::type;
+
+    /// Enable if helper for AggregatedActiveType.
+    template<typename Expr>
+    using EnableIfAggregatedActiveType = typename enable_if_base_of<
+        AggregatedActiveTypeBase<
+            typename Expr::Real,
+            typename Expr::ActiveInnerType,
+            typename Expr::Impl,
+            Expr::isStatic
+        >, Expr>::type;
+
+    /// If the real type is not handled by CoDiPack
+    template<typename Type>
+    using IsPassiveReal = std::is_same<Type, PassiveReal<Type>>;
+
+#if CODI_IS_CPP14
+    /// Value entry of IsPassiveReal
+    template<typename Expr>
+    bool constexpr isPassiveReal = IsPassiveReal<Expr>::value;
+#endif
+
+    /// Negated enable if wrapper for IsPassiveReal
+    template<typename Type>
+    using EnableIfNotPassiveReal = typename std::enable_if<!IsPassiveReal<Type>::value>::type;
+
+    /// Enable if wrapper for IsPassiveReal
+    template<typename Type>
+    using EnableIfPassiveReal = typename std::enable_if<IsPassiveReal<Type>::value>::type;
+
 #ifndef DOXYGEN_DISABLE
+
+    /// @}
+    /*******************************************************************************/
+    /// @name Various specializations.
+    /// @{
 
     /// Specialization of DataExtraction for floating point types.
     template<typename T_Type>
@@ -458,70 +569,6 @@ namespace codi {
         }
     };
 
-    template<typename T_Type, typename T_InnerType, typename T_Real, int T_Elements>
-    struct ArrayAggregatedTypeTraitsBase {
-      public:
-        static_assert(sizeof(T_Type) == T_Elements * sizeof(T_InnerType),
-                      "Instantiation of ArrayAggregatedTypeTraitsBase with inner real and number of elements that do not"
-                      "have the size of real.");
-
-        using Type = CODI_DD(T_Type, CODI_ANY);
-        using InnerType = CODI_DD(T_InnerType, CODI_ANY);
-        using Real = CODI_DD(T_Real, CODI_ANY);
-
-        static int constexpr Elements = CODI_DD(T_Elements, 1);
-
-        static Type arrayConstructor(InnerType const* v) {
-          Type w{};
-
-          InnerType* wArray = reinterpret_cast<InnerType*>(&w);
-
-          static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
-            wArray[i.value] = v[i.value];
-          });
-
-          return w;
-        }
-
-        template<size_t element>
-        static InnerType adjointOfConstructor(Type const& w, Type const& w_b) {
-          CODI_UNUSED(w);
-
-          // We compute (\bar w^T * dT/dv_i)^T because then we do not need a transpose implementation on dT/dv_i.
-          Type w_b_trans = ComputationTraits::transpose(w_b);
-          InnerType const* w_b_transArray = reinterpret_cast<InnerType const*>(&w_b_trans);
-
-
-          return ComputationTraits::transpose(w_b_transArray[element]);
-        }
-
-        template<int element>
-        CODI_INLINE static InnerType& arrayAccess(Type& w) {
-          InnerType* wArray = reinterpret_cast<InnerType*>(&w);
-
-          return wArray[element];
-        }
-
-        template<size_t element>
-        static InnerType arrayAccess(Type const& w) {
-          InnerType const* wArray = reinterpret_cast<InnerType const*>(&w);
-
-          return wArray[element];
-        }
-
-        template<size_t element>
-        static Type adjointOfArrayAccess(Type const& w, InnerType const& v_b) {
-          CODI_UNUSED(w);
-
-          Type w_b{};
-
-          InnerType* w_bArray = reinterpret_cast<InnerType*>(&w_b);
-          w_bArray[element] = v_b;
-
-          return ComputationTraits::transpose(w_b);
-        }
-    };
-
     template<typename T_Type>
     struct AggregatedTypeTraits<T_Type, typename std::enable_if<std::is_floating_point<T_Type>::value>::type> :
       ArrayAggregatedTypeTraitsBase<T_Type, T_Type, T_Type, 1> {};
@@ -535,29 +582,6 @@ namespace codi {
       ArrayAggregatedTypeTraitsBase<int*, int*, int*, 1> {};
 
 #endif
-
-    /// @}
-    /*******************************************************************************/
-    /// @name Detection of specific real value types
-    /// @{
-
-    /// If the real type is not handled by CoDiPack
-    template<typename Type>
-    using IsPassiveReal = std::is_same<Type, PassiveReal<Type>>;
-
-#if CODI_IS_CPP14
-    /// Value entry of IsPassiveReal
-    template<typename Expr>
-    bool constexpr isPassiveReal = IsPassiveReal<Expr>::value;
-#endif
-
-    /// Negated enable if wrapper for IsPassiveReal
-    template<typename Type>
-    using EnableIfNotPassiveReal = typename std::enable_if<!IsPassiveReal<Type>::value>::type;
-
-    /// Enable if wrapper for IsPassiveReal
-    template<typename Type>
-    using EnableIfPassiveReal = typename std::enable_if<IsPassiveReal<Type>::value>::type;
 
     /// @}
 

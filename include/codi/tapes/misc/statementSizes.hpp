@@ -34,32 +34,39 @@
  */
 #pragma once
 
-#include "../../misc/macros.hpp"
 #include "../../config.h"
+#include "../../expressions/assignExpression.hpp"
+#include "../../misc/macros.hpp"
+#include "../../traits/expressionTraits.hpp"
 
 /** \copydoc codi::Namespace */
 namespace codi {
 
+  /// Define all static sizes of an Expression.
   struct StatementSizes {
-      size_t const maxActiveArgs;
-      size_t const maxConstantArgs;
-      size_t const maxOutputArgs;
+      size_t const inputArgs;     ///< Number of input arguments.
+      size_t const constantArgs;  ///< Number of constant arguments.
+      size_t const outputArgs;    ///< Number of output arguments.
 
-      StatementSizes(size_t const maxActiveArgs, size_t const maxConstantArgs, size_t const maxOutputArgs) :
-        maxActiveArgs(maxActiveArgs),
-        maxConstantArgs(maxConstantArgs),
-        maxOutputArgs(maxOutputArgs) {}
+      /// Constructor
+      StatementSizes(size_t const inputArgs, size_t const constantArgs, size_t const maxOutputArgs) :
+        inputArgs(inputArgs),
+        constantArgs(constantArgs),
+        outputArgs(maxOutputArgs) {}
 
-      template<typename Expr>
+      /// Creation function from AssignExpression.
+      template<typename T_Expr>
       static StatementSizes create() {
+        using Expr = CODI_DD(T_Expr, CODI_T(AssignExpression<CODI_ANY, CODI_ANY>));
+
         using Lhs = typename Expr::Lhs;
         using Rhs = typename Expr::Rhs;
 
-        size_t constexpr maxActiveArgs = ExpressionTraits::NumberOfActiveTypeArguments<Rhs>::value;
-        size_t constexpr maxConstantArgs = ExpressionTraits::NumberOfConstantTypeArguments<Rhs>::value;
+        size_t constexpr inputArgs = ExpressionTraits::NumberOfActiveTypeArguments<Rhs>::value;
+        size_t constexpr constantArgs = ExpressionTraits::NumberOfConstantTypeArguments<Rhs>::value;
         size_t constexpr maxOutputArgs = ExpressionTraits::NumberOfActiveTypeArguments<Lhs>::value;
 
-        return StatementSizes(maxActiveArgs, maxConstantArgs, maxOutputArgs);
+        return StatementSizes(inputArgs, constantArgs, maxOutputArgs);
       }
   };
 }

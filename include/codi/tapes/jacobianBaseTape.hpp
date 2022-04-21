@@ -41,7 +41,8 @@
 #include "../misc/macros.hpp"
 #include "../misc/memberStore.hpp"
 #include "../config.h"
-#include "../expressions/aggregatedExpressionType.hpp"
+#include "../expressions/aggregate/aggregatedActiveType.hpp"
+#include "../expressions/aggregate/arrayAccessExpression.hpp"
 #include "../expressions/lhsExpressionInterface.hpp"
 #include "../expressions/logic/compileTimeTraversalLogic.hpp"
 #include "../expressions/logic/helpers/forEachLeafLogic.hpp"
@@ -270,12 +271,12 @@ namespace codi {
           /// General implementation. Checks for invalid and passive values/Jacobians.
           template<typename Node, typename Jacobian, typename DataVector>
           CODI_INLINE void handleJacobianOnActive(Node const& node, Jacobian jacobianExpr, DataVector& dataVector) {
-            Real jacobia = jacobianExpr;
+            Real jacobian = jacobianExpr;
 
             if (CODI_ENABLE_CHECK(Config::CheckZeroIndex, 0 != node.getIdentifier())) {
-              if (CODI_ENABLE_CHECK(Config::IgnoreInvalidJacobians, RealTraits::isTotalFinite(jacobia))) {
-                if (CODI_ENABLE_CHECK(Config::CheckJacobianIsZero, !RealTraits::isTotalZero(jacobia))) {
-                  dataVector.pushData(jacobia, node.getIdentifier());
+              if (CODI_ENABLE_CHECK(Config::IgnoreInvalidJacobians, RealTraits::isTotalFinite(jacobian))) {
+                if (CODI_ENABLE_CHECK(Config::CheckJacobianIsZero, !RealTraits::isTotalZero(jacobian))) {
+                  dataVector.pushData(jacobian, node.getIdentifier());
                 }
               }
             }
@@ -340,8 +341,10 @@ namespace codi {
 
       /// @{
 
+      /// \copydoc codi::InternalStatementRecordingTapeInterface::store() <br>
+      /// Implementation for AggregatedActiveType.
       template<typename Aggregated, typename Type, typename Lhs, typename Rhs>
-      CODI_INLINE void store(AggregatedExpressionType<Aggregated, Type, Lhs>& lhs,
+      CODI_INLINE void store(AggregatedActiveType<Aggregated, Type, Lhs>& lhs,
                              ExpressionInterface<Aggregated, Rhs> const& rhs) {
 
         using AggregatedTraits = RealTraits::AggregatedTypeTraits<Aggregated>;
@@ -362,7 +365,7 @@ namespace codi {
             ActiveTypeWrapper<typename Lhs::ActiveInnerType> wrapper(
                   AggregatedTraits::template arrayAccess<i.value>(real),
                   identifierVec[i.value]);
-            wrapper = ExtractExpression<Aggregated, i.value, Rhs>(rhs);
+            wrapper = ArrayAccessExpression<Aggregated, i.value, Rhs>(rhs);
           });
 
           static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {

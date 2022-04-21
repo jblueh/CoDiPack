@@ -10,7 +10,8 @@
 #include "../../misc/macros.hpp"
 #include "../../config.h"
 #include "../activeType.hpp"
-#include "../aggregatedExpressionType.hpp"
+#include "../aggregate/aggregatedActiveType.hpp"
+#include "../static/staticContextAggregateActiveType.hpp"
 #include "allOperators.hpp"
 #include "../real/binaryOperators.hpp"
 #include "../../misc/self.hpp"
@@ -64,12 +65,12 @@ namespace codi {
   }
 
 
-  /// Implementation of AggregatedExpressionType for complex types.
+  /// Implementation of AggregatedActiveType for complex types.
   /// @tparam T_InnerActive The active type which is used in the inner store.
   /// @tparam T_Impl The implementation if it extends this class, otherwise nothing.
   template<typename T_InnerActive, typename T_Impl = Self>
   struct ActiveComplex
-      : public AggregatedExpressionType<std::complex<typename T_InnerActive::Real>, T_InnerActive,
+      : public AggregatedActiveType<std::complex<typename T_InnerActive::Real>, T_InnerActive,
                                         ReturnSelf<T_Impl, ActiveComplex<T_InnerActive, T_Impl>>> {
 
     public:
@@ -81,7 +82,7 @@ namespace codi {
       using Real = std::complex<InnerReal>; ///< Complex value with the inner real.
       using PassiverInnerReal = RealTraits::PassiveReal<InnerReal>; ///< Passive inner value.
 
-      using Base = AggregatedExpressionType<Real, InnerActive, Impl>; ///< Abbreviation for the base class.
+      using Base = AggregatedActiveType<Real, InnerActive, Impl>; ///< Abbreviation for the base class.
 
       using value_type = InnerActive;  ///< std::complex interface.
 
@@ -94,7 +95,7 @@ namespace codi {
           ExpressionInterface<InnerReal, ArgR> const& argR) :
         Base()
       {
-        Base::template array<0>() = argR;
+        Base::arrayValue[0] = argR;
       }
 
       /// Constructor.
@@ -102,7 +103,7 @@ namespace codi {
           PassiverInnerReal const& argR) :
         Base()
       {
-        Base::template array<0>() = argR;
+        Base::arrayValue[0] = argR;
       }
 
       /// Constructor.
@@ -112,8 +113,8 @@ namespace codi {
           ExpressionInterface<InnerReal, ArgI> const& argI) :
         Base()
       {
-        Base::template array<0>() = argR;
-        Base::template array<1>() = argI;
+        Base::arrayValue[0] = argR;
+        Base::arrayValue[1] = argI;
       }
 
       /// Constructor.
@@ -123,8 +124,8 @@ namespace codi {
           ExpressionInterface<InnerReal, ArgI> const& argI) :
         Base()
       {
-        Base::template array<0>() = argR;
-        Base::template array<1>() = argI;
+        Base::arrayValue[0] = argR;
+        Base::arrayValue[1] = argI;
       }
 
       /// Constructor.
@@ -134,8 +135,8 @@ namespace codi {
           PassiverInnerReal const& argI) :
         Base()
       {
-        Base::template array<0>() = argR;
-        Base::template array<1>() = argI;
+        Base::arrayValue[0] = argR;
+        Base::arrayValue[1] = argI;
       }
 
       /// Constructor.
@@ -144,8 +145,8 @@ namespace codi {
           PassiverInnerReal const& argI) :
         Base()
       {
-        Base::template array<0>() = argR;
-        Base::template array<1>() = argI;
+        Base::arrayValue[0] = argR;
+        Base::arrayValue[1] = argI;
       }
 
       /// Operator += for expressions.
@@ -202,7 +203,7 @@ namespace codi {
       using InnerActiveResult = ExpressionTraits::ActiveResult<InnerReal, Tape, true>;
 
       /// The resulting active type of an expression.
-      using ActiveResult = StaticAggregatedExpressionType<std::complex<InnerReal>, InnerActiveResult>;
+      using ActiveResult = StaticAggregatedActiveType<std::complex<InnerReal>, InnerActiveResult>;
   };
 }
 

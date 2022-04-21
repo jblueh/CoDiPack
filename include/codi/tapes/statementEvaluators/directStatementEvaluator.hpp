@@ -78,7 +78,7 @@ namespace codi {
         using Handle = typename PrimalTapeStatementFunctions::Handle;
 
         return PrimalTapeStatementFunctions(
-          reinterpret_cast<Handle>(Generator::template StatementCallGen<types, Expr>::evaluate)...
+          reinterpret_cast<Handle>(Generator::template StatementCallGenerator<types, Expr>::evaluate)...
          );
       }
   };
@@ -108,7 +108,7 @@ namespace codi {
       template<StatementCall type, typename Tape, typename... Args>
       static void call(Handle const& h, Args&&... args) {
         using Expr = AssignExpression<ActiveType<Tape>, ActiveType<Tape>>;
-        using CallGen = typename Tape::template StatementCallGen<type, Expr>;
+        using CallGen = typename Tape::template StatementCallGenerator<type, Expr>;
 
         using Function = decltype(&CallGen::evaluate);
 

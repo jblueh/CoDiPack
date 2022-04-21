@@ -81,20 +81,20 @@ namespace codi {
    * the generator.
    *
    * In general, implementations of this interface need to store functions pointers to the `evaluate`
-   * functions of the StatementCallGen structures in the StatementEvaluatorTapeInterface or the `evaluateInner` function
+   * functions of the StatementCallGenerator structures in the StatementEvaluatorTapeInterface or the `evaluateInner` function
    * for the StatementEvaluatorInnerTapeInterface.
    *
    * A usual call flow for the first approach is (see also the code for ReverseStatementEvaluator):
    * \code{.cpp}
    *   // During recording in tape.store.
-   *   // Instantiates e.g Tape::StatementCallGen<StatementCall::Reverse, Expr>::evaluate
+   *   // Instantiates e.g Tape::StatementCallGenerator<StatementCall::Reverse, Expr>::evaluate
    *   auto handle = StatementEvaluatorInterface::createHandle<Tape, Tape, Expr>();
    *   tapeData.pushHandle(handle);
    *
    *   // During reverse interpretation of the tape.
    *   auto handle = tapeData.popHandle(handle);
    *
-   *   // This calls Tape::StatementCallGen<StatementCall::Reverse, Expr>::evaluate(tapeData);
+   *   // This calls Tape::StatementCallGenerator<StatementCall::Reverse, Expr>::evaluate(tapeData);
    *   StatementEvaluatorInterface::call<StatementCall::Reverse, Tape>(handle, tapeData);
    * \endcode
    *

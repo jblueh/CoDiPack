@@ -42,9 +42,15 @@
 /** \copydoc codi::Namespace */
 namespace codi {
 
+  /**
+   * Pseudo expression that defines a lhs and rhs expression where the rhs is assigned to the lhs.
+   *
+   * @tparam T_Lhs The type of the left hand side expression that is assigned to.
+   * @tparam T_Rhs The type of the right hand side expression that is assigned from.
+   */
   template<typename T_Lhs, typename T_Rhs>
   struct AssignExpression {
-      using Lhs = CODI_DD(T_Lhs, CODI_T(LhsExpressionInterface<double, double, CODI_ANY, CODI_ANY>));
-      using Rhs = CODI_DD(T_Rhs, CODI_T(ExpressionInterface<double, CODI_ANY>));
+      using Lhs = CODI_DD(T_Lhs, CODI_T(LhsExpressionInterface<double, double, CODI_ANY, CODI_ANY>)); ///< See AssignExpression.
+      using Rhs = CODI_DD(T_Rhs, CODI_T(ExpressionInterface<double, CODI_ANY>)); ///< See AssignExpression.
   };
 }

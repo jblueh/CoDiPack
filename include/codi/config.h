@@ -301,7 +301,7 @@ namespace codi {
 #if CODI_ForcedInlines
   #if defined(__INTEL_COMPILER) | defined(_MSC_VER)
     #define CODI_INLINE __forceinline
-    #define CODI_LAMBDA_INLINE __forceinline /* TODO: Test */
+    #define CODI_LAMBDA_INLINE /*__forceinline*/
   #elif defined(__GNUC__)
     #define CODI_INLINE inline __attribute__((always_inline))
     #define CODI_LAMBDA_INLINE __attribute__((always_inline))

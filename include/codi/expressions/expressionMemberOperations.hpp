@@ -40,12 +40,23 @@
 /** \copydoc codi::Namespace */
 namespace codi {
 
+  /** Interface for injecting member operations in expressions
+   *
+   *  This ExpressionInterface extends from this interface and therefore all methods defined in specializations of
+   *  this class are available in expressions with the specialized Real type.
+   *
+   * @tparam T_Real  Original primal value of the statement/expression.
+   * @tparam T_Impl  Class implementing this interface.
+   */
   template<typename T_Real, typename T_Impl, typename = void>
   struct ExpressionMemberOperations {
 
-      using Real = CODI_DD(T_Real, double);
-      using Impl = CODI_DD(T_Impl, CODI_ANY);
+      using Real = CODI_DD(T_Real, double);    ///< See ExpressionMemberOperations.
+      using Impl = CODI_DD(T_Impl, CODI_ANY);  ///< See ExpressionMemberOperations.
 
+    protected:
+
+      /// Cast to implementation.
       CODI_INLINE Impl const& cast() const {
         return static_cast<Impl const&>(*this);
       }

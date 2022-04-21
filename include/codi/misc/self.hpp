@@ -42,7 +42,7 @@
 /** \copydoc codi::Namespace */
 namespace codi {
 
-  struct Self {};
+  struct Self {}; ///< Proxy for detecting a template argument that should be the same as the class.
 
   /// If Impl == Self
   ///   return SelfType
@@ -52,5 +52,6 @@ namespace codi {
   using ReturnSelf = typename std::conditional<
     std::is_same<Self, Impl>::value, // if
         SelfType,                    // true
-        Impl>::type;                 // false
+        Impl                         // false
+    >::type;                         // return
 }

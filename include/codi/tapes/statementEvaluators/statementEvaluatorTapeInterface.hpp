@@ -59,11 +59,11 @@ namespace codi {
    *
    * See StatementEvaluatorInterface for a full description.
    *
-   * In the evaluation method of StatementCallGen the full evaluation of the statement needs to be done.
+   * In the evaluation method of StatementCallGenerator the full evaluation of the statement needs to be done.
    * - 1. Load expression specific data
    * - 2. Call expression specific function
    *
-   * The structure StatementCallGen needs to be specialized for all enums in StatementCall.
+   * The structure StatementCallGenerator needs to be specialized for all enums in StatementCall.
    */
   struct StatementEvaluatorTapeInterface {
     public:
@@ -73,7 +73,7 @@ namespace codi {
 
       /// This structure is accessed by the StatementEvaluatorInterface.
       template<StatementCall type, typename Expr>
-      struct StatementCallGen {
+      struct StatementCallGenerator {
 
           /// Evaluate the full expression.
           template<typename... Args>
@@ -101,7 +101,7 @@ namespace codi {
 
       /// This structure is accessed by the StatementEvaluatorInterface.
       template<StatementCall type, typename Expr>
-      struct StatementCallGen {
+      struct StatementCallGenerator {
 
           /// Evaluate expression in a forward mode.
           template<typename... Args>

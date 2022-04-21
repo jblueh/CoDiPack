@@ -83,7 +83,7 @@ namespace codi {
 
         return InnerPrimalTapeStatementData(
             PrimalTapeStatementFunctions(
-              ((Handle)Generator::template StatementCallGen<types, Expr>::evaluateInner)...
+              ((Handle)Generator::template StatementCallGenerator<types, Expr>::evaluateInner)...
             ),
             StatementSizes::create<Expr>());
       }
@@ -116,7 +116,7 @@ namespace codi {
       template<StatementCall type, typename Tape, typename... Args>
       static void call(Handle const& h, Args&&... args) {
         using Expr = AssignExpression<ActiveType<Tape>, ActiveType<Tape>>;
-        using CallGen = typename Tape::template StatementCallGen<type, Expr>;
+        using CallGen = typename Tape::template StatementCallGenerator<type, Expr>;
 
         using Function = decltype(&CallGen::evaluateInner);
 

@@ -107,15 +107,13 @@ namespace codi {
             argB(argB.cast()),
             result(Operation::primal(this->argA.getValue(), this->argB.getValue())) {}
 
-      CODI_INLINE BinaryExpression(BinaryExpression const&) = default;
-      
       /*******************************************************************************/
       /// @name Implementation of ExpressionInterface
       /// @{
 
       using StoreAs = BinaryExpression;  ///< \copydoc codi::ExpressionInterface::StoreAs
       using ADLogic =
-          typename ExpressionTraits::ValidateResult<typename ArgA::ADLogic, typename ArgB::ADLogic>::
+          typename ExpressionTraits::ValidateADLogic<typename ArgA::ADLogic, typename ArgB::ADLogic>::
               ADLogic;  ///< \copydoc codi::ExpressionInterface::ADLogic
 
       /// \copydoc codi::ExpressionInterface::getValue()

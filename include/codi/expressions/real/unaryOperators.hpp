@@ -54,7 +54,7 @@ namespace codi {
   struct OperationUnaryMinus : public UnaryOperation<T_Real> {
     public:
 
-      using Real = CODI_DD(T_Real, double);  ///< See BinaryOperation.
+      using Real = CODI_DD(T_Real, double);  ///< See UnaryOperation.
 
       /// \copydoc UnaryOperation::primal
       template<typename Arg>
@@ -120,7 +120,7 @@ namespace codi {
   struct OperationAbs : public UnaryOperation<T_Real> {
     public:
 
-      using Real = CODI_DD(T_Real, double);  ///< See BinaryOperation.
+      using Real = CODI_DD(T_Real, double);  ///< See UnaryOperation.
 
       /// \copydoc UnaryOperation::primal
       template<typename Arg>
@@ -154,7 +154,7 @@ namespace codi {
   struct OperationAcos : public UnaryOperation<T_Real> {
     public:
 
-      using Real = CODI_DD(T_Real, double);  ///< See BinaryOperation.
+      using Real = CODI_DD(T_Real, double);  ///< See UnaryOperation.
 
       /// \copydoc UnaryOperation::primal
       template<typename Arg>
@@ -175,14 +175,14 @@ namespace codi {
     private:
 
       template<typename Arg>
-      static void checkArgument(Arg const& arg) {
+      CODI_INLINE static void checkArgument(Arg const& arg) {
         if (RealTraits::getPassiveValue(arg) <= -1.0 || 1.0 <= RealTraits::getPassiveValue(arg)) {
           CODI_EXCEPTION("acos outside of (-1, 1).(Value: %0.15e)", RealTraits::getPassiveValue(arg));
         }
       }
 
       template<typename Arg>
-      static void checkArgument(std::complex<Arg> const& arg) {
+      CODI_INLINE static void checkArgument(std::complex<Arg> const& arg) {
         if (0.0 == RealTraits::getPassiveValue(imag(arg)) && (RealTraits::getPassiveValue(real(arg)) == -1.0 || 1.0 == RealTraits::getPassiveValue(real(arg)))) {
           CODI_EXCEPTION("acos outside of C \\ {(-1, 0), (1, 0)}.(Value: %0.15e + %0.15e i)",
                          RealTraits::getPassiveValue(real(arg)),
@@ -199,7 +199,7 @@ namespace codi {
   struct OperationAcosh : public UnaryOperation<T_Real> {
     public:
 
-      using Real = CODI_DD(T_Real, double);  ///< See BinaryOperation.
+      using Real = CODI_DD(T_Real, double);  ///< See UnaryOperation.
 
       /// \copydoc UnaryOperation::primal
       template<typename Arg>
@@ -221,14 +221,14 @@ namespace codi {
     private:
 
       template<typename Arg>
-      static void checkArgument(Arg const& arg) {
+      CODI_INLINE static void checkArgument(Arg const& arg) {
         if (RealTraits::getPassiveValue(arg) >= 1.0) {
           CODI_EXCEPTION("acosh outside of [1, inf).(Value: %0.15e)", RealTraits::getPassiveValue(arg));
         }
       }
 
       template<typename Arg>
-      static void checkArgument(std::complex<Arg> const& arg) {
+      CODI_INLINE static void checkArgument(std::complex<Arg> const& arg) {
         if (0.0 == RealTraits::getPassiveValue(imag(arg)) && RealTraits::getPassiveValue(real(arg)) >= 1.0) {
           CODI_EXCEPTION("asin outside of C \\ (-inf, 1)x(0).(Value: %0.15e + %0.15e i)",
                          RealTraits::getPassiveValue(real(arg)),
@@ -245,7 +245,7 @@ namespace codi {
   struct OperationAsin : public UnaryOperation<T_Real> {
     public:
 
-      using Real = CODI_DD(T_Real, double);  ///< See BinaryOperation.
+      using Real = CODI_DD(T_Real, double);  ///< See UnaryOperation.
 
       /// \copydoc UnaryOperation::primal
       template<typename Arg>
@@ -266,14 +266,14 @@ namespace codi {
     private:
 
       template<typename Arg>
-      static void checkArgument(Arg const& arg) {
+      CODI_INLINE static void checkArgument(Arg const& arg) {
         if (RealTraits::getPassiveValue(arg) <= -1.0 || 1.0 <= RealTraits::getPassiveValue(arg)) {
           CODI_EXCEPTION("asin outside of (-1, 1).(Value: %0.15e)", RealTraits::getPassiveValue(arg));
         }
       }
 
       template<typename Arg>
-      static void checkArgument(std::complex<Arg> const& arg) {
+      CODI_INLINE static void checkArgument(std::complex<Arg> const& arg) {
         if (0.0 == RealTraits::getPassiveValue(imag(arg)) && (RealTraits::getPassiveValue(real(arg)) == -1.0 || 1.0 == RealTraits::getPassiveValue(real(arg)))) {
           CODI_EXCEPTION("asin outside of C \\ {(-1, 0), (1, 0)}.(Value: %0.15e + %0.15e i)",
                          RealTraits::getPassiveValue(real(arg)),
@@ -290,7 +290,7 @@ namespace codi {
   struct OperationAsinh : public UnaryOperation<T_Real> {
     public:
 
-      using Real = CODI_DD(T_Real, double);  ///< See BinaryOperation.
+      using Real = CODI_DD(T_Real, double);  ///< See UnaryOperation.
 
       /// \copydoc UnaryOperation::primal
       template<typename Arg>
@@ -315,7 +315,7 @@ namespace codi {
   struct OperationAtan : public UnaryOperation<T_Real> {
     public:
 
-      using Real = CODI_DD(T_Real, double);  ///< See BinaryOperation.
+      using Real = CODI_DD(T_Real, double);  ///< See UnaryOperation.
 
       /// \copydoc UnaryOperation::primal
       template<typename Arg>
@@ -339,7 +339,7 @@ namespace codi {
   struct OperationAtanh : public UnaryOperation<T_Real> {
     public:
 
-      using Real = CODI_DD(T_Real, double);  ///< See BinaryOperation.
+      using Real = CODI_DD(T_Real, double);  ///< See UnaryOperation.
 
       /// \copydoc UnaryOperation::primal
       template<typename Arg>
@@ -360,14 +360,14 @@ namespace codi {
     private:
 
       template<typename Arg>
-      static void checkArgument(Arg const& arg) {
+      CODI_INLINE static void checkArgument(Arg const& arg) {
         if (RealTraits::getPassiveValue(arg) <= -1.0 || 1.0 <= RealTraits::getPassiveValue(arg)) {
           CODI_EXCEPTION("atanh outside of (-1, 1).(Value: %0.15e)", RealTraits::getPassiveValue(arg));
         }
       }
 
       template<typename Arg>
-      static void checkArgument(std::complex<Arg> const& arg) {
+      CODI_INLINE static void checkArgument(std::complex<Arg> const& arg) {
         if (0.0 == RealTraits::getPassiveValue(imag(arg)) && (RealTraits::getPassiveValue(real(arg)) <= -1.0 || 1.0 <= RealTraits::getPassiveValue(real(arg)))) {
           CODI_EXCEPTION("atanh outside of C \\ (-1, 1) x (0).(Value: %0.15e + %0.15e i)",
                          RealTraits::getPassiveValue(real(arg)),
@@ -384,7 +384,7 @@ namespace codi {
   struct OperationCbrt : public UnaryOperation<T_Real> {
     public:
 
-      using Real = CODI_DD(T_Real, double);  ///< See BinaryOperation.
+      using Real = CODI_DD(T_Real, double);  ///< See UnaryOperation.
 
       /// \copydoc UnaryOperation::primal
       template<typename Arg>
@@ -422,7 +422,7 @@ namespace codi {
   struct OperationCos : public UnaryOperation<T_Real> {
     public:
 
-      using Real = CODI_DD(T_Real, double);  ///< See BinaryOperation.
+      using Real = CODI_DD(T_Real, double);  ///< See UnaryOperation.
 
       /// \copydoc UnaryOperation::primal
       template<typename Arg>
@@ -446,7 +446,7 @@ namespace codi {
   struct OperationCosh : public UnaryOperation<T_Real> {
     public:
 
-      using Real = CODI_DD(T_Real, double);  ///< See BinaryOperation.
+      using Real = CODI_DD(T_Real, double);  ///< See UnaryOperation.
 
       /// \copydoc UnaryOperation::primal
       template<typename Arg>
@@ -470,7 +470,7 @@ namespace codi {
   struct OperationErf : public UnaryOperation<T_Real> {
     public:
 
-      using Real = CODI_DD(T_Real, double);  ///< See BinaryOperation.
+      using Real = CODI_DD(T_Real, double);  ///< See UnaryOperation.
 
       /// \copydoc UnaryOperation::primal
       template<typename Arg>
@@ -494,7 +494,7 @@ namespace codi {
   struct OperationErfc : public UnaryOperation<T_Real> {
     public:
 
-      using Real = CODI_DD(T_Real, double);  ///< See BinaryOperation.
+      using Real = CODI_DD(T_Real, double);  ///< See UnaryOperation.
 
       /// \copydoc UnaryOperation::primal
       template<typename Arg>
@@ -518,7 +518,7 @@ namespace codi {
   struct OperationExp : public UnaryOperation<T_Real> {
     public:
 
-      using Real = CODI_DD(T_Real, double);  ///< See BinaryOperation.
+      using Real = CODI_DD(T_Real, double);  ///< See UnaryOperation.
 
       /// \copydoc UnaryOperation::primal
       template<typename Arg>
@@ -572,7 +572,7 @@ namespace codi {
   struct OperationLog : public UnaryOperation<T_Real> {
     public:
 
-      using Real = CODI_DD(T_Real, double);  ///< See BinaryOperation.
+      using Real = CODI_DD(T_Real, double);  ///< See UnaryOperation.
 
       /// \copydoc UnaryOperation::primal
       template<typename Arg>
@@ -593,14 +593,14 @@ namespace codi {
     private:
 
       template<typename Arg>
-      static void checkArgument(Arg const& arg) {
+      CODI_INLINE static void checkArgument(Arg const& arg) {
         if (0.0 > RealTraits::getPassiveValue(arg)) {
           CODI_EXCEPTION("Logarithm of negative value or zero.(Value: %0.15e)", RealTraits::getPassiveValue(arg));
         }
       }
 
       template<typename Arg>
-      static void checkArgument(std::complex<Arg> const& arg) {
+      CODI_INLINE static void checkArgument(std::complex<Arg> const& arg) {
         if (0.0 == RealTraits::getPassiveValue(abs(arg))) {
           CODI_EXCEPTION("Logarithm of zero.(Value: %0.15e)", RealTraits::getPassiveValue(abs(arg)));
         }
@@ -615,7 +615,7 @@ namespace codi {
   struct OperationLog10 : public UnaryOperation<T_Real> {
     public:
 
-      using Real = CODI_DD(T_Real, double);  ///< See BinaryOperation.
+      using Real = CODI_DD(T_Real, double);  ///< See UnaryOperation.
 
       /// \copydoc UnaryOperation::primal
       template<typename Arg>
@@ -635,14 +635,14 @@ namespace codi {
 
     private:
       template<typename Arg>
-      static void checkArgument(Arg const& arg) {
+      CODI_INLINE static void checkArgument(Arg const& arg) {
         if (0.0 > RealTraits::getPassiveValue(arg)) {
           CODI_EXCEPTION("Logarithm of negative value or zero.(Value: %0.15e)", RealTraits::getPassiveValue(arg));
         }
       }
 
       template<typename Arg>
-      static void checkArgument(std::complex<Arg> const& arg) {
+      CODI_INLINE static void checkArgument(std::complex<Arg> const& arg) {
         if (0.0 == RealTraits::getPassiveValue(abs(arg))) {
           CODI_EXCEPTION("Logarithm of zero.(Value: %0.15e)", RealTraits::getPassiveValue(abs(arg)));
         }
@@ -663,7 +663,7 @@ namespace codi {
   struct OperationSin : public UnaryOperation<T_Real> {
     public:
 
-      using Real = CODI_DD(T_Real, double);  ///< See BinaryOperation.
+      using Real = CODI_DD(T_Real, double);  ///< See UnaryOperation.
 
       /// \copydoc UnaryOperation::primal
       template<typename Arg>
@@ -687,7 +687,7 @@ namespace codi {
   struct OperationSinh : public UnaryOperation<T_Real> {
     public:
 
-      using Real = CODI_DD(T_Real, double);  ///< See BinaryOperation.
+      using Real = CODI_DD(T_Real, double);  ///< See UnaryOperation.
 
       /// \copydoc UnaryOperation::primal
       template<typename Arg>
@@ -711,7 +711,7 @@ namespace codi {
   struct OperationSqrt : public UnaryOperation<T_Real> {
     public:
 
-      using Real = CODI_DD(T_Real, double);  ///< See BinaryOperation.
+      using Real = CODI_DD(T_Real, double);  ///< See UnaryOperation.
 
       /// \copydoc UnaryOperation::primal
       template<typename Arg>
@@ -734,14 +734,14 @@ namespace codi {
 
     private:
       template<typename Arg>
-      static void checkArgument(Arg const& arg) {
+      CODI_INLINE static void checkArgument(Arg const& arg) {
         if (0.0 > RealTraits::getPassiveValue(arg)) {
           CODI_EXCEPTION("Sqrt of negative value or zero.(Value: %0.15e)", RealTraits::getPassiveValue(arg));
         }
       }
 
       template<typename Arg>
-      static void checkArgument(std::complex<Arg> const& arg) {
+      CODI_INLINE static void checkArgument(std::complex<Arg> const& arg) {
         CODI_UNUSED(arg);
       }
   };
@@ -754,7 +754,7 @@ namespace codi {
   struct OperationTan : public UnaryOperation<T_Real> {
     public:
 
-      using Real = CODI_DD(T_Real, double);  ///< See BinaryOperation.
+      using Real = CODI_DD(T_Real, double);  ///< See UnaryOperation.
 
       /// \copydoc UnaryOperation::primal
       template<typename Arg>
@@ -775,7 +775,7 @@ namespace codi {
 
     private:
       template<typename Arg>
-      static void checkArgument(Arg const& arg) {
+      CODI_INLINE static void checkArgument(Arg const& arg) {
         if (0.0 == abs(cos(RealTraits::getPassiveValue(arg)))) {
           CODI_EXCEPTION("Tan evaluated at (0.5  + i) * PI.(Value: %0.15e)", RealTraits::getPassiveValue(arg));
         }
@@ -790,7 +790,7 @@ namespace codi {
   struct OperationTanh : public UnaryOperation<T_Real> {
     public:
 
-      using Real = CODI_DD(T_Real, double);  ///< See BinaryOperation.
+      using Real = CODI_DD(T_Real, double);  ///< See UnaryOperation.
 
       /// \copydoc UnaryOperation::primal
       template<typename Arg>
@@ -814,7 +814,7 @@ namespace codi {
   struct OperationTgamma : public UnaryOperation<T_Real> {
     public:
 
-      using Real = CODI_DD(T_Real, double);  ///< See BinaryOperation.
+      using Real = CODI_DD(T_Real, double);  ///< See UnaryOperation.
 
       /// \copydoc UnaryOperation::primal
       template<typename Arg>

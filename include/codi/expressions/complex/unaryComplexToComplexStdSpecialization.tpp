@@ -32,6 +32,7 @@
 namespace std {
 #endif
 
+  /// Function overload for FUNCTION(complex<ActiveType>).
   template<typename Tape>
   CODI_INLINE codi::UnaryExpression<complex<typename Tape::Real>,
     complex<codi::ActiveType<Tape>>,

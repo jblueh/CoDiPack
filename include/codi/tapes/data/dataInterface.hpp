@@ -118,8 +118,11 @@ namespace codi {
    * data and iterating over the data.
    *
    * Adding data:
-   *  - reserveItems(): Needs to be called before a pushData call to ensure that enough space is left.
-   *  - pushData():     Add the actual data to the data stream.
+   *  - reserveItems():   Needs to be called before a pushData or getDataPointer call to ensure that enough space is
+   *                      left.
+   *  - pushData():       Add the actual data to the data stream.
+   *  - getDataPointer(): Get pointers to the internally allocated data.
+   *  - addDataSize():    Add the number of items written by the pointers from getDataPointer.
    *
    * Positional information:
    *   - getPosition(), getZeroPosition(): Global position of the all nested data interfaces.
@@ -152,6 +155,53 @@ namespace codi {
       /// @name Adding items
 
       /**
+       *  @brief Add this many items to the data stream, after the data pointers form getDataPointer have been
+       *         manipulated.
+       *
+       *  See getDataPointer for details.
+       *
+       *  @param[in] size  Number of data items that have been written.
+       */
+      CODI_INLINE void addDataSize(size_t const& size);
+
+      /**
+       * @brief Get pointers to the data from the storage implementation. The method can only be called after a call to
+       *        reserveItems() and data can only be accessed from 0 to the number given by reserveItems. Afterwards
+       *        addDataSize() needs to be called with the actual number of elements, that have been written.
+       *
+       * The arrays can be access with less items than indicated with reserveItems(). The call to reserveItems only
+       * represents the maximum number of data items that can be accessed safely.
+       *
+       * After all elements have been written to the arrays addDataSize needs to be called with the final written
+       * number of entries.
+       *
+       *  Example usage:
+       *  \code{.cpp}
+       *    DataInterface<int, double> argVector = ...;
+       *
+       *    // 1. Request space.
+       *    argVector.reserveItems(10);
+       *
+       *    // 2. Add the data.
+       *    int* dataInt;
+       *    double* dataDouble;
+       *    argVector.getDataPointer(dataInt, dataDouble);
+       *    for(int i = 0; i < 5; i += 1) {
+       *      dataInt[i] = i + 1;
+       *      dataDouble[i] = i + 11;
+       *    }
+       *
+       *    // 3. Add the number of items.
+       *    argVector.addDataSize(5);
+       *  \endcode
+       *
+       * @param[in] data  The pointers that are populated with the data from the internal representation.
+       * @tparam Data Types of the pointers.
+       */
+      template<typename... Data>
+      CODI_INLINE void getDataPointer(Data*&... pointers);
+
+      /**
        * @brief Add data to the storage allocated by the implementation. The method can only be called after a call to
        *        reserveItems and only as often as the number of reserved items.
        *
@@ -166,11 +216,6 @@ namespace codi {
        */
       template<typename... Data>
       CODI_INLINE void pushData(Data const&... data);
-
-      template<typename... Data>
-      CODI_INLINE void getDataPointer(Data*&... pointers);
-
-      CODI_INLINE void addDataSize(size_t size);
 
       /**
        * @brief Reserve this many items on the data stream. See pushData for details.

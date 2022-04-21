@@ -80,9 +80,8 @@ namespace codi {
       using EvalHandle = typename TapeTypes::EvalHandle;                  ///< See PrimalValueTapeTypes.
       using Position = typename Base::Position;                           ///< See TapeTypesInterface.
 
-      using FixedSizeStatementData = typename Base::FixedSizeStatementData;
-      using StmtPackHelper = typename Base::StmtPackHelper;
-      using StatementEvalArguments = typename Base::StatementEvalArguments;
+      using StmtFixedDataEntry = typename Base::StmtFixedDataEntry;  ///< See PrimalValueBaseTape.
+      using StmtCallArgs = typename Base::StmtCallArgs;              ///< See PrimalValueBaseTape.
 
       /// Constructor
       PrimalValueReuseTape() : Base() {}
@@ -101,13 +100,13 @@ namespace codi {
         {
           CODI_UNUSED(endDynamicPos);
 
-          FixedSizeStatementData data;
+          StmtFixedDataEntry data;
 
           while (curFixedSizePos > endFixedSizePos) {
 
             curFixedSizePos = data.readReverse(fixedSizeValues, curFixedSizePos);
 
-            StatementEvalArguments stmtArgs{data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues};
+            StmtCallArgs stmtArgs{data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues};
             StatementEvaluator::template call<StatementCall::ClearAdjoint, PrimalValueReuseTape>(
                 data.handle, STMT_ARGS_UNPACK(stmtArgs), adjointVector, adjointVectorSize);
           }
@@ -139,13 +138,13 @@ namespace codi {
 
         StackArray<Real> lhsPrimals{};
         StackArray<Gradient> lhsTangents{};
-        FixedSizeStatementData data;
+        StmtFixedDataEntry data;
 
         while (curFixedSizePos < endFixedSizePos) {
 
           curFixedSizePos = data.readForward(fixedSizeValues, curFixedSizePos);
 
-          StatementEvalArguments stmtArgs{data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues};
+          StmtCallArgs stmtArgs{data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues};
           StatementEvaluator::template call<StatementCall::Forward, PrimalValueReuseTape>(
               data.handle, STMT_ARGS_UNPACK(stmtArgs), primalVector, adjointVector, lhsPrimals.data(), lhsTangents.data());
         }
@@ -162,13 +161,13 @@ namespace codi {
         CODI_UNUSED(endDynamicPos);
 
         StackArray<Real> lhsPrimals{};
-        FixedSizeStatementData data;
+        StmtFixedDataEntry data;
 
         while (curFixedSizePos < endFixedSizePos) {
 
           curFixedSizePos = data.readForward(fixedSizeValues, curFixedSizePos);
 
-          StatementEvalArguments stmtArgs{data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues};
+          StmtCallArgs stmtArgs{data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues};
           StatementEvaluator::template call<StatementCall::Primal, PrimalValueReuseTape>(
               data.handle, STMT_ARGS_UNPACK(stmtArgs), primalVector, lhsPrimals.data());
         }
@@ -185,13 +184,13 @@ namespace codi {
         CODI_UNUSED(endDynamicPos);
 
         StackArray<Gradient> lhsAdjoints{};
-        FixedSizeStatementData data;
+        StmtFixedDataEntry data;
 
         while (curFixedSizePos > endFixedSizePos) {
 
           curFixedSizePos = data.readReverse(fixedSizeValues, curFixedSizePos);
 
-          StatementEvalArguments stmtArgs{data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues};
+          StmtCallArgs stmtArgs{data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues};
           StatementEvaluator::template call<StatementCall::Reverse, PrimalValueReuseTape>(
               data.handle, STMT_ARGS_UNPACK(stmtArgs), primalVector, adjointVector, lhsAdjoints.data());
         }
@@ -209,13 +208,13 @@ namespace codi {
         {
           CODI_UNUSED(endDynamicPos);
 
-          FixedSizeStatementData data;
+          StmtFixedDataEntry data;
 
           while (curFixedSizePos > endFixedSizePos) {
 
             curFixedSizePos = data.readReverse(fixedSizeValues, curFixedSizePos);
 
-            StatementEvalArguments stmtArgs{data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues};
+            StmtCallArgs stmtArgs{data.numberOfPassiveArguments, curDynamicSizePos, dynamicSizeValues};
             StatementEvaluator::template call<StatementCall::ResetPrimal, PrimalValueReuseTape>(
                 data.handle, STMT_ARGS_UNPACK(stmtArgs), primalVector);
           }

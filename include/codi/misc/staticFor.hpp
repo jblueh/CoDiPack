@@ -43,17 +43,20 @@
 /** \copydoc codi::Namespace */
 namespace codi {
 
+  /// Iterator in static_for.
   template<std::size_t N>
-  struct num {
+  struct static_for_iter {
       static const constexpr auto value = N;
   };
 
+  /// Static for specialization for an std::index_sequence.
   template<class F, std::size_t... Is>
   CODI_INLINE void static_for(F func, std::index_sequence<Is...>) {
     using expander = int[];
-    (void)expander{0, ((void)func(num<Is>{}), 0)...};
+    (void)expander{0, ((void)func(static_for_iter<Is>{}), 0)...};
   }
 
+  /// Static for with i = 0 .. (N - 1)
   template<std::size_t N, typename F>
   CODI_INLINE void static_for(F func) {
     static_for(func, std::make_index_sequence<N>());

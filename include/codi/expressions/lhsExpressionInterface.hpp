@@ -253,17 +253,20 @@ namespace codi {
       }
   };
 
+  /// Specialize real traits for lhs expressions.
   template<typename T_Type>
   struct RealTraits::AggregatedTypeTraits<T_Type, ExpressionTraits::EnableIfLhsExpression<T_Type>> :
     RealTraits::ArrayAggregatedTypeTraitsBase<T_Type, T_Type, typename T_Type::Real, 1> {};
 
+  /// Specialize computation traits for lhs expressions.
   template<typename T>
   struct ComputationTraits::TransposeImpl<T, ExpressionTraits::EnableIfLhsExpression<T>> {
     public:
-      using Jacobian = T;
-      using Return = T;
+      using Jacobian = T; ///< See codi::ComputationTraits::TransposeImpl.
+      using Return = T;   ///< See codi::ComputationTraits::TransposeImpl.
 
-      static Return transpose(Jacobian const& jacobian) {
+      /// \copydoc ComputationTraits::TransposeImpl::transpose()
+      CODI_INLINE static Return transpose(Jacobian const& jacobian) {
         return jacobian;
       }
   };

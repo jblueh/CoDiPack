@@ -161,11 +161,13 @@ namespace codi {
   template<typename Tape>
   Tape ActiveType<Tape>::tape{};
 
+  /// Specialization of ActiveResultImpl for active types in a static context.
   template<typename T_Real, typename T_Tape>
   struct ExpressionTraits::ActiveResultImpl<T_Real, T_Tape, false> {
+    public:
 
-      using Real = CODI_DD(T_Real, CODI_ANY);
-      using Tape = CODI_DD(T_Tape, CODI_ANY);
+      using Real = CODI_DD(T_Real, CODI_ANY);  ///< See ExpressionTraits::ActiveResultImpl.
+      using Tape = CODI_DD(T_Tape, CODI_ANY);  ///< See ExpressionTraits::ActiveResultImpl.
 
       /// The resulting active type of an expression.
       using ActiveResult = ActiveType<Tape>;
