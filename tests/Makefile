@@ -45,7 +45,7 @@ DRIVER_DIR = $(INCLUDE_DIR)/drivers
 CODI_DIR := ..
 CODI_INCLUDE = -I$(CODI_DIR)/include
 
-FLAGS = -Wall -Wextra -pedantic -std=c++14 -DCODI_IgnoreInvalidJacobians=true -DCODI_EnableAssert=true -I$(INCLUDE_DIR) $(CODI_INCLUDE)
+FLAGS = -Wall -Werror=return-type -Wextra -pedantic -std=c++14 -DCODI_IgnoreInvalidJacobians=true -DCODI_EnableAssert=true -I$(INCLUDE_DIR) $(CODI_INCLUDE)
 
 ifeq ($(OPT), yes)
   CXX_FLAGS := -O3 $(FLAGS)
