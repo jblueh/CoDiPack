@@ -85,7 +85,7 @@ namespace codi {
       using StmtCallArgs = typename Base::StmtCallArgs;              ///< See PrimalValueBaseTape.
 
       template<typename T>
-      using StackArray = typename Base::StackArray<T>;  ///< See PrimalValueBaseTape.
+      using StackArray = typename Base::template StackArray<T>;  ///< See PrimalValueBaseTape.
 
       /// Constructor
       PrimalValueLinearTape() : Base() {}
