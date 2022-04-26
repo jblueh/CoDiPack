@@ -1008,7 +1008,7 @@ namespace codi {
               ArrayAccessExpression<LhsReal, pos, StaticRhs>;  ///< Extract expressions for aggregated types.
 
           /// Construct the statement in the static context.
-          static StaticRhs constructStatic(Real* __restrict__ primalVector,
+          CODI_INLINE static StaticRhs constructStatic(Real* __restrict__ primalVector,
                                            PassiveReal const* const __restrict__ constantValues,
                                            Identifier const* const __restrict__ identifiers) {
             return Constructor::construct(primalVector, identifiers, constantValues);
