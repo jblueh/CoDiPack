@@ -107,8 +107,7 @@ namespace codi {
             argB(argB.cast()),
             result(Operation::primal(this->argA.getValue(), this->argB.getValue())) {}
 
-      /// Constructor
-      CODI_INLINE BinaryExpression(BinaryExpression const&) = default;
+      CODI_INLINE BinaryExpression(BinaryExpression const&) = default;  ///< Constructor
 
       /*******************************************************************************/
       /// @name Implementation of ExpressionInterface
