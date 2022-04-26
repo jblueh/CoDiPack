@@ -72,6 +72,7 @@ namespace codi {
 
       CODI_INLINE AggregatedActiveTypeBase() = default;                                 ///< Constructor.
       CODI_INLINE AggregatedActiveTypeBase(AggregatedActiveTypeBase const&) = default;  ///< Constructor.
+      CODI_INLINE ~AggregatedActiveTypeBase() = default;                                ///< Destructor.
 
       /*******************************************************************************/
       /// Implementation of ExpressionInterface
@@ -155,6 +156,7 @@ namespace codi {
       using PassiveReal = RealTraits::PassiveReal<Real>;                       ///< Passive value type of the real.
 
       using Base::Base;  ///< Use base constructors.
+      CODI_INLINE ~AggregatedActiveType() = default;  ///< Destructor.
 
       /// Constructor.
       template<typename Expr>

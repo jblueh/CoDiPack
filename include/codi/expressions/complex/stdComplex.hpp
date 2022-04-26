@@ -124,18 +124,18 @@ namespace codi {
 
       /// Constructor.
       template<typename ArgR>
-      ActiveComplex(ExpressionInterface<InnerReal, ArgR> const& argR) : Base() {
+      CODI_INLINE ActiveComplex(ExpressionInterface<InnerReal, ArgR> const& argR) : Base() {
         Base::arrayValue[0] = argR;
       }
 
       /// Constructor.
-      ActiveComplex(PassiverInnerReal const& argR) : Base() {
+      CODI_INLINE ActiveComplex(PassiverInnerReal const& argR) : Base() {
         Base::arrayValue[0] = argR;
       }
 
       /// Constructor.
       template<typename ArgR, typename ArgI>
-      ActiveComplex(ExpressionInterface<InnerReal, ArgR> const& argR, ExpressionInterface<InnerReal, ArgI> const& argI)
+      CODI_INLINE ActiveComplex(ExpressionInterface<InnerReal, ArgR> const& argR, ExpressionInterface<InnerReal, ArgI> const& argI)
           : Base() {
         Base::arrayValue[0] = argR;
         Base::arrayValue[1] = argI;
@@ -143,23 +143,25 @@ namespace codi {
 
       /// Constructor.
       template<typename ArgI>
-      ActiveComplex(PassiverInnerReal const& argR, ExpressionInterface<InnerReal, ArgI> const& argI) : Base() {
+      CODI_INLINE ActiveComplex(PassiverInnerReal const& argR, ExpressionInterface<InnerReal, ArgI> const& argI) : Base() {
         Base::arrayValue[0] = argR;
         Base::arrayValue[1] = argI;
       }
 
       /// Constructor.
       template<typename ArgR>
-      ActiveComplex(ExpressionInterface<InnerReal, ArgR> const& argR, PassiverInnerReal const& argI) : Base() {
+      CODI_INLINE ActiveComplex(ExpressionInterface<InnerReal, ArgR> const& argR, PassiverInnerReal const& argI) : Base() {
         Base::arrayValue[0] = argR;
         Base::arrayValue[1] = argI;
       }
 
       /// Constructor.
-      ActiveComplex(PassiverInnerReal const& argR, PassiverInnerReal const& argI) : Base() {
+      CODI_INLINE ActiveComplex(PassiverInnerReal const& argR, PassiverInnerReal const& argI) : Base() {
         Base::arrayValue[0] = argR;
         Base::arrayValue[1] = argI;
       }
+
+      CODI_INLINE ~ActiveComplex() = default; ///< Destructor
 
       /// Operator += for expressions.
       template<typename Rhs>
@@ -242,12 +244,14 @@ namespace std {
       using Base = codi::ActiveComplex<codi::ActiveType<Tape>, complex<codi::ActiveType<T_Tape>>>;
 
       using Base::Base;                               ///< Use Base constructors.
-      complex(complex const& value) : Base(value) {}  ///< Constructor.
+      CODI_INLINE complex(complex const& value) : Base(value) {}  ///< Constructor.
+
+      CODI_INLINE ~complex() = default; ///< Destructor
 
       using Base::operator=;  ///< Use Base assign operators.
 
       /// Assign operator.
-      complex& operator=(complex const& value) {
+      CODI_INLINE complex& operator=(complex const& value) {
         Base::store(value);
 
         return *this;
