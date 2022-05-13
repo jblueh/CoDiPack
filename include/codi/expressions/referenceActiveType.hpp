@@ -53,10 +53,12 @@ namespace codi {
    * @tparam T_Type  The type of the reference which is captured.
    */
   template<typename T_Type>
-  struct ReferenceActiveType : public LhsExpressionInterface<typename T_Type::Real, typename T_Type::Gradient,
-                                                             typename T_Type::Tape, ReferenceActiveType<T_Type>>,
-                               public AssignmentOperators<T_Type, ReferenceActiveType<T_Type>>,
-                               public IncrementOperators<T_Type, ReferenceActiveType<T_Type>> {
+  struct ReferenceActiveType
+      : public LhsExpressionInterface<typename T_Type::Real, typename T_Type::Gradient, typename T_Type::Tape,
+                                      ReferenceActiveType<T_Type>>,
+        public AssignmentOperators<typename T_Type::Tape::Real, T_Type::Tape::AllowJacobianOptimization,
+                                   ReferenceActiveType<T_Type>>,
+        public IncrementOperators<T_Type, ReferenceActiveType<T_Type>> {
     public:
 
       /// See ReferenceActiveType.

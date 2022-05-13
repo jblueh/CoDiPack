@@ -353,6 +353,7 @@ namespace codi {
         if (CODI_ENABLE_CHECK(Config::CheckTapeActivity, cast().isActive())) {
           Aggregated real{};
           Identifier identifierVec[Elements];
+
           static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
             AggregatedTraits::template arrayAccess<i.value>(real) = lhs.arrayValue[i.value].getValue();
             identifierVec[i.value] = lhs.arrayValue[i.value].getIdentifier();

@@ -61,7 +61,8 @@ namespace codi {
   struct ImmutableActiveType
       : public LhsExpressionInterface<typename T_ActiveType::Real, typename T_ActiveType::Gradient,
                                       typename T_ActiveType::Tape, ImmutableActiveType<T_ActiveType>>,
-        public AssignmentOperators<typename T_ActiveType::Tape, ImmutableActiveType<T_ActiveType>>,
+        public AssignmentOperators<typename T_ActiveType::Tape::Real, T_ActiveType::Tape::AllowJacobianOptimization,
+                                   ImmutableActiveType<T_ActiveType>>,
         public IncrementOperators<typename T_ActiveType::Tape, ImmutableActiveType<T_ActiveType>> {
     public:
 

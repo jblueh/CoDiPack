@@ -60,7 +60,8 @@ namespace codi {
   struct ActiveTypeWrapper
       : public LhsExpressionInterface<typename T_ActiveType::Real, typename T_ActiveType::Gradient,
                                       typename T_ActiveType::Tape, ActiveTypeWrapper<T_ActiveType>>,
-        public AssignmentOperators<typename T_ActiveType::Tape, ActiveTypeWrapper<T_ActiveType>>,
+        public AssignmentOperators<typename T_ActiveType::Tape::Real, T_ActiveType::Tape::AllowJacobianOptimization,
+                                   ActiveTypeWrapper<T_ActiveType>>,
         public IncrementOperators<typename T_ActiveType::Tape, ActiveTypeWrapper<T_ActiveType>> {
     public:
 

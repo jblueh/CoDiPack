@@ -53,6 +53,16 @@ static void assignToReal(R* r, C const* c, int complexCount) {
   }
 }
 
+template<typename Arg>
+static codi::RealTraits::PassiveReal<Arg> passive(Arg const& arg) {
+  return codi::RealTraits::getPassiveValue(arg);
+}
+
+template<typename Arg>
+static std::complex<codi::RealTraits::PassiveReal<Arg>> passive(std::complex<Arg> const& arg) {
+  return {codi::RealTraits::getPassiveValue(std::real(arg)), codi::RealTraits::getPassiveValue(std::imag(arg))};
+}
+
 #if CODI_SpecializeStdComplex
 template<typename T>
 using TestComplex = std::complex<T>;

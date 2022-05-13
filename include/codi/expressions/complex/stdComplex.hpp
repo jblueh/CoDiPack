@@ -105,7 +105,11 @@ namespace codi {
   /// @tparam T_Impl The implementation if it extends this class, otherwise nothing.
   template<typename T_InnerActive, typename T_Impl = Self>
   struct ActiveComplex : public AggregatedActiveType<std::complex<typename T_InnerActive::Real>, T_InnerActive,
-                                                     ReturnSelf<T_Impl, ActiveComplex<T_InnerActive, T_Impl>>> {
+                                                     ReturnSelf<T_Impl, ActiveComplex<T_InnerActive, T_Impl>>>,
+                         public AssignmentOperators<typename T_InnerActive::Real, false,
+                                                    ReturnSelf<T_Impl, ActiveComplex<T_InnerActive, T_Impl>>>,
+                         public AssignmentOperators<std::complex<typename T_InnerActive::Real>, false,
+                                                    ReturnSelf<T_Impl, ActiveComplex<T_InnerActive, T_Impl>>> {
     public:
 
       using InnerActive = CODI_DD(T_InnerActive, CODI_T(ActiveType<CODI_ANY>));        ///< See ActiveComplex.
@@ -116,11 +120,26 @@ namespace codi {
       using PassiverInnerReal = RealTraits::PassiveReal<InnerReal>;  ///< Passive inner value.
 
       using Base = AggregatedActiveType<Real, InnerActive, Impl>;  ///< Abbreviation for the base class.
+      using AssignReal = AssignmentOperators<InnerReal, false, ReturnSelf<Impl, ActiveComplex>>;  ///< Abbreviation for
+                                                                                                  ///< real assignments.
+      using AssignComplex =
+          AssignmentOperators<std::complex<InnerReal>, false, ReturnSelf<Impl, ActiveComplex>>;  ///< Abbreviations for
+                                                                                                 ///< complex
+                                                                                                 ///< assignments.
 
       using value_type = InnerActive;  ///< std::complex interface.
 
       using Base::Base;       ///< Use Base constructors.
       using Base::operator=;  ///< Use Base assign operators.
+
+      using AssignReal::operator+=;     ///< Use real operator +=
+      using AssignComplex::operator+=;  ///< Use real operator +=
+      using AssignReal::operator-=;     ///< Use real operator -=
+      using AssignComplex::operator-=;  ///< Use real operator -=
+      using AssignReal::operator*=;     ///< Use real operator *=
+      using AssignComplex::operator*=;  ///< Use real operator *=
+      using AssignReal::operator/=;     ///< Use real operator /=
+      using AssignComplex::operator/=;  ///< Use real operator /=
 
       /// Constructor.
       template<typename ArgR>
@@ -163,29 +182,6 @@ namespace codi {
 
       CODI_INLINE ~ActiveComplex() = default; ///< Destructor
 
-      /// Operator += for expressions.
-      template<typename Rhs>
-      CODI_INLINE Impl& operator+=(ExpressionInterface<Real, Rhs> const& rhs) {
-        return Base::cast() = (Base::cast() + rhs);
-      }
-
-      /// Operator -= for expressions.
-      template<typename Rhs>
-      CODI_INLINE Impl& operator-=(ExpressionInterface<Real, Rhs> const& rhs) {
-        return Base::cast() = (Base::cast() - rhs);
-      }
-
-      /// Operator *= for expressions.
-      template<typename Rhs>
-      CODI_INLINE Impl& operator*=(ExpressionInterface<Real, Rhs> const& rhs) {
-        return Base::cast() = (Base::cast() * rhs);
-      }
-
-      /// Operator /= for expressions.
-      template<typename Rhs>
-      CODI_INLINE Impl& operator/=(ExpressionInterface<Real, Rhs> const& rhs) {
-        return Base::cast() = (Base::cast() / rhs);
-      }
   };
 
   /// Specialization of ActiveResultImpl for std::complex.

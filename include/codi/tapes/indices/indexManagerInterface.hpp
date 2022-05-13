@@ -118,9 +118,8 @@ namespace codi {
       Index getLargestCreatedIndex() const;
   };
 
-
-	template<typename Index>
+  template<typename Index>
   Index constexpr IndexManagerInterface<Index>::InactiveIndex;
-	template<typename Index>
+  template<typename Index>
   Index constexpr IndexManagerInterface<Index>::InvalidIndex;
 }

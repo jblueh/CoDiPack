@@ -57,7 +57,7 @@ namespace codi {
   template<typename T_Tape>
   struct ActiveType
       : public LhsExpressionInterface<typename T_Tape::Real, typename T_Tape::Gradient, T_Tape, ActiveType<T_Tape>>,
-        public AssignmentOperators<T_Tape, ActiveType<T_Tape>>,
+        public AssignmentOperators<typename T_Tape::Real, T_Tape::AllowJacobianOptimization, ActiveType<T_Tape>>,
         public IncrementOperators<T_Tape, ActiveType<T_Tape>> {
     public:
 
@@ -116,7 +116,7 @@ namespace codi {
         static_cast<LhsExpressionInterface<Real, Gradient, Tape, ActiveType>&>(*this) = v;
         return *this;
       }
-      using LhsExpressionInterface<Real, Gradient, Tape, ActiveType>::operator=;
+      using Base::operator=;
 
       /*******************************************************************************/
       /// @name Implementation of ExpressionInterface

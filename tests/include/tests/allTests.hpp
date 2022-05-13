@@ -40,6 +40,7 @@
 #include "basic/testOutput.hpp"
 #include "exceptions/testOneArgumentExceptions.hpp"
 #include "exceptions/testTwoArgumentExceptions.hpp"
+#include "expressions/complex/testComplexAssignOperators.hpp"
 #include "expressions/complex/testComplexOneArgumentExpr1.hpp"
 #include "expressions/complex/testComplexOneArgumentExpr2.hpp"
 #include "expressions/complex/testComplexTwoArgumentExpr1.hpp"

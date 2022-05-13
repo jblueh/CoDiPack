@@ -262,8 +262,7 @@ namespace codi {
 
     /// Counts the number of nodes in the expression.
     template<typename Expr>
-    struct NumberOfOperations
-        : public CompileTimeTraversalLogic<size_t, NumberOfOperations<Expr>> {
+    struct NumberOfOperations : public CompileTimeTraversalLogic<size_t, NumberOfOperations<Expr>> {
       public:
 
         /// \copydoc CompileTimeTraversalLogic::node()
