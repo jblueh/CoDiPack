@@ -350,27 +350,48 @@ namespace codi {
 
         int constexpr Elements = AggregatedTraits::Elements;
 
+        bool freeAndUpdate = true;
+
         if (CODI_ENABLE_CHECK(Config::CheckTapeActivity, cast().isActive())) {
-          Aggregated real{};
-          Identifier identifierVec[Elements];
+          size_t constexpr MaxArgs = ExpressionTraits::NumberOfActiveTypeArguments<Rhs>::value;
 
+          codiAssert(MaxArgs < Config::MaxArgumentSize);
+
+          statementData.reserveItems(Elements);
+
+          // Push the Jacobians
+          typename JacobianData::InternalPosHandle jacobianStart = jacobianData.reserveItems(MaxArgs * Elements);
+          std::array<size_t, Elements> numberOfArguments;
+          size_t totalNumberOfArguments = 0;
           static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
-            AggregatedTraits::template arrayAccess<i.value>(real) = lhs.arrayValue[i.value].getValue();
-            identifierVec[i.value] = lhs.arrayValue[i.value].getIdentifier();
+            pushJacobians(ArrayAccessExpression<Aggregated, i.value, Rhs>(rhs));
+
+            size_t newTotalNumberOfArguments = jacobianData.getPushedDataCount(jacobianStart);
+            numberOfArguments[i.value] = newTotalNumberOfArguments - totalNumberOfArguments;
+            totalNumberOfArguments = newTotalNumberOfArguments;
           });
 
-          // Perform the storing for each index
-          static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
-            ActiveTypeWrapper<typename Lhs::ActiveInnerType> wrapper(
-                AggregatedTraits::template arrayAccess<i.value>(real), identifierVec[i.value]);
-            wrapper = ArrayAccessExpression<Aggregated, i.value, Rhs>(rhs);
-          });
+          if(0 != totalNumberOfArguments) {
+            freeAndUpdate = false;
 
-          static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
-            lhs.arrayValue[i.value].value() = AggregatedTraits::template arrayAccess<i.value>(real);
-            lhs.arrayValue[i.value].getIdentifier() = identifierVec[i.value];
-          });
-        } else {
+            // Update all lhs entries
+            Aggregated real = rhs.cast().getValue();
+
+            static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
+              // Always free the lhs index so that we do not have problems with self references on the rhs during the reverse run.
+              indexManager.get().freeIndex(lhs.arrayValue[i.value].getIdentifier());
+
+              if (CODI_ENABLE_CHECK(Config::CheckEmptyStatements, 0 != numberOfArguments[i.value])) {
+                indexManager.get().assignIndex(lhs.arrayValue[i.value].getIdentifier());
+                cast().pushStmtData(lhs.arrayValue[i.value].getIdentifier(), (Config::ArgumentSize)numberOfArguments[i.value]);
+              }
+
+              lhs.arrayValue[i.value].value() = AggregatedTraits::template arrayAccess<i.value>(real);
+            });
+          }
+        }
+
+        if(freeAndUpdate) {
           Aggregated real = rhs.cast().getValue();
 
           static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
