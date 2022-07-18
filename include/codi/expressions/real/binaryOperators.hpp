@@ -201,6 +201,8 @@ namespace codi {
 
   using std::atan2;
   using std::copysign;
+  using std::trunc;
+  using std::fmod;
   using std::frexp;
   using std::hypot;
   using std::ldexp;
@@ -309,6 +311,50 @@ namespace codi {
 
 #define OPERATION_LOGIC OperationCopysign
 #define FUNCTION copysignf
+#include "binaryOverloads.tpp"
+
+  /// BinaryOperation implementation for fmod
+  template<typename T_Real>
+  struct OperationFmod : public BinaryOperation<T_Real> {
+    public:
+
+      using Real = CODI_DD(T_Real, double);  ///< See BinaryOperation.
+
+      /// \copydoc codi::BinaryOperation::primal()
+      template<typename ArgA, typename ArgB>
+      static CODI_INLINE Real primal(ArgA const& argA, ArgB const& argB) {
+        return fmod(argA, argB);
+      }
+
+      /// \copydoc codi::BinaryOperation::gradientA()
+      template<typename ArgA, typename ArgB>
+      static CODI_INLINE RealTraits::PassiveReal<Real> gradientA(ArgA const& argA, ArgB const& argB,
+                                                                 Real const& result) {
+        CODI_UNUSED(argA, argB, result);
+
+        return RealTraits::PassiveReal<Real>(1.0);
+      }
+
+      /// \copydoc codi::BinaryOperation::gradientB()
+      template<typename ArgA, typename ArgB>
+      static CODI_INLINE RealTraits::PassiveReal<Real> gradientB(ArgA const& argA, ArgB const& argB,
+                                                                 Real const& result) {
+        CODI_UNUSED(result);
+
+        if (RealTraits::getPassiveValue(argB) == 0.0) {
+          return RealTraits::PassiveReal<Real>(0.0);
+        } else {
+          return -trunc(RealTraits::getPassiveValue(argA/argB));
+        }
+      }
+  };
+
+#define OPERATION_LOGIC OperationFmod
+#define FUNCTION fmod
+#include "binaryOverloads.tpp"
+
+#define OPERATION_LOGIC OperationFmod
+#define FUNCTION fmodf
 #include "binaryOverloads.tpp"
 
   /// BinaryOperation implementation for frexp
@@ -683,6 +729,8 @@ namespace std {
   using codi::copysignf;
   using codi::fmax;
   using codi::fmin;
+  using codi::fmod;
+  using codi::fmodf;
   using codi::frexp;
   using codi::hypot;
   using codi::hypotf;
