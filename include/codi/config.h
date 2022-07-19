@@ -37,6 +37,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "misc/cudaDef.hpp"
 #include "misc/exceptions.hpp"
 
 /** @file */
@@ -64,13 +65,6 @@ namespace codi {
     /*******************************************************************************/
     /// @name Type and compile time value declarations
     /// @{
-
-#if defined(__CUDA_ARCH__) || defined(__CUDA__)
-  #define CODI_FunctionAttributes __device__ __host__
-#else
-  #define CODI_FunctionAttributes /*empty*/
-#endif
-
 
 #ifndef CODI_ChunkSize
   /// See codi::Config::ChunkSize.

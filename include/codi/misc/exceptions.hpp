@@ -39,7 +39,7 @@
 #include <cstdlib>
 #include <iostream>
 
-#include "../config.h"
+#include "cudaDef.hpp"
 
 /** \copydoc codi::Namespace */
 namespace codi {
@@ -56,13 +56,15 @@ namespace codi {
    * @param[in]            file  The file were the function is defined.
    * @param[in]            line  The line in the file were the assert is defined.
    */
-  inline void checkAndOutputAssert(bool const condition, char const* conditionString, char const* function,
+  CODI_FunctionAttributes inline void checkAndOutputAssert(bool const condition, char const* conditionString, char const* function,
                                    char const* file, int line) {
+#if !CODI_CUDA
     if (!condition) {
       std::cerr << "codiAssertion failed: " << conditionString << " in function " << function << " at " << file << ":"
                 << line << std::endl;
       abort();
     }
+#endif
   }
 
 /**
@@ -83,7 +85,8 @@ namespace codi {
    * @param[in]     line  Line inside the file where the exception was generated.
    * @param[in]  message  The exception message and the arguments for the formatting in the message.
    */
-  inline void outputException(char const function[], char const file[], int const line, char const* message, ...) {
+  CODI_FunctionAttributes inline void outputException(char const function[], char const file[], int const line, char const* message, ...) {
+#if !CODI_CUDA
     fprintf(stderr, "Error in function %s (%s:%d)\nThe message is: ", function, file, line);
 
     va_list vl;
@@ -93,6 +96,7 @@ namespace codi {
 
     fprintf(stderr, "\n");
     exit(-1);
+#endif
   }
 
 #if defined(__GNUC__) || defined(__clang__) || defined(__INTEL_COMPILER)
