@@ -65,6 +65,13 @@ namespace codi {
     /// @name Type and compile time value declarations
     /// @{
 
+#if defined(__CUDA_ARCH__) || defined(__CUDA__)
+  #define CODI_FunctionAttributes __device__ __host__
+#else
+  #define CODI_FunctionAttributes /*empty*/
+#endif
+
+
 #ifndef CODI_ChunkSize
   /// See codi::Config::ChunkSize.
   #define CODI_ChunkSize 2097152
@@ -291,16 +298,16 @@ namespace codi {
 #endif
 #if CODI_ForcedInlines
   #if defined(__INTEL_COMPILER) | defined(_MSC_VER)
-    #define CODI_INLINE __forceinline
+    #define CODI_INLINE CODI_FunctionAttributes __forceinline
   #elif defined(__GNUC__)
-    #define CODI_INLINE inline __attribute__((always_inline))
+    #define CODI_INLINE CODI_FunctionAttributes inline __attribute__((always_inline))
   #else
     #warning Could not determine compiler for forced inline definitions. Using inline.
-    #define CODI_INLINE inline
+    #define CODI_INLINE CODI_FunctionAttributes inline
   #endif
 #else
   /// See codi::Config::ForcedInlines.
-  #define CODI_INLINE inline
+  #define CODI_INLINE CODI_FunctionAttributes inline
 #endif
     /// Force inlining instead of using the heuristics from the compiler.
     bool constexpr ForcedInlines = CODI_ForcedInlines;
