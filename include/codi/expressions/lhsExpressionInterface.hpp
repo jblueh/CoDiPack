@@ -38,6 +38,7 @@
 #include "../config.h"
 #include "../tapes/interfaces/fullTapeInterface.hpp"
 #include "../traits/expressionTraits.hpp"
+#include "../traits/misc/toConst.hpp"
 #include "../traits/realTraits.hpp"
 #include "expressionInterface.hpp"
 
@@ -105,7 +106,7 @@ namespace codi {
 
       /// Get the gradient of this lvalue from the tape.
       CODI_INLINE Gradient const& gradient() const {
-        return const_cast<Tape const&>(Impl::getTape()).gradient(cast().getIdentifier());
+        return toConst(Impl::getTape()).gradient(cast().getIdentifier());
       }
 
       /// Get the gradient of this lvalue from the tape.
