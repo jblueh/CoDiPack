@@ -36,6 +36,7 @@
 
 #include "codi/config.h"
 #include "codi/expressions/activeType.hpp"
+#include "codi/expressions/activeTypeLocalTape.hpp"
 #include "codi/expressions/activeTypeWrapper.hpp"
 #include "codi/expressions/immutableActiveType.hpp"
 #include "codi/expressions/real/allOperators.hpp"
@@ -90,7 +91,7 @@ namespace codi {
   /// General forward AD type. See \ref sec_forwardAD for a forward mode AD explanation or \ref ActiveTypeList for a
   /// list of all types.
   template<typename Real, typename Gradient = Real>
-  using RealForwardGen = ActiveType<ForwardEvaluation<Real, Gradient>>;
+  using RealForwardGen = ActiveTypeLocalTape<ForwardEvaluation<Real, Gradient>>;
 
   /// Default forward AD type. See \ref sec_forwardAD for a forward mode AD explanation or \ref ActiveTypeList for a
   /// list of all types.
