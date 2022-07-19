@@ -86,14 +86,14 @@ namespace codi {
 
       /// \copydoc codi::InternalStatementRecordingTapeInterface::initIdentifier()
       template<typename Real>
-      void initIdentifier(Real& value, Identifier& identifier) {
+      CODI_INLINE void initIdentifier(Real& value, Identifier& identifier) {
         CODI_UNUSED(value);
         identifier = Identifier();
       }
 
       /// \copydoc codi::InternalStatementRecordingTapeInterface::destroyIdentifier()
       template<typename Real>
-      void destroyIdentifier(Real& value, Identifier& identifier) {
+      CODI_INLINE void destroyIdentifier(Real& value, Identifier& identifier) {
         CODI_UNUSED(value, identifier);
       }
 
@@ -117,7 +117,7 @@ namespace codi {
 
       /// \copydoc codi::InternalStatementRecordingTapeInterface::store()
       template<typename Lhs, typename Rhs>
-      void store(LhsExpressionInterface<Real, Gradient, ForwardEvaluation, Lhs>& lhs,
+      CODI_INLINE void store(LhsExpressionInterface<Real, Gradient, ForwardEvaluation, Lhs>& lhs,
                  ExpressionInterface<Real, Rhs> const& rhs) {
         LocalReverseLogic reversal;
 
@@ -131,7 +131,7 @@ namespace codi {
       /// \copydoc codi::InternalStatementRecordingTapeInterface::store() <br>
       /// Optimization for copy statements.
       template<typename Lhs, typename Rhs>
-      void store(LhsExpressionInterface<Real, Gradient, ForwardEvaluation, Lhs>& lhs,
+      CODI_INLINE void store(LhsExpressionInterface<Real, Gradient, ForwardEvaluation, Lhs>& lhs,
                  LhsExpressionInterface<Real, Gradient, ForwardEvaluation, Rhs> const& rhs) {
         lhs.cast().value() = rhs.cast().getValue();
         lhs.cast().gradient() = rhs.cast().getGradient();
@@ -140,7 +140,7 @@ namespace codi {
       /// \copydoc codi::InternalStatementRecordingTapeInterface::store() <br>
       /// Specialization for passive assignments.
       template<typename Lhs>
-      void store(LhsExpressionInterface<Real, Gradient, ForwardEvaluation, Lhs>& lhs, PassiveReal const& rhs) {
+      CODI_INLINE void store(LhsExpressionInterface<Real, Gradient, ForwardEvaluation, Lhs>& lhs, PassiveReal const& rhs) {
         lhs.cast().value() = rhs;
         lhs.cast().gradient() = Gradient();
       }
@@ -151,22 +151,22 @@ namespace codi {
       /// @{
 
       /// \copydoc codi::GradientAccessTapeInterface::setGradient()
-      void setGradient(Identifier& identifier, Gradient const& gradient) {
+      CODI_INLINE void setGradient(Identifier& identifier, Gradient const& gradient) {
         identifier = gradient;
       }
 
       /// \copydoc codi::GradientAccessTapeInterface::getGradient()
-      Gradient const& getGradient(Identifier const& identifier) const {
+      CODI_INLINE Gradient const& getGradient(Identifier const& identifier) const {
         return identifier;
       }
 
       /// \copydoc codi::GradientAccessTapeInterface::gradient(Identifier const&)
-      Gradient& gradient(Identifier& identifier) {
+      CODI_INLINE Gradient& gradient(Identifier& identifier) {
         return identifier;
       }
 
       /// \copydoc codi::GradientAccessTapeInterface::gradient(Identifier const&) const
-      Gradient const& gradient(Identifier const& identifier) const {
+      CODI_INLINE Gradient const& gradient(Identifier const& identifier) const {
         return identifier;
       }
 
@@ -174,11 +174,11 @@ namespace codi {
 
     private:
 
-      void setGradient(Identifier const& identifier, Gradient const& gradient) {
+      CODI_INLINE void setGradient(Identifier const& identifier, Gradient const& gradient) {
         CODI_UNUSED(identifier, gradient);
       }
 
-      Gradient& gradient(Identifier const& identifier) {
+      CODI_INLINE Gradient& gradient(Identifier const& identifier) {
         CODI_UNUSED(identifier);
         static Gradient temp = Gradient();
         return temp;

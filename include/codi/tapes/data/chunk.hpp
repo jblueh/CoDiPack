@@ -100,17 +100,17 @@ namespace codi {
       /// @name Interface: Data IO
       /// @{
 
-      virtual void allocateData() = 0;                   ///< Allocated the data if it was deallocated before.
-      virtual void deleteData() = 0;                     ///< Delete the allocated data.
-      virtual void readData(FileIo& handle) = 0;         ///< Read data from the FileIo handle.
-      virtual void writeData(FileIo& handle) const = 0;  ///< Write data to the FileIo handle.
+      CODI_INLINE virtual void allocateData() = 0;                   ///< Allocated the data if it was deallocated before.
+      CODI_INLINE virtual void deleteData() = 0;                     ///< Delete the allocated data.
+      CODI_INLINE virtual void readData(FileIo& handle) = 0;         ///< Read data from the FileIo handle.
+      CODI_INLINE virtual void writeData(FileIo& handle) const = 0;  ///< Write data to the FileIo handle.
 
       /// @}
       /*******************************************************************************/
       /// @name Interface: Misc
       /// @{
 
-      void swap(CODI_IMPLEMENTATION& other);  ///< Swap data with other chunk of the same type.
+      CODI_INLINE void swap(CODI_IMPLEMENTATION& other);  ///< Swap data with other chunk of the same type.
 
       /// @}
     protected:
@@ -120,10 +120,10 @@ namespace codi {
     public:
 
       /// Constructor
-      explicit ChunkBase(size_t const& size) : size(size), usedSize(0) {}
+      CODI_INLINE explicit ChunkBase(size_t const& size) : size(size), usedSize(0) {}
 
       /// Destructor
-      virtual ~ChunkBase() {}
+      CODI_INLINE virtual ~ChunkBase() {}
 
       /*******************************************************************************/
       /// @name Common functionality
@@ -167,7 +167,7 @@ namespace codi {
     protected:
 
       /// Swap the entries of this base class.
-      void swap(ChunkBase& other) {
+      CODI_INLINE void swap(ChunkBase& other) {
         std::swap(size, other.size);
         std::swap(usedSize, other.usedSize);
       }
@@ -191,12 +191,12 @@ namespace codi {
     public:
 
       /// Constructor
-      Chunk1(size_t const& size) : ChunkBase(size), data1(nullptr) {
+      CODI_INLINE Chunk1(size_t const& size) : ChunkBase(size), data1(nullptr) {
         allocateData();
       }
 
       /// Destructor
-      ~Chunk1() {
+      CODI_INLINE ~Chunk1() {
         deleteData();
       }
 
@@ -207,7 +207,7 @@ namespace codi {
       static size_t constexpr EntrySize = sizeof(Data1);  ///< \copydoc ChunkBase::EntrySize
 
       /// \copydoc ChunkBase::allocateData()
-      void allocateData() {
+      CODI_INLINE void allocateData() {
         if (nullptr == data1) {
           data1 = new Data1[size];
         }
@@ -220,7 +220,7 @@ namespace codi {
       }
 
       /// \copydoc ChunkBase::deleteData
-      void deleteData() {
+      CODI_INLINE void deleteData() {
         if (nullptr != data1) {
           delete[] data1;
           data1 = nullptr;
@@ -235,21 +235,21 @@ namespace codi {
       }
 
       /// \copydoc ChunkBase::readData
-      void readData(FileIo& handle) {
+      CODI_INLINE void readData(FileIo& handle) {
         allocateData();
 
         handle.readData(data1, size);
       }
 
       /// \copydoc ChunkBase::swap
-      void swap(Chunk1<Data1>& other) {
+      CODI_INLINE void swap(Chunk1<Data1>& other) {
         Base::swap(other);
 
         std::swap(data1, other.data1);
       }
 
       /// \copydoc ChunkBase::writeData
-      void writeData(FileIo& handle) const {
+      CODI_INLINE void writeData(FileIo& handle) const {
         handle.writeData(data1, size);
       }
 
@@ -276,12 +276,12 @@ namespace codi {
     public:
 
       /// Constructor
-      Chunk2(size_t const& size) : ChunkBase(size), data1(nullptr), data2(nullptr) {
+      CODI_INLINE Chunk2(size_t const& size) : ChunkBase(size), data1(nullptr), data2(nullptr) {
         allocateData();
       }
 
       /// Destructor
-      ~Chunk2() {
+      CODI_INLINE ~Chunk2() {
         deleteData();
       }
 
@@ -292,7 +292,7 @@ namespace codi {
       static size_t constexpr EntrySize = sizeof(Data1) + sizeof(Data2);  ///< \copydoc ChunkBase::EntrySize
 
       /// \copydoc ChunkBase::allocateData()
-      void allocateData() {
+      CODI_INLINE void allocateData() {
         if (nullptr == data1) {
           data1 = new Data1[size];
         }
@@ -310,7 +310,7 @@ namespace codi {
       }
 
       /// \copydoc ChunkBase::deleteData
-      void deleteData() {
+      CODI_INLINE void deleteData() {
         if (nullptr != data1) {
           delete[] data1;
           data1 = nullptr;
@@ -331,7 +331,7 @@ namespace codi {
       }
 
       /// \copydoc ChunkBase::readData
-      void readData(FileIo& handle) {
+      CODI_INLINE void readData(FileIo& handle) {
         allocateData();
 
         handle.readData(data1, size);
@@ -339,7 +339,7 @@ namespace codi {
       }
 
       /// \copydoc ChunkBase::swap
-      void swap(Chunk2<Data1, Data2>& other) {
+      CODI_INLINE void swap(Chunk2<Data1, Data2>& other) {
         Base::swap(other);
 
         std::swap(data1, other.data1);
@@ -347,7 +347,7 @@ namespace codi {
       }
 
       /// \copydoc ChunkBase::writeData
-      void writeData(FileIo& handle) const {
+      CODI_INLINE void writeData(FileIo& handle) const {
         handle.writeData(data1, size);
         handle.writeData(data2, size);
       }
@@ -377,12 +377,12 @@ namespace codi {
     public:
 
       /// Constructor
-      Chunk3(size_t const& size) : ChunkBase(size), data1(nullptr), data2(nullptr), data3(nullptr) {
+      CODI_INLINE Chunk3(size_t const& size) : ChunkBase(size), data1(nullptr), data2(nullptr), data3(nullptr) {
         allocateData();
       }
 
       /// Destructor
-      ~Chunk3() {
+      CODI_INLINE ~Chunk3() {
         deleteData();
       }
 
@@ -394,7 +394,7 @@ namespace codi {
           sizeof(Data1) + sizeof(Data2) + sizeof(Data3);  ///< \copydoc ChunkBase::EntrySize
 
       /// \copydoc ChunkBase::allocateData()
-      void allocateData() {
+      CODI_INLINE void allocateData() {
         if (nullptr == data1) {
           data1 = new Data1[size];
         }
@@ -417,7 +417,7 @@ namespace codi {
       }
 
       /// \copydoc ChunkBase::deleteData
-      void deleteData() {
+      CODI_INLINE void deleteData() {
         if (nullptr != data1) {
           delete[] data1;
           data1 = nullptr;
@@ -444,7 +444,7 @@ namespace codi {
       }
 
       /// \copydoc ChunkBase::readData
-      void readData(FileIo& handle) {
+      CODI_INLINE void readData(FileIo& handle) {
         allocateData();
 
         handle.readData(data1, size);
@@ -453,7 +453,7 @@ namespace codi {
       }
 
       /// \copydoc ChunkBase::swap
-      void swap(Chunk3<Data1, Data2, Data3>& other) {
+      CODI_INLINE void swap(Chunk3<Data1, Data2, Data3>& other) {
         Base::swap(other);
 
         std::swap(data1, other.data1);
@@ -462,7 +462,7 @@ namespace codi {
       }
 
       /// \copydoc ChunkBase::writeData
-      void writeData(FileIo& handle) const {
+      CODI_INLINE void writeData(FileIo& handle) const {
         handle.writeData(data1, size);
         handle.writeData(data2, size);
         handle.writeData(data3, size);
@@ -495,12 +495,12 @@ namespace codi {
     public:
 
       /// Constructor
-      Chunk4(size_t const& size) : ChunkBase(size), data1(nullptr), data2(nullptr), data3(nullptr), data4(nullptr) {
+      CODI_INLINE Chunk4(size_t const& size) : ChunkBase(size), data1(nullptr), data2(nullptr), data3(nullptr), data4(nullptr) {
         allocateData();
       }
 
       /// Destructor
-      ~Chunk4() {
+      CODI_INLINE ~Chunk4() {
         deleteData();
       }
 
@@ -512,7 +512,7 @@ namespace codi {
           sizeof(Data1) + sizeof(Data2) + sizeof(Data3) + sizeof(Data4);  ///< \copydoc ChunkBase::EntrySize
 
       /// \copydoc ChunkBase::allocateData()
-      void allocateData() {
+      CODI_INLINE void allocateData() {
         if (nullptr == data1) {
           data1 = new Data1[size];
         }
@@ -541,7 +541,7 @@ namespace codi {
       }
 
       /// \copydoc ChunkBase::deleteData
-      void deleteData() {
+      CODI_INLINE void deleteData() {
         if (nullptr != data1) {
           delete[] data1;
           data1 = nullptr;
@@ -574,7 +574,7 @@ namespace codi {
       }
 
       /// \copydoc ChunkBase::readData
-      void readData(FileIo& handle) {
+      CODI_INLINE void readData(FileIo& handle) {
         allocateData();
 
         handle.readData(data1, size);
@@ -584,7 +584,7 @@ namespace codi {
       }
 
       /// \copydoc ChunkBase::swap
-      void swap(Chunk4<Data1, Data2, Data3, Data4>& other) {
+      CODI_INLINE void swap(Chunk4<Data1, Data2, Data3, Data4>& other) {
         Base::swap(other);
 
         std::swap(data1, other.data1);
@@ -594,7 +594,7 @@ namespace codi {
       }
 
       /// \copydoc ChunkBase::writeData
-      void writeData(FileIo& handle) const {
+      CODI_INLINE void writeData(FileIo& handle) const {
         handle.writeData(data1, size);
         handle.writeData(data2, size);
         handle.writeData(data3, size);
