@@ -657,6 +657,10 @@ namespace codi {
 #define FUNCTION pow
 #include "binaryOverloads.tpp"
 
+#define OPERATION_LOGIC OperationPow
+#define FUNCTION powf
+#include "binaryOverloads.tpp"
+
   /// BinaryOperation implementation for remainder
   ///
   /// Derivative implementation based on IEC 60559: remainder = numer - rquot * denom
@@ -739,6 +743,7 @@ namespace std {
   using codi::max;
   using codi::min;
   using codi::pow;
+  using codi::powf;
   using codi::remainder;
   using codi::swap;
 }
