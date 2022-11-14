@@ -32,25 +32,39 @@
  *    - Former members:
  *      - Tim Albring
  */
+
 #pragma once
 
-#include <type_traits>
+#include <codi.hpp>
 
-#include "../../config.h"
-#include "../../misc/macros.hpp"
 
-/** \copydoc codi::Namespace */
-namespace codi {
+struct BaseLinearSystemSolverHandler {
+  public:
 
-  /// Enable if abbreviation for std::is_base_of
-  template<typename Base, typename Impl, typename R = void>
-  using enable_if_base_of = std::enable_if<std::is_base_of<Base, Impl>::value, R>;
+    template<typename Number>
+    static void solveSystemDirect(Number* A, Number* b, Number* x) {
+      Number det = 1.0 / (A[0] * A[3] - A[1] * A[2]);
 
-  /// Enable if abbreviation for \c "std::is_same"
-  template<typename T1, typename T2, typename R = void>
-  using enable_if_same = std::enable_if<std::is_same<T1, T2>::value, R>;
+      x[0] = (A[3] * b[0] - A[1] * b[1] ) * det;
+      x[1] = (-A[2] * b[0] + A[0] * b[1] ) * det;
+    }
 
-  /// Enable if abbreviation for \c "!std::is_same"
-  template<typename T1, typename T2, typename R = void>
-  using enable_if_not_same = std::enable_if<!std::is_same<T1, T2>::value, R>;
-}
+    template<typename Solver, typename M, typename V, typename Number>
+    static void func(Solver solver, M& A, V& b, V& sol, Number scale) {
+
+      for(int i = 0; i < 2; i += 1) {
+        sol[i] = scale * b[i];
+      }
+
+      for(int i = 0; i < 2; i += 1) {
+        b[i] = sol[i] / scale;
+      }
+
+#if CODI_EnableEigen
+      codi::solveLinearSystem(solver, A, b, sol);
+#else
+      (void)solver;
+      solveSystemDirect(A, b, sol);
+#endif
+    }
+};

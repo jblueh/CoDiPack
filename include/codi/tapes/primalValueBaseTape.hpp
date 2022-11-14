@@ -519,7 +519,7 @@ namespace codi {
       /// \copydoc codi::InternalStatementRecordingTapeInterface::store() <br>
       /// Specialization for passive assignments.
       template<typename Lhs>
-      CODI_INLINE void store(LhsExpressionInterface<Real, Gradient, Impl, Lhs>& lhs, PassiveReal const& rhs) {
+      CODI_INLINE void store(LhsExpressionInterface<Real, Gradient, Impl, Lhs>& lhs, Real const& rhs) {
         indexManager.get().freeIndex(lhs.cast().getIdentifier());
 
         lhs.cast().value() = rhs;
@@ -829,7 +829,7 @@ namespace codi {
       /// \copydoc codi::ExternalFunctionTapeInterface::registerExternalFunctionOutput()
       template<typename Lhs>
       Real registerExternalFunctionOutput(LhsExpressionInterface<Real, Gradient, Impl, Lhs>& value) {
-        return internalRegisterInput(value, true);
+        return internalRegisterInput(value, false);
       }
 
       /// @}

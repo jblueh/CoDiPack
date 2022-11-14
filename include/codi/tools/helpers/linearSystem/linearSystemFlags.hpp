@@ -32,25 +32,33 @@
  *    - Former members:
  *      - Tim Albring
  */
+
 #pragma once
 
-#include <type_traits>
+#include <vector>
 
-#include "../../config.h"
-#include "../../misc/macros.hpp"
+#include "../../../config.h"
+#include "../../../misc/enumBitset.hpp"
+#include "../../../misc/macros.hpp"
 
 /** \copydoc codi::Namespace */
 namespace codi {
 
-  /// Enable if abbreviation for std::is_base_of
-  template<typename Base, typename Impl, typename R = void>
-  using enable_if_base_of = std::enable_if<std::is_base_of<Base, Impl>::value, R>;
+  /// Flags for the linear system solver. See LinearSystemInterface for a description of the flags.
+  enum class LinearSystemSolverFlags {
+    ReverseEvaluation = 0,
+    ForwardEvaluation,
+    PrimalEvaluation,
+    ProvidePrimalSolution,
+    RecomputePrimalInForwardEvaluation,
+    MaxElement
+  };
 
-  /// Enable if abbreviation for \c "std::is_same"
-  template<typename T1, typename T2, typename R = void>
-  using enable_if_same = std::enable_if<std::is_same<T1, T2>::value, R>;
+  /// All hints for the LinearSystemSolverHelper.
+  using LinearSystemSolverHints = EnumBitset<LinearSystemSolverFlags>;
 
-  /// Enable if abbreviation for \c "!std::is_same"
-  template<typename T1, typename T2, typename R = void>
-  using enable_if_not_same = std::enable_if<!std::is_same<T1, T2>::value, R>;
+  /// Return a hints structure when to enums are ored.
+  CODI_INLINE LinearSystemSolverHints operator|(LinearSystemSolverFlags a, LinearSystemSolverFlags b) {
+    return LinearSystemSolverHints(a) | b;
+  }
 }
