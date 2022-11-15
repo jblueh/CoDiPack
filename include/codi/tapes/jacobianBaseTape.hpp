@@ -374,15 +374,22 @@ namespace codi {
           if(0 != totalNumberOfArguments) {
             freeAndUpdate = false;
 
+            // First get all identifiers to prevent self references
+            std::array<Identifier, Elements> identifiers = {};
+            static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
+              if (CODI_ENABLE_CHECK(Config::CheckEmptyStatements, 0 != numberOfArguments[i.value])) {
+                indexManager.get().assignIndex(identifiers[i.value]);
+              }
+            });
+
             // Update all lhs entries
             Aggregated real = rhs.cast().getValue();
 
             static_for<Elements>([&](auto i) CODI_LAMBDA_INLINE {
-              // Always free the lhs index so that we do not have problems with self references on the rhs during the reverse run.
               indexManager.get().freeIndex(lhs.arrayValue[i.value].getIdentifier());
 
               if (CODI_ENABLE_CHECK(Config::CheckEmptyStatements, 0 != numberOfArguments[i.value])) {
-                indexManager.get().assignIndex(lhs.arrayValue[i.value].getIdentifier());
+                lhs.arrayValue[i.value].getIdentifier() = identifiers[i.value];
                 cast().pushStmtData(lhs.arrayValue[i.value].getIdentifier(), (Config::ArgumentSize)numberOfArguments[i.value]);
               }
 
