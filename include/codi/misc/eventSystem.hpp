@@ -144,16 +144,18 @@ namespace codi {
       /// Map that links events to registered callbacks and their associated custom data.
       using EventListenerMap = std::map<Event, std::list<std::pair<Handle, std::pair<Callback, void*>>>>;
 
+#if !CODI_CUDA
       /**
        * @brief Access the static EventListenerMap.
        *
        * Both tapes and event systems are static entities in CoDiPack, but the tape depends on the event system. We
        * ensure with an initialize-on-first-use pattern that the event system is available when needed.
        */
-      static EventListenerMap& getListeners() {
+      static CODI_INLINE EventListenerMap& getListeners() {
         static EventListenerMap* const listeners = new EventListenerMap;
         return *listeners;
       }
+#endif
 
     private:
 
@@ -177,12 +179,14 @@ namespace codi {
       template<typename TypedCallback>
       static CODI_INLINE Handle internalRegisterListener(bool const& enabled, Event event, TypedCallback callback,
                                                          void* customData) {
+#if !CODI_CUDA
         if (enabled) {
           nextHandle = nextHandle + 1;
           Handle handle = nextHandle;
           getListeners()[event].push_back(std::make_pair(handle, std::make_pair((void*)callback, customData)));
           return handle;
         }
+#endif
 
         return 0;
       }
@@ -202,9 +206,11 @@ namespace codi {
       template<typename TypedCallback, typename... Args>
       static CODI_INLINE void internalNotifyListeners(bool const& enabled, Event event, Args&&... args) {
         if (enabled) {
+#if !CODI_CUDA
           for (auto const& listener : getListeners()[event]) {
             ((TypedCallback)listener.second.first)(std::forward<Args>(args)..., listener.second.second);
           }
+#endif
         }
       }
 
@@ -253,6 +259,14 @@ namespace codi {
                                                  lhsIdentifier, newValue, statement);
       }
 
+      static CODI_INLINE void notifyStatementPrimalListeners(Tape tape, Real const& lhsValue,
+                                                             Identifier const& lhsIdentifier, Real const& newValue,
+                                                             EventHints::Statement statement) {
+        internalNotifyListeners<void (*)(Tape&, Real const&, Identifier const&, Real const&, EventHints::Statement,
+                                         void*)>(Config::StatementEvents, Event::StatementPrimal, tape, lhsValue,
+                                                 lhsIdentifier, newValue, statement);
+      }
+
       /// @}
       /*******************************************************************************/
       /// @name General methods
@@ -266,6 +280,7 @@ namespace codi {
        * @param handle  Handle of the listener that should be deregistered.
        */
       static CODI_INLINE void deregisterListener(Handle const& handle) {
+#if !CODI_CUDA
         for (auto& listenersForEvent : getListeners()) {
           auto iterator = listenersForEvent.second.begin();
           for (; listenersForEvent.second.end() != iterator; ++iterator) {
@@ -279,6 +294,7 @@ namespace codi {
             break;
           }
         }
+#endif
       }
 
       /// @}

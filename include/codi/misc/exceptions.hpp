@@ -72,7 +72,8 @@ namespace codi {
  *
  * @param ...  Arguments for a printf like output and format.
  */
-#define CODI_EXCEPTION(...) outputException(__func__, __FILE__, __LINE__, __VA_ARGS__)
+#if !CODI_CUDA
+  #define CODI_EXCEPTION(...) outputException(__func__, __FILE__, __LINE__, __VA_ARGS__)
 
   /**
    * @brief Prints the positions and the message of the exception.
@@ -86,7 +87,6 @@ namespace codi {
    * @param[in]  message  The exception message and the arguments for the formatting in the message.
    */
   CODI_FunctionAttributes inline void outputException(char const function[], char const file[], int const line, char const* message, ...) {
-#if !CODI_CUDA
     fprintf(stderr, "Error in function %s (%s:%d)\nThe message is: ", function, file, line);
 
     va_list vl;
@@ -96,8 +96,10 @@ namespace codi {
 
     fprintf(stderr, "\n");
     exit(-1);
-#endif
   }
+#else
+  #define CODI_EXCEPTION(...) /* do nothing */
+#endif
 
 #if defined(__GNUC__) || defined(__clang__) || defined(__INTEL_COMPILER)
   #define DEPRECATE(foo, msg) foo __attribute__((deprecated(msg)))

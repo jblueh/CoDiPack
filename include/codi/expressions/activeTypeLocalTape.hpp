@@ -34,8 +34,8 @@
  */
 #pragma once
 
-#include "../misc/macros.hpp"
 #include "../config.h"
+#include "../misc/macros.hpp"
 #include "../tapes/interfaces/fullTapeInterface.hpp"
 #include "../traits/realTraits.hpp"
 #include "assignmentOperators.hpp"
@@ -65,7 +65,7 @@ namespace codi {
       /// For reverse AD, the tape must implement ReverseTapeInterface.
       /// For forward AD, the 'tape' (that is not a tape, technically) must implement
       /// InternalStatementRecordingTapeInterface and GradientAccessTapeInterface.
-      using Tape = CODI_DD(T_Tape, CODI_T(FullTapeInterface<double, double, int, EmptyPosition>));
+      using Tape = CODI_DD(T_Tape, CODI_DEFAULT_TAPE);
 
       using Real = typename Tape::Real;                   ///< See LhsExpressionInterface.
       using PassiveReal = RealTraits::PassiveReal<Real>;  ///< Basic computation type.
@@ -85,13 +85,10 @@ namespace codi {
 
       /// Constructor
       constexpr CODI_INLINE ActiveTypeLocalTape() = default;
-      //CODI_INLINE ActiveTypeLocalTape() : primalValue(), identifier() {
-      //  Base::init();
-      //}
 
       /// Constructor
       CODI_INLINE ActiveTypeLocalTape(ActiveTypeLocalTape<Tape> const& v) : primalValue(), identifier() {
-        Base::init();
+        Base::init(v.getValue(), EventHints::Statement::Copy);
         this->getTape().store(*this, v);
       }
 
@@ -101,7 +98,7 @@ namespace codi {
       /// Constructor
       template<class Rhs>
       CODI_INLINE ActiveTypeLocalTape(ExpressionInterface<Real, Rhs> const& rhs) : primalValue(), identifier() {
-        Base::init();
+        Base::init(rhs.cast().getValue(), EventHints::Statement::Expression);
         this->getTape().store(*this, rhs.cast());
       }
 
