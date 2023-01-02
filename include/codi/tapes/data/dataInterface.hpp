@@ -36,8 +36,8 @@
 
 #include <vector>
 
-#include "../../misc/macros.hpp"
 #include "../../config.h"
+#include "../../misc/macros.hpp"
 #include "../misc/tapeValues.hpp"
 #include "chunk.hpp"
 #include "position.hpp"
@@ -143,10 +143,17 @@ namespace codi {
   struct DataInterface {
     public:
 
-      using NestedData = CODI_DD(T_NestedData, DataInterface);         ///< See DataInterface
+      using NestedData = T_NestedData;                                 ///< See DataInterface
       using InternalPosHandle = CODI_DD(T_InternalPosHandle, size_t);  ///< See DataInterface
 
       using Position = EmptyPosition;  ///< Contains position data for this DataInterface and all nested interfaces
+
+#if CODI_IDE
+      /// Constructor
+      DataInterface(size_t chunkSize) {
+        CODI_UNUSED(chunkSize);
+      }
+#endif
 
       /*******************************************************************************/
       /// @name Adding items
@@ -197,6 +204,16 @@ namespace codi {
                                                                                      #reserveItems. */
       CODI_INLINE Position getZeroPosition() const; /**< @return The start position of the DataInterface and all nested
                                                                  interfaces. */
+
+      /**
+       * @brief Obtain pointers to internal data.
+       *
+       * @tparam     Data      Types of the stored data.
+       * @param[in]  startPos  Internal position handle, usually obtained by a call to reserveItems.
+       * @param[out] data      Returned pointers.
+       */
+      template<typename... Data>
+      CODI_INLINE void getDataPointers(InternalPosHandle const& startPos, Data*&... data);
 
       /*******************************************************************************/
       /// @name Misc functions

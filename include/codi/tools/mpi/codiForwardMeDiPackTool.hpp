@@ -40,9 +40,9 @@
 #include <medi/ampi/typeDefault.hpp>
 #include <medi/ampi/types/indexTypeHelper.hpp>
 
-#include "../../misc/macros.hpp"
 #include "../../config.h"
 #include "../../expressions/lhsExpressionInterface.hpp"
+#include "../../misc/macros.hpp"
 
 /** \copydoc codi::Namespace */
 namespace codi {
@@ -54,7 +54,7 @@ namespace codi {
                                                        typename T_Type::PassiveReal, int> {
     public:
 
-      using Type = CODI_DD(T_Type, CODI_T(LhsExpressionInterface<double, double, CODI_ANY, CODI_ANY>));
+      using Type = CODI_DD(T_Type, CODI_DEFAULT_LHS_EXPRESSION);
 
       using PrimalType = typename Type::Real;
       using AdjointType = void;

@@ -37,9 +37,9 @@
 #include <complex>
 #include <vector>
 
-#include "../../misc/macros.hpp"
 #include "../../config.h"
 #include "../../expressions/lhsExpressionInterface.hpp"
+#include "../../misc/macros.hpp"
 #include "../../tapes/misc/vectorAccessInterface.hpp"
 #include "../../traits/computationTraits.hpp"
 #include "../../traits/expressionTraits.hpp"
@@ -75,8 +75,8 @@ namespace codi {
    */
   template<typename T_Type, typename = void>
   struct AggregatedTypeVectorAccessWrapper : public VectorAccessInterface<CODI_ANY, CODI_ANY> {
-      static_assert(false && std::is_void<T_Type>::value,
-                    "Instantiation of unspecialized AggregatedTypeVectorAccessWrapper.");
+      CODI_STATIC_ASSERT(false && std::is_void<T_Type>::value,
+                         "Instantiation of unspecialized AggregatedTypeVectorAccessWrapper.");
 
       using Type = CODI_DD(T_Type, CODI_ANY);  ///< See AggregatedTypeVectorAccessWrapperBase.
   };
@@ -104,13 +104,16 @@ namespace codi {
 
       InnerInterface& innerInterface;  ///< Reference to the accessor of the underlying tape.
 
-      std::vector<Real> lhs;  ///< Temporary storage for indirect adjoint or tangent updates.
+      std::vector<Real> lhs;     ///< Temporary storage for indirect adjoint or tangent updates.
+      std::vector<Real> buffer;  ///< Temporary storage for getAdjointVec access.
 
     public:
 
       /// Constructor
       AggregatedTypeVectorAccessWrapperBase(InnerInterface* innerInterface)
-          : innerInterface(*innerInterface), lhs(innerInterface->getVectorSize()) {}
+          : innerInterface(*innerInterface),
+            lhs(innerInterface->getVectorSize()),
+            buffer(innerInterface->getVectorSize()) {}
 
       /*******************************************************************************/
       /// @name Misc
@@ -177,6 +180,12 @@ namespace codi {
         }
       }
 
+      /// \copydoc VectorAccessInterface::getAdjointVec()
+      Real const* getAdjointVec(Identifier const& index) {
+        getAdjointVec(index, buffer.data());
+        return buffer.data();
+      }
+
       /// \copydoc VectorAccessInterface::updateAdjointVec()
       void updateAdjointVec(Identifier const& index, Real const* const vec) {
         for (size_t curDim = 0; curDim < lhs.size(); curDim += 1) {
@@ -236,11 +245,8 @@ namespace codi {
             VectorAccessInterface<typename T_InnerType::Real, typename T_InnerType::Identifier>> {
     public:
 
-      using InnerType = CODI_DD(
-          T_InnerType,
-          CODI_T(LhsExpressionInterface<double, double, CODI_ANY, CODI_ANY>));  ///< See
-                                                                                ///< AggregatedTypeVectorAccessWrapper.
-      using Type = std::complex<InnerType>;  ///< See AggregatedTypeVectorAccessWrapper.
+      using InnerType = CODI_DD(T_InnerType, CODI_DEFAULT_LHS_EXPRESSION);  ///< See AggregatedTypeVectorAccessWrapper.
+      using Type = std::complex<InnerType>;                                 ///< See AggregatedTypeVectorAccessWrapper.
 
       using InnerInterface = VectorAccessInterface<
           typename InnerType::Real,
@@ -303,10 +309,7 @@ namespace codi {
   template<typename T_Type>
   struct AggregatedTypeVectorAccessWrapperFactory<T_Type, ExpressionTraits::EnableIfLhsExpression<T_Type>> {
     public:
-      using Type = CODI_DD(
-          T_Type,
-          CODI_T(LhsExpressionInterface<double, int, CODI_ANY, CODI_ANY>));  ///< See
-                                                                             ///< AggregatedTypeVectorAccessWrapperBase.
+      using Type = CODI_DD(T_Type, CODI_DEFAULT_LHS_EXPRESSION);  ///< See AggregatedTypeVectorAccessWrapperBase.
 
       using RType = VectorAccessInterface<typename Type::Real, typename Type::Identifier>;
 

@@ -34,8 +34,8 @@
  */
 #pragma once
 
-#include "../misc/macros.hpp"
 #include "../config.h"
+#include "../misc/macros.hpp"
 #include "../tapes/interfaces/fullTapeInterface.hpp"
 #include "../traits/realTraits.hpp"
 #include "assignmentOperators.hpp"
@@ -65,7 +65,7 @@ namespace codi {
       /// For reverse AD, the tape must implement ReverseTapeInterface.
       /// For forward AD, the 'tape' (that is not a tape, technically) must implement
       /// InternalStatementRecordingTapeInterface and GradientAccessTapeInterface.
-      using Tape = CODI_DD(T_Tape, CODI_T(FullTapeInterface<double, double, int, EmptyPosition>));
+      using Tape = CODI_DD(T_Tape, CODI_DEFAULT_TAPE);
 
       using Real = typename Tape::Real;                   ///< See LhsExpressionInterface.
       using PassiveReal = RealTraits::PassiveReal<Real>;  ///< Basic computation type.
@@ -85,25 +85,38 @@ namespace codi {
 
       /// Constructor
       CODI_INLINE ActiveType() : primalValue(), identifier() {
-        Base::init();
+        Base::init(Real(), EventHints::Statement::Passive);
       }
 
       /// Constructor
       CODI_INLINE ActiveType(ActiveType<Tape> const& v) : primalValue(), identifier() {
-        Base::init();
+        Base::init(v.getValue(), EventHints::Statement::Copy);
         this->getTape().store(*this, v);
       }
 
       /// Constructor
-      CODI_INLINE ActiveType(PassiveReal const& value) : primalValue(value), identifier() {
-        Base::init();
+      CODI_INLINE ActiveType(Real const& value) : primalValue(value), identifier() {
+        Base::init(value, EventHints::Statement::Passive);
       }
 
       /// Constructor
-      template<class Rhs>
+      template<typename U = Real, typename = RealTraits::EnableIfNotPassiveReal<U>>
+      CODI_INLINE ActiveType(PassiveReal const& value) : primalValue(value), identifier() {
+        Base::init(value, EventHints::Statement::Passive);
+      }
+
+      /// Constructor
+      template<typename Rhs>
       CODI_INLINE ActiveType(ExpressionInterface<Real, Rhs> const& rhs) : primalValue(), identifier() {
-        Base::init();
+        Base::init(rhs.cast().getValue(), EventHints::Statement::Expression);
         this->getTape().store(*this, rhs.cast());
+      }
+
+      /// Constructor
+      template<typename Rhs, typename U = Real, typename = RealTraits::EnableIfNotPassiveReal<U>>
+      CODI_INLINE ActiveType(ExpressionInterface<typename U::Real, Rhs> const& rhs)
+          : primalValue(rhs.cast()), identifier() {
+        Base::init(rhs.cast().getValue(), EventHints::Statement::Passive);
       }
 
       /// Destructor
@@ -111,7 +124,7 @@ namespace codi {
         Base::destroy();
       }
 
-      /// See LhsExpressionInterface::operator =(ExpressionInterface const&).
+      /// See LhsExpressionInterface::operator=(ExpressionInterface const&).
       CODI_INLINE ActiveType<Tape>& operator=(ActiveType<Tape> const& v) {
         static_cast<LhsExpressionInterface<Real, Gradient, Tape, ActiveType>&>(*this) = v;
         return *this;
@@ -158,6 +171,8 @@ namespace codi {
       /// @}
   };
 
+  // clang-format off
   template<typename Tape>
-  Tape ActiveType<Tape>::tape{};
+  CODI_DD(Tape, CODI_DEFAULT_TAPE) ActiveType<Tape>::tape{};
+  // clang-format on
 }

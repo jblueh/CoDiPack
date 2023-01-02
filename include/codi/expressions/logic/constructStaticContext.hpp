@@ -34,11 +34,12 @@
  */
 #pragma once
 
-#include "../../misc/macros.hpp"
 #include "../../config.h"
+#include "../../misc/macros.hpp"
 #include "../../tapes/interfaces/reverseTapeInterface.hpp"
 #include "../../traits/expressionTraits.hpp"
 #include "../binaryExpression.hpp"
+#include "../constantExpression.hpp"
 #include "../expressionInterface.hpp"
 #include "../static/staticContextActiveType.hpp"
 #include "../unaryExpression.hpp"

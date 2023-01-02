@@ -36,9 +36,9 @@
 
 #include <vector>
 
+#include "../../config.h"
 #include "../../misc/constructVector.hpp"
 #include "../../misc/macros.hpp"
-#include "../../config.h"
 #include "../../traits/realTraits.hpp"
 #include "delayAccessor.hpp"
 #include "dummy.hpp"
@@ -185,9 +185,9 @@ namespace codi {
   template<typename T_Nested>
   struct JacobianConvertWrapper {
     public:
-      using Nested = CODI_DECLARE_DEFAULT(T_Nested, JacobianInterface<double>);  ///< See JacobianConvertWrapper.
-      using T = typename Nested::T;                                              ///< See JacobianInterface.
-      using DelayAcc = JacobianDelayAccessor<JacobianConvertWrapper>;            ///< Return type for reference access.
+      using Nested = CODI_DD(T_Nested, JacobianInterface<double>);     ///< See JacobianConvertWrapper.
+      using T = typename Nested::T;                                    ///< See JacobianInterface.
+      using DelayAcc = JacobianDelayAccessor<JacobianConvertWrapper>;  ///< Return type for reference access.
 
     private:
       Nested& nested;

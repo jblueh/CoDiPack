@@ -37,8 +37,8 @@
 
 #include <vector>
 
-#include "../../misc/macros.hpp"
 #include "../../config.h"
+#include "../../misc/macros.hpp"
 #include "../../traits/misc/enableIfHelpers.hpp"
 #include "chunk.hpp"
 #include "dataInterface.hpp"
@@ -65,7 +65,7 @@ namespace codi {
   struct BlockData : public DataInterface<T_NestedData> {
     public:
 
-      using Chunk = CODI_DD(T_Chunk, CODI_T(ChunkBase<CODI_ANY>));                      ///< See BlockData
+      using Chunk = CODI_DD(T_Chunk, CODI_T(Chunk1<CODI_ANY>));                         ///< See BlockData
       using NestedData = CODI_DD(T_NestedData, CODI_T(DataInterface<CODI_ANY>));        ///< See BlockData
       using PointerInserter = CODI_DD(T_PointerInserter, CODI_T(PointerStore<Chunk>));  ///< See BlockData
 
@@ -157,6 +157,12 @@ namespace codi {
       /// \copydoc DataInterface::getZeroPosition
       CODI_INLINE Position getZeroPosition() const {
         return Position(0, nested->getZeroPosition());
+      }
+
+      /// \copydoc DataInterface::getDataPointers
+      template<typename... Data>
+      CODI_INLINE void getDataPointers(InternalPosHandle const& startPos, Data*&... data) {
+        chunk.dataPointer(startPos, data...);
       }
 
       /*******************************************************************************/
@@ -284,4 +290,8 @@ namespace codi {
         }
       }
   };
+
+  /// BlockData DataInterface used in all unchecked tapes.
+  template<typename Chunk, typename NestedData = EmptyData>
+  using DefaultBlockData = BlockData<Chunk, NestedData>;
 }

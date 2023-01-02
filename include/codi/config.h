@@ -96,14 +96,6 @@ namespace codi {
     /// @name Compile time flags
     /// @{
 
-#ifndef CODI_EnableMPI
-  /// See codi::Config::EnableMPI.
-  #define CODI_EnableMPI false
-#endif
-    /// Add MPI and MeDiPack specific headers.
-    bool constexpr EnableMPI = CODI_EnableMPI;
-    // Do not undefine.
-
 #ifndef CODI_CheckExpressionArguments
   /// See codi::Config::CheckExpressionArguments.
   #define CODI_CheckExpressionArguments false
@@ -246,6 +238,65 @@ namespace codi {
     /// With a linear index management, control if adjoints are set to zero during reversal.
     bool constexpr ReversalZeroesAdjoints = CODI_ReversalZeroesAdjoints;
 #undef CODI_ReversalZeroesAdjoints
+
+    /// @}
+    /*******************************************************************************/
+    /// @name Event system
+    /// @{
+    ///
+
+#ifndef CODI_ADWorkflowEvents
+  /// See codi::Config::ADWorkflowEvents.
+  #define CODI_ADWorkflowEvents true
+#endif
+    /// Enable AD workflow events, also known as Tape* events. Enabled by default.
+    bool constexpr ADWorkflowEvents = CODI_ADWorkflowEvents;
+#undef CODI_ADWorkflowEvents
+
+#ifndef CODI_PreaccEvents
+    /// See codi::Config::PreaccEvents.
+  #define CODI_PreaccEvents false
+#endif
+    /// Enable preaccumulation events. Disabled by default.
+    bool constexpr PreaccEvents = CODI_PreaccEvents;
+#undef CODI_PreaccEvents
+
+#ifndef CODI_StatementEvents
+    /// See codi::Config::StatementEvents.
+  #define CODI_StatementEvents false
+#endif
+    /// Enable statement events. Disabled by default.
+    bool constexpr StatementEvents = CODI_StatementEvents;
+#undef CODI_StatementEvents
+
+#ifndef CODI_IndexEvents
+    /// See codi::Config::IndexEvents.
+  #define CODI_IndexEvents false
+#endif
+    /// Enable index management events. Disabled by default.
+    bool constexpr IndexEvents = CODI_IndexEvents;
+#undef CODI_IndexEvents
+
+    /// @}
+    /*******************************************************************************/
+    /// @name Relations to other libraries
+    /// @{
+
+#ifndef CODI_EnableEigen
+  /// See codi::Config::EnableEigen.
+  #define CODI_EnableEigen 0
+#endif
+    /// Enable Eigen specific implementations.
+    bool constexpr EnableEigen = CODI_EnableEigen;
+    // Do not undefine
+
+#ifndef CODI_EnableMPI
+  /// See codi::Config::EnableMPI.
+  #define CODI_EnableMPI false
+#endif
+    /// Add MPI and MeDiPack specific headers.
+    bool constexpr EnableMPI = CODI_EnableMPI;
+    // Do not undefine.
 
     /// @}
     /*******************************************************************************/

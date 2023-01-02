@@ -36,11 +36,11 @@
 
 #include <vector>
 
-#include "../../misc/macros.hpp"
 #include "../../config.h"
 #include "../../expressions/lhsExpressionInterface.hpp"
-#include "../../tapes/misc/vectorAccessInterface.hpp"
+#include "../../misc/macros.hpp"
 #include "../../tapes/interfaces/fullTapeInterface.hpp"
+#include "../../tapes/misc/vectorAccessInterface.hpp"
 #include "../../traits/tapeTraits.hpp"
 #include "../data/externalFunctionUserData.hpp"
 
@@ -87,13 +87,12 @@ namespace codi {
     public:
 
       /// See ExternalFunctionHelper.
-      using Type = CODI_DD(T_Type, CODI_T(LhsExpressionInterface<double, double, CODI_ANY, CODI_ANY>));
+      using Type = CODI_DD(T_Type, CODI_DEFAULT_LHS_EXPRESSION);
 
       using Real = typename Type::Real;              ///< See LhsExpressionInterface.
       using Identifier = typename Type::Identifier;  ///< See LhsExpressionInterface.
 
-      /// See LhsExpressionInterface.
-      using Tape = CODI_DD(typename Type::Tape, CODI_T(FullTapeInterface<double, double, int, CODI_ANY>));
+      using Tape = CODI_DD(typename Type::Tape, CODI_DEFAULT_TAPE);  ///< See LhsExpressionInterface.
 
       /// Function interface for the reverse AD call of an external function.
       using ReverseFunc = void (*)(Real const* x, Real* x_b, size_t m, Real const* y, Real const* y_b, size_t n,

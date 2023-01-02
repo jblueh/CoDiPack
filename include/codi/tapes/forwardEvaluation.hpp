@@ -34,10 +34,10 @@
  */
 #pragma once
 
-#include "../misc/macros.hpp"
 #include "../config.h"
 #include "../expressions/lhsExpressionInterface.hpp"
 #include "../expressions/logic/helpers/jacobianComputationLogic.hpp"
+#include "../misc/macros.hpp"
 #include "../traits/expressionTraits.hpp"
 #include "../traits/realTraits.hpp"
 #include "../traits/tapeTraits.hpp"
@@ -140,7 +140,7 @@ namespace codi {
       /// \copydoc codi::InternalStatementRecordingTapeInterface::store() <br>
       /// Specialization for passive assignments.
       template<typename Lhs>
-      CODI_INLINE void store(LhsExpressionInterface<Real, Gradient, ForwardEvaluation, Lhs>& lhs, PassiveReal const& rhs) {
+      CODI_INLINE void store(LhsExpressionInterface<Real, Gradient, ForwardEvaluation, Lhs>& lhs, Real const& rhs) {
         lhs.cast().value() = rhs;
         lhs.cast().gradient() = Gradient();
       }
@@ -191,8 +191,9 @@ namespace codi {
   struct RealTraits::IsTotalFinite<T_Type, TapeTraits::EnableIfForwardTape<typename T_Type::Tape>> {
     public:
 
-      using Type = CODI_DD(T_Type, TEMPLATE(LhsExpressionInterface<double, double, InternalExpressionTapeInterface<ANY>,
-                                                                   T_Type>));  ///< See RealTraits::IsTotalFinite.
+      using Type = CODI_DD(
+          T_Type, CODI_T(LhsExpressionInterface<double, double, InternalStatementRecordingTapeInterface<CODI_ANY>,
+                                                T_Type>));  ///< See RealTraits::IsTotalFinite.
 
       /// \copydoc codi::RealTraits::IsTotalFinite::isTotalFinite()
       static CODI_INLINE bool isTotalFinite(Type const& v) {
@@ -207,10 +208,11 @@ namespace codi {
   struct RealTraits::IsTotalZero<T_Type, TapeTraits::EnableIfForwardTape<typename T_Type::Tape>> {
     public:
 
-      using Type = CODI_DD(T_Type, TEMPLATE(LhsExpressionInterface<double, double, InternalExpressionTapeInterface<ANY>,
-                                                                   T_Type>));  ///< See RealTraits::IsTotalZero.
-      using Real = typename Type::Real;                                        ///< See
-                                                                               ///< codi::LhsExpressionInterface::Real.
+      using Type = CODI_DD(
+          T_Type, CODI_T(LhsExpressionInterface<double, double, InternalStatementRecordingTapeInterface<CODI_ANY>,
+                                                T_Type>));  ///< See RealTraits::IsTotalZero.
+      using Real = typename Type::Real;                     ///< See
+                                                            ///< codi::LhsExpressionInterface::Real.
 
       /// \copydoc codi::RealTraits::IsTotalFinite::isTotalZero()
       static CODI_INLINE bool isTotalZero(Type const& v) {

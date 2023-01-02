@@ -36,8 +36,8 @@
 
 #include <vector>
 
-#include "../../misc/macros.hpp"
 #include "../../config.h"
+#include "../../misc/macros.hpp"
 #include "../../traits/misc/enableIfHelpers.hpp"
 #include "chunk.hpp"
 #include "dataInterface.hpp"
@@ -64,7 +64,7 @@ namespace codi {
   struct ChunkedData : public DataInterface<T_NestedData> {
     public:
 
-      using Chunk = CODI_DD(T_Chunk, ChunkBase);                                        ///< See ChunkedData
+      using Chunk = CODI_DD(T_Chunk, Chunk1<CODI_ANY>);                                 ///< See ChunkedData
       using NestedData = CODI_DD(T_NestedData, CODI_T(DataInterface<CODI_ANY>));        ///< See ChunkedData
       using PointerInserter = CODI_DD(T_PointerInserter, CODI_T(PointerStore<Chunk>));  ///< See ChunkedData
 
@@ -204,6 +204,12 @@ namespace codi {
       /// \copydoc DataInterface::getZeroPosition
       CODI_INLINE Position getZeroPosition() const {
         return Position(0, 0, nested->getZeroPosition());
+      }
+
+      /// \copydoc DataInterface::getDataPointers
+      template<typename... Data>
+      CODI_INLINE void getDataPointers(InternalPosHandle const& startPos, Data*&... data) {
+        curChunk->dataPointer(startPos, data...);
       }
 
       /*******************************************************************************/
@@ -470,4 +476,8 @@ namespace codi {
         }
       }
   };
+
+  /// ChunkData DataInterface used in all regular tapes.
+  template<typename Chunk, typename NestedData = EmptyData>
+  using DefaultChunkedData = ChunkedData<Chunk, NestedData>;
 }

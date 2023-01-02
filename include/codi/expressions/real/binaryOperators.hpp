@@ -37,9 +37,9 @@
 #include <cmath>
 #include <utility>
 
+#include "../../config.h"
 #include "../../misc/exceptions.hpp"
 #include "../../misc/macros.hpp"
-#include "../../config.h"
 #include "../../traits/realTraits.hpp"
 #include "../binaryExpression.hpp"
 #include "../constantExpression.hpp"
@@ -201,7 +201,8 @@ namespace codi {
 
   using std::atan2;
   using std::copysign;
-  using std::trunc;
+  using std::fmax;
+  using std::fmin;
   using std::fmod;
   using std::frexp;
   using std::hypot;
@@ -210,6 +211,7 @@ namespace codi {
   using std::min;
   using std::pow;
   using std::remainder;
+  using std::trunc;
 
   /// BinaryOperation implementation for atan2
   template<typename T_Real>

@@ -34,8 +34,8 @@
  */
 #pragma once
 
-#include "../misc/macros.hpp"
 #include "../config.h"
+#include "../misc/macros.hpp"
 #include "expressionInterface.hpp"
 #include "logic/nodeInterface.hpp"
 #include "logic/traversalLogic.hpp"
@@ -78,7 +78,9 @@ namespace codi {
   struct ConstantExpression : public ExpressionInterface<T_Real, ConstantExpression<T_Real, T_ConversionOperator>> {
     public:
 
-      using Real = CODI_DD(T_Real, double);  ///< See ConstantExpression.
+      using Real = T_Real;  ///< See ConstantExpression.
+
+      /// See ConstantExpression.
       template<typename T>
       using ConversionOperator = CODI_DD(CODI_T(T_ConversionOperator<T>), CODI_T(ConstantDataConversion<T>));
 

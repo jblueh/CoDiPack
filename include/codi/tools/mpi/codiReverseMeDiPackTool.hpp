@@ -43,11 +43,11 @@
 #include <medi/ampi/typeDefault.hpp>
 #include <medi/ampi/types/indexTypeHelper.hpp>
 
-#include "../../misc/macros.hpp"
 #include "../../config.h"
 #include "../../expressions/lhsExpressionInterface.hpp"
-#include "../../tapes/misc/adjointVectorAccess.hpp"
+#include "../../misc/macros.hpp"
 #include "../../tapes/interfaces/fullTapeInterface.hpp"
+#include "../../tapes/misc/adjointVectorAccess.hpp"
 
 /** \copydoc codi::Namespace */
 namespace codi {
@@ -58,7 +58,7 @@ namespace codi {
   struct CoDiMeDiAdjointInterfaceWrapper : public medi::AdjointInterface {
     public:
 
-      using Type = CODI_DD(T_Type, CODI_T(LhsExpressionInterface<double, double, CODI_ANY, CODI_ANY>));
+      using Type = CODI_DD(T_Type, CODI_DEFAULT_LHS_EXPRESSION);
 
       using Real = typename Type::Real;
       using Identifier = typename Type::Identifier;
@@ -159,14 +159,14 @@ namespace codi {
     public:
 
       // All type definitions for the interface.
-      using Type = CODI_DD(T_Type, CODI_T(LhsExpressionInterface<double, double, CODI_ANY, CODI_ANY>));
+      using Type = CODI_DD(T_Type, CODI_DEFAULT_LHS_EXPRESSION);
       using PrimalType = typename Type::Real;
       using AdjointType = void;
       using ModifiedType = Type;
       using IndexType = typename Type::Identifier;
 
       // Helper definition for CoDiPack.
-      using Tape = CODI_DD(typename Type::Tape, CODI_T(FullTapeInterface<double, double, int, CODI_ANY>));
+      using Tape = CODI_DD(typename Type::Tape, CODI_DEFAULT_TAPE);
 
       using OpHelper =
           medi::OperatorHelper<medi::FunctionHelper<Type, Type, typename Type::PassiveReal, typename Type::Gradient,
