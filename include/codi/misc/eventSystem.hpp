@@ -177,7 +177,7 @@ namespace codi {
        * @return Handle that can be used to deregister this listener. A handle of 0 means that nothing was registered.
        */
       template<typename TypedCallback>
-      static CODI_INLINE Handle internalRegisterListener(bool const& enabled, Event event, TypedCallback callback,
+      static CODI_INLINE Handle internalRegisterListener(bool const enabled, Event event, TypedCallback callback,
                                                          void* customData) {
 #if !CODI_CUDA
         if (enabled) {
@@ -204,14 +204,14 @@ namespace codi {
        * @tparam Args           Types of the callback arguments.
        */
       template<typename TypedCallback, typename... Args>
-      static CODI_INLINE void internalNotifyListeners(bool const& enabled, Event event, Args&&... args) {
-        if (enabled) {
+      static CODI_INLINE void internalNotifyListeners(bool const enabled, Event event, Args&&... args) {
 #if !CODI_CUDA
+        if (enabled) {
           for (auto const& listener : getListeners()[event]) {
             ((TypedCallback)listener.second.first)(std::forward<Args>(args)..., listener.second.second);
           }
-#endif
         }
+#endif
       }
 
     public:
