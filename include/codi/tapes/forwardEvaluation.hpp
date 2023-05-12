@@ -185,38 +185,42 @@ namespace codi {
       }
   };
 
-  /// \copydoc codi::RealTraits::IsTotalFinite <br>
-  /// Tests whether both value and gradient are finite.
-  template<typename T_Type>
-  struct RealTraits::IsTotalFinite<T_Type, TapeTraits::EnableIfForwardTape<typename T_Type::Tape>> {
-    public:
+#ifndef DOXYGEN_DISABLE
+  namespace RealTraits {
+    /// \copydoc codi::RealTraits::IsTotalFinite <br>
+    /// Tests whether both value and gradient are finite.
+    template<typename T_Type>
+    struct IsTotalFinite<T_Type, TapeTraits::EnableIfForwardTape<typename T_Type::Tape>> {
+      public:
 
-      using Type = CODI_DD(
-          T_Type, CODI_T(LhsExpressionInterface<double, double, InternalStatementRecordingTapeInterface<CODI_ANY>,
-                                                T_Type>));  ///< See RealTraits::IsTotalFinite.
+        using Type = CODI_DD(
+            T_Type, CODI_T(LhsExpressionInterface<double, double, InternalStatementRecordingTapeInterface<CODI_ANY>,
+                                                  T_Type>));  ///< See RealTraits::IsTotalFinite.
 
-      /// \copydoc codi::RealTraits::IsTotalFinite::isTotalFinite()
-      static CODI_INLINE bool isTotalFinite(Type const& v) {
-        using std::isfinite;
-        return RealTraits::isTotalFinite(v.getValue()) && RealTraits::isTotalFinite(v.getGradient());
-      }
-  };
+        /// \copydoc codi::RealTraits::IsTotalFinite::isTotalFinite()
+        static CODI_INLINE bool isTotalFinite(Type const& v) {
+          using std::isfinite;
+          return RealTraits::isTotalFinite(v.getValue()) && RealTraits::isTotalFinite(v.getGradient());
+        }
+    };
 
-  /// \copydoc codi::RealTraits::IsTotalZero <br>
-  /// Tests whether both value and gradient are zero.
-  template<typename T_Type>
-  struct RealTraits::IsTotalZero<T_Type, TapeTraits::EnableIfForwardTape<typename T_Type::Tape>> {
-    public:
+    /// \copydoc codi::RealTraits::IsTotalZero <br>
+    /// Tests whether both value and gradient are zero.
+    template<typename T_Type>
+    struct IsTotalZero<T_Type, TapeTraits::EnableIfForwardTape<typename T_Type::Tape>> {
+      public:
 
-      using Type = CODI_DD(
-          T_Type, CODI_T(LhsExpressionInterface<double, double, InternalStatementRecordingTapeInterface<CODI_ANY>,
-                                                T_Type>));  ///< See RealTraits::IsTotalZero.
-      using Real = typename Type::Real;                     ///< See
-                                                            ///< codi::LhsExpressionInterface::Real.
+        using Type = CODI_DD(
+            T_Type, CODI_T(LhsExpressionInterface<double, double, InternalStatementRecordingTapeInterface<CODI_ANY>,
+                                                  T_Type>));  ///< See RealTraits::IsTotalZero.
+        using Real = typename Type::Real;                     ///< See
+                                                              ///< codi::LhsExpressionInterface::Real.
 
-      /// \copydoc codi::RealTraits::IsTotalFinite::isTotalZero()
-      static CODI_INLINE bool isTotalZero(Type const& v) {
-        return Real() == v.getValue() && typename Type::Gradient() == v.getGradient();
-      }
-  };
+        /// \copydoc codi::RealTraits::IsTotalFinite::isTotalZero()
+        static CODI_INLINE bool isTotalZero(Type const& v) {
+          return Real() == v.getValue() && typename Type::Gradient() == v.getGradient();
+        }
+    };
+  }
+#endif
 }

@@ -314,38 +314,40 @@ namespace codi {
   }
 
 #ifndef DOXYGEN_DISABLE
-  template<typename T_Type>
-  struct RealTraits::IsTotalZero<T_Type, GradientTraits::EnableIfDirection<T_Type>> {
-    public:
+  namespace RealTraits {
+    template<typename T_Type>
+    struct IsTotalZero<T_Type, GradientTraits::EnableIfDirection<T_Type>> {
+      public:
 
-      using Type = CODI_DD(T_Type, CODI_T(Direction<double, 1>));
-      using Real = typename GradientTraits::Real<Type>;
+        using Type = CODI_DD(T_Type, CODI_T(Direction<double, 1>));
+        using Real = typename GradientTraits::Real<Type>;
 
-      static CODI_INLINE bool isTotalZero(Type const& v) {
-        for (size_t i = 0; i < GradientTraits::dim<Type>(); ++i) {
-          if (!codi::RealTraits::isTotalZero(v[i])) {
-            return false;
+        static CODI_INLINE bool isTotalZero(Type const& v) {
+          for (size_t i = 0; i < GradientTraits::dim<Type>(); ++i) {
+            if (!codi::RealTraits::isTotalZero(v[i])) {
+              return false;
+            }
           }
+          return true;
         }
-        return true;
-      }
-  };
+    };
 
-  template<typename T_Type>
-  struct RealTraits::IsTotalFinite<T_Type, GradientTraits::EnableIfDirection<T_Type>> {
-    public:
+    template<typename T_Type>
+    struct IsTotalFinite<T_Type, GradientTraits::EnableIfDirection<T_Type>> {
+      public:
 
-      using Type = CODI_DD(T_Type, CODI_T(Direction<double, 1>));
+        using Type = CODI_DD(T_Type, CODI_T(Direction<double, 1>));
 
-      static CODI_INLINE bool isTotalFinite(Type const& v) {
-        for (size_t i = 0; i < GradientTraits::dim<Type>(); ++i) {
-          if (!codi::RealTraits::isTotalFinite(v[i])) {
-            return false;
+        static CODI_INLINE bool isTotalFinite(Type const& v) {
+          for (size_t i = 0; i < GradientTraits::dim<Type>(); ++i) {
+            if (!codi::RealTraits::isTotalFinite(v[i])) {
+              return false;
+            }
           }
+          return true;
         }
-        return true;
-      }
-  };
+    };
+  }
 
   namespace GradientTraits {
 

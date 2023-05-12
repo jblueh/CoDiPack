@@ -107,21 +107,23 @@ namespace codi {
   };
 
 #ifndef DOXYGEN_DISABLE
-  template<typename T_Type>
-  struct RealTraits::TraitsImplementation<T_Type, ExpressionTraits::EnableIfExpression<T_Type>> {
-    public:
+  namespace RealTraits {
+    template<typename T_Type>
+    struct TraitsImplementation<T_Type, ExpressionTraits::EnableIfExpression<T_Type>> {
+      public:
 
-      using Type = CODI_DD(T_Type, CODI_T(ExpressionInterface<double, T_Type>));
-      using Real = typename Type::Real;
+        using Type = CODI_DD(T_Type, CODI_T(ExpressionInterface<double, T_Type>));
+        using Real = typename Type::Real;
 
-      using PassiveReal = RealTraits::PassiveReal<Real>;
+        using PassiveReal = RealTraits::PassiveReal<Real>;
 
-      static int constexpr MaxDerivativeOrder = 1 + RealTraits::MaxDerivativeOrder<Real>();
+        static int constexpr MaxDerivativeOrder = 1 + RealTraits::MaxDerivativeOrder<Real>();
 
-      static CODI_INLINE PassiveReal const& getPassiveValue(Type const& v) {
-        return RealTraits::getPassiveValue(v.getValue());
-      }
-  };
+        static CODI_INLINE PassiveReal const& getPassiveValue(Type const& v) {
+          return RealTraits::getPassiveValue(v.getValue());
+        }
+    };
+  }
 #endif
 
   /// Write the primal value to the stream.

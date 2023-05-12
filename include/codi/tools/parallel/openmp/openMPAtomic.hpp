@@ -240,24 +240,28 @@ namespace codi {
   template<typename Type>
   using OpenMPAtomic = OpenMPAtomicImpl<Type>;
 
-  /// Declare OpenMPAtomic to be atomic in terms of AtomicTraits.
-  template<typename T_Type>
-  struct AtomicTraits::IsAtomic<OpenMPAtomic<T_Type>> : std::true_type {};
-
 #ifndef DOXYGEN_DISABLE
-  // Specialize IsTotalZero for OpenMPAtomic on arithmetic types.
-  template<typename T_Type>
-  struct RealTraits::IsTotalZero<
-      OpenMPAtomicImpl<T_Type, typename std::enable_if<std::is_arithmetic<T_Type>::value>::type>> {
-    public:
+  namespace AtomicTraits {
+    /// Declare OpenMPAtomic to be atomic in terms of AtomicTraits.
+    template<typename T_Type>
+    struct IsAtomic<OpenMPAtomic<T_Type>> : std::true_type {};
+  }
 
-      using Type =
-          CODI_DD(CODI_T(OpenMPAtomicImpl<T_Type, typename std::enable_if<std::is_arithmetic<T_Type>::value>::type>),
-                  OpenMPAtomic<double>);
+  namespace RealTraits {
+    // Specialize IsTotalZero for OpenMPAtomic on arithmetic types.
+    template<typename T_Type>
+    struct IsTotalZero<
+        OpenMPAtomicImpl<T_Type, typename std::enable_if<std::is_arithmetic<T_Type>::value>::type>> {
+      public:
 
-      static CODI_INLINE bool isTotalZero(Type const& v) {
-        return typename Type::Type() == v;
-      }
-  };
+        using Type =
+            CODI_DD(CODI_T(OpenMPAtomicImpl<T_Type, typename std::enable_if<std::is_arithmetic<T_Type>::value>::type>),
+                    OpenMPAtomic<double>);
+
+        static CODI_INLINE bool isTotalZero(Type const& v) {
+          return typename Type::Type() == v;
+        }
+    };
+  }
 #endif
 }

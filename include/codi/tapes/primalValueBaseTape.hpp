@@ -1346,17 +1346,21 @@ namespace codi {
   template<size_t size>
   struct JacobianExpression {};
 
-  /// Specialization for manual statement pushes of the used expression type.
-  template<size_t size>
-  struct ExpressionTraits::NumberOfActiveTypeArguments<JacobianExpression<size>> {
-      static size_t constexpr value = size;  ///< Number of arguments.
-  };
+#ifndef DOXYGEN_DISABLE
+  namespace ExpressionTraits {
+    /// Specialization for manual statement pushes of the used expression type.
+    template<size_t size>
+    struct NumberOfActiveTypeArguments<JacobianExpression<size>> {
+        static size_t constexpr value = size;  ///< Number of arguments.
+    };
 
-  /// Specialization for manual statement pushes of the used expression type.
-  template<size_t size>
-  struct ExpressionTraits::NumberOfConstantTypeArguments<JacobianExpression<size>> {
-      static size_t constexpr value = 0;  ///< Always zero.
-  };
+    /// Specialization for manual statement pushes of the used expression type.
+    template<size_t size>
+    struct NumberOfConstantTypeArguments<JacobianExpression<size>> {
+        static size_t constexpr value = 0;  ///< Always zero.
+    };
+  }
+#endif
 
 #define CREATE_EXPRESSION(size)                                                                                        \
   TapeTypes::StatementEvaluator::template createHandle<Impl, typename Impl::template JacobianStatementGenerator<size>, \

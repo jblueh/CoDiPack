@@ -235,52 +235,54 @@ namespace codi {
 
 #ifndef DOXYGEN_DISABLE
 
-  /// Specialization of RealTraits::DataExtraction for CoDiPack types.
-  template<typename T_Type>
-  struct RealTraits::DataExtraction<T_Type, ExpressionTraits::EnableIfLhsExpression<T_Type>> {
-    public:
-      using Type = CODI_DD(T_Type, CODI_DEFAULT_LHS_EXPRESSION);  ///< See DataExtraction.
+  namespace RealTraits {
+    /// Specialization of RealTraits::DataExtraction for CoDiPack types.
+    template<typename T_Type>
+    struct DataExtraction<T_Type, ExpressionTraits::EnableIfLhsExpression<T_Type>> {
+      public:
+        using Type = CODI_DD(T_Type, CODI_DEFAULT_LHS_EXPRESSION);  ///< See DataExtraction.
 
-      using Real = typename Type::Real;              ///< See DataExtraction::Real.
-      using Identifier = typename Type::Identifier;  ///< See DataExtraction::Identifier.
+        using Real = typename Type::Real;              ///< See DataExtraction::Real.
+        using Identifier = typename Type::Identifier;  ///< See DataExtraction::Identifier.
 
-      /// \copydoc DataExtraction::getValue()
-      CODI_INLINE static Real getValue(Type const& v) {
-        return v.getValue();
-      }
+        /// \copydoc DataExtraction::getValue()
+        CODI_INLINE static Real getValue(Type const& v) {
+          return v.getValue();
+        }
 
-      /// \copydoc DataExtraction::getIdentifier()
-      CODI_INLINE static Identifier getIdentifier(Type const& v) {
-        return v.getIdentifier();
-      }
+        /// \copydoc DataExtraction::getIdentifier()
+        CODI_INLINE static Identifier getIdentifier(Type const& v) {
+          return v.getIdentifier();
+        }
 
-      /// \copydoc DataExtraction::setValue()
-      CODI_INLINE static void setValue(Type& v, Real const& value) {
-        v.setValue(value);
-      }
-  };
+        /// \copydoc DataExtraction::setValue()
+        CODI_INLINE static void setValue(Type& v, Real const& value) {
+          v.setValue(value);
+        }
+    };
 
-  /// Specialization of RealTraits::DataRegistration for CoDiPack types.
-  template<typename T_Type>
-  struct RealTraits::TapeRegistration<T_Type, ExpressionTraits::EnableIfLhsExpression<T_Type>> {
-      using Type = CODI_DD(T_Type, CODI_DEFAULT_LHS_EXPRESSION);  ///< See DataRegistration.
+    /// Specialization of RealTraits::DataRegistration for CoDiPack types.
+    template<typename T_Type>
+    struct TapeRegistration<T_Type, ExpressionTraits::EnableIfLhsExpression<T_Type>> {
+        using Type = CODI_DD(T_Type, CODI_DEFAULT_LHS_EXPRESSION);  ///< See DataRegistration.
 
-      using Real = typename DataExtraction<Type>::Real;  ///< See DataExtraction::Real.
+        using Real = typename DataExtraction<Type>::Real;  ///< See DataExtraction::Real.
 
-      /// \copydoc DataRegistration::registerInput()
-      CODI_INLINE static void registerInput(Type& v) {
-        Type::getTape().registerInput(v);
-      }
+        /// \copydoc DataRegistration::registerInput()
+        CODI_INLINE static void registerInput(Type& v) {
+          Type::getTape().registerInput(v);
+        }
 
-      /// \copydoc DataRegistration::registerOutput()
-      CODI_INLINE static void registerOutput(Type& v) {
-        Type::getTape().registerOutput(v);
-      }
+        /// \copydoc DataRegistration::registerOutput()
+        CODI_INLINE static void registerOutput(Type& v) {
+          Type::getTape().registerOutput(v);
+        }
 
-      /// \copydoc DataRegistration::registerExternalFunctionOutput()
-      CODI_INLINE static Real registerExternalFunctionOutput(Type& v) {
-        return Type::getTape().registerExternalFunctionOutput(v);
-      }
-  };
+        /// \copydoc DataRegistration::registerExternalFunctionOutput()
+        CODI_INLINE static Real registerExternalFunctionOutput(Type& v) {
+          return Type::getTape().registerExternalFunctionOutput(v);
+        }
+    };
+  }
 #endif
 }
