@@ -53,6 +53,7 @@
 #include "codi/tapes/statementEvaluators/directStatementEvaluator.hpp"
 #include "codi/tapes/statementEvaluators/innerStatementEvaluator.hpp"
 #include "codi/tapes/statementEvaluators/reverseStatementEvaluator.hpp"
+#include "codi/tapes/tagging/tagTape.hpp"
 #include "codi/tools/data/aggregatedTypeVectorAccessWrapper.hpp"
 #include "codi/tools/data/direction.hpp"
 #include "codi/tools/data/externalFunctionUserData.hpp"
@@ -239,6 +240,7 @@ namespace codi {
    */
   using JacobianComputationScalarType = RealReverseIndex;
 
+  using RealTag = ActiveType<TagTape<double, int>>;
 }
 
 #include "codi/tools/helpers/evaluationHelper.hpp"
