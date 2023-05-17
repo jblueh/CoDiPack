@@ -181,14 +181,14 @@ namespace codi {
 
       /// Do nothing.
       VectorAccessInterface<Real, Identifier>* createVectorAccess() {
-        return new AdjointVectorAccess<Real, Identifier, Real>(nullptr);
+        return nullptr;
       }
 
       /// Do nothing.
       template<typename Adjoint>
       VectorAccessInterface<Real, Identifier>* createVectorAccessCustomAdjoints(Adjoint* data) {
         CODI_UNUSED(data);
-        return new AdjointVectorAccess<Real, Identifier, Real>(nullptr);
+        return nullptr;
       }
 
       /// Do nothing.
@@ -507,6 +507,11 @@ namespace codi {
       bool isActive() const {
         return active;
       }  ///< Check if tape is active.
+
+      /// Default check.
+      bool isActive(Identifier const& identifier) const {
+        return identifier.tag != 0;
+      }
 
       void evaluate() {}  ///< Do nothing.
 
