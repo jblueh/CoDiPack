@@ -32,15 +32,15 @@
  *    - Former members:
  *      - Tim Albring
  */
-#include "basePreaccumulationLargeStatement.hpp"
+#include "basePreaccumulation.hpp"
 
-struct TestPreaccumulationLocalAdjointsPreprocessTapeLargeStatement
-    : public BasePreaccumulationLargeStatement<TestPreaccumulationLocalAdjointsPreprocessTapeLargeStatement> {
+struct TestPreaccumulationLocalAdjointVectorPreprocessTape
+    : public BasePreaccumulation<TestPreaccumulationLocalAdjointVectorPreprocessTape> {
   public:
-    NAME("PreaccumulationLocalAdjointsPreprocessTapeLargeStatement")
+    NAME("PreaccumulationLocalAdjointVectorPreprocessTape")
 
-    template<typename PreaccHelper>
-    static void finish(PreaccHelper& ph) {
-      ph.finishLocalAdjointsPreprocessTape();
+    template<typename Number>
+    static void finish(codi::PreaccumulationHelper<Number>& ph, Number* y) {
+      ph.finishLocalAdjointVectorPreprocessTape(y[0], y[1]);
     }
 };
